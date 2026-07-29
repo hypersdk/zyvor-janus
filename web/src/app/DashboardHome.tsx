@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ComparePanel } from "@/components/ComparePanel";
-import { AppLink, Button, Card, EmptyState, FormField, PageHero, Select, StatusBadge } from "@/components/ui";
+import { AppLink, Button, Card, EmptyState, FormField, MetricTile, PageHero, Select, StatusBadge } from "@/components/ui";
 import { compareConfigs, fetchConfigs, fetchRuns, startRun } from "@/lib/api";
 import type { CompareResult, ConfigEntry, RunSummary } from "@/types/simulation";
 
@@ -19,6 +19,13 @@ export function DashboardHome() {
   const [compareError, setCompareError] = useState<string | null>(null);
 
   const canCompare = Boolean(compareA && compareB && compareA !== compareB);
+
+  const runningCount = runs.filter((r) => r.status === "running" || r.status === "pending").length;
+  const completedCount = runs.filter((r) => r.status === "completed").length;
+  const failedCount = runs.filter((r) => r.status === "failed").length;
+  const health = failedCount > 0 ? "warn" : runningCount > 0 ? "live" : "idle";
+  const healthLabel =
+    health === "live" ? "Simulations running" : health === "warn" ? "Recent failures" : "Idle — ready to run";
 
   const refresh = useCallback(async () => {
     const [cfgs, runList] = await Promise.all([fetchConfigs(), fetchRuns()]);
@@ -75,6 +82,17 @@ export function DashboardHome() {
           </>
         }
       />
+
+      <div className="ops-status-pill">
+        <span className={`status-lamp status-lamp-${health}`} />
+        {healthLabel}
+      </div>
+      <div className="metrics-grid ops-kpi-grid">
+        <MetricTile label="Total Runs" value={String(runs.length)} />
+        <MetricTile label="Running Now" value={String(runningCount)} />
+        <MetricTile label="Completed" value={String(completedCount)} />
+        <MetricTile label="Failed" value={String(failedCount)} />
+      </div>
 
       <div className="dashboard-grid">
         <Card

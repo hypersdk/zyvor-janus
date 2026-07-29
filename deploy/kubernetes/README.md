@@ -16,8 +16,9 @@ Ingress (nginx)
 
 - Docker
 - `kubectl` configured for your cluster
-- NGINX Ingress Controller (`ingressClassName: nginx`)
-- A default StorageClass for the API outputs PVC (optional but recommended)
+- For local testing without a real cluster: [kind](https://kind.sigs.k8s.io) (recommended) or [minikube](https://minikube.sigs.k8s.io) — see [Local cluster (kind)](#local-cluster-kind) below
+- NGINX Ingress Controller (`ingressClassName: nginx`) — only needed if you use the Ingress; `kubectl port-forward` works without it (default for local testing)
+- A default StorageClass for the API outputs PVC (kind and minikube both ship one by default)
 
 ## 1. Build images
 
@@ -28,13 +29,77 @@ chmod +x deploy/build-images.sh
 ./deploy/build-images.sh
 ```
 
+This also rewrites the `images:` block in [`kustomization.yaml`](kustomization.yaml) to match what was just built, so `kubectl apply -k .` always deploys exactly what you built — no manual edit needed.
+
 Push to your registry:
 
 ```bash
 REGISTRY=registry.example.com/your-org TAG=0.1.0 PUSH=1 ./deploy/build-images.sh
 ```
 
-Then edit [`kustomization.yaml`](kustomization.yaml) `images:` to match your registry/tag.
+## Local cluster (kind)
+
+No remote cluster needed — this runs entirely on your machine.
+
+```bash
+# 1. Create a local cluster
+kind create cluster --name forgesim
+
+# 2. Build images (auto-syncs kustomization.yaml, see above)
+./deploy/build-images.sh
+
+# 3. Load the locally-built images into kind — kind's nodes run their own
+#    containerd, separate from your host Docker daemon, so images built with
+#    `docker build` aren't visible until loaded explicitly
+kind load docker-image forgesim-api:0.1.0 forgesim-web:0.1.0 --name forgesim
+
+# 4. Configure auth (see "2. Configure auth" below) and deploy (see "3. Deploy" below)
+cd deploy/kubernetes
+cp secret.example.yaml secret.yaml   # edit credentials
+kubectl apply -f secret.yaml
+kubectl apply -k .
+kubectl -n forgesim rollout status deploy/forgesim-api
+kubectl -n forgesim rollout status deploy/forgesim-web
+
+# 5. Reach the dashboard (port-forward — simplest, no ingress controller needed)
+kubectl -n forgesim port-forward svc/forgesim-web 3000:3000 &
+kubectl -n forgesim port-forward svc/forgesim-api 8080:8080 &
+open http://localhost:3000   # log in with credentials from secret.yaml
+```
+
+If you used a different `TAG` when building, pass the same tag to `kind load docker-image` (e.g. `forgesim-api:$TAG forgesim-web:$TAG`).
+
+### Optional: exercise the real Ingress on kind
+
+Only needed if you want to test [`ingress.yaml`](ingress.yaml) itself rather than port-forward — requires installing ingress-nginx and a local hosts entry:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+kubectl -n ingress-nginx wait --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller --timeout=120s
+
+echo "127.0.0.1 forgesim.example.com" | sudo tee -a /etc/hosts
+open http://forgesim.example.com
+```
+
+### Optional: minikube instead of kind
+
+```bash
+minikube start -p forgesim
+eval $(minikube -p forgesim docker-env)   # build directly into minikube's runtime
+./deploy/build-images.sh                  # skip `kind load` — no separate load step needed
+kubectl apply -f secret.yaml && kubectl apply -k .
+minikube -p forgesim service forgesim-web -n forgesim --url
+```
+
+### Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `ImagePullBackOff` | Images built locally but never loaded into the cluster | Run `kind load docker-image` (or use the minikube `docker-env` approach) |
+| `web` pod `CreateContainerConfigError` | Secret applied after/without the Deployment | `kubectl apply -f secret.yaml` — the pod recovers automatically, no restart needed |
+| Ingress returns 404 / connection refused | No `/etc/hosts` entry, or ingress-nginx not installed | Use port-forward instead, or follow the Ingress steps above |
+| `kubectl apply -k .` deploys the wrong image tag | `kustomization.yaml` out of sync with what was built | Re-run `./deploy/build-images.sh` — it rewrites the `images:` block automatically |
 
 ## 2. Configure auth
 
@@ -81,17 +146,7 @@ kubectl -n forgesim exec deploy/forgesim-api -- \
 | Dashboard login | Secret `forgesim-auth` |
 | Ingress host | `ingress.yaml` |
 
-To add custom cluster configs without rebuilding, mount a ConfigMap:
-
-```yaml
-volumeMounts:
-  - name: extra-configs
-    mountPath: /app/configs/clusters/custom
-volumes:
-  - name: extra-configs
-    configMap:
-      name: forgesim-extra-configs
-```
+Cluster YAML configs are baked into the API image under `configs/` at build time. There is currently no supported way to mount extra configs without rebuilding the image — a ConfigMap-based override is not wired into `api.yaml` today.
 
 ## CLI-only batch job
 
@@ -103,6 +158,8 @@ kubectl -n forgesim logs job/forgesim-run-once
 ```
 
 For interactive use, prefer the web UI or `POST /api/runs` on the API service.
+
+Note: this Job is applied directly (`kubectl apply -f`), not through `kubectl apply -k`, so it does not pick up the tag/registry `build-images.sh` syncs into `kustomization.yaml`. If you built a non-default tag, edit its `image:` field before applying.
 
 ## Notes
 

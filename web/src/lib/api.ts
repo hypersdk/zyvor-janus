@@ -72,6 +72,26 @@ export async function fetchSnapshots(id: string): Promise<ClusterSnapshot[]> {
   return apiFetch<ClusterSnapshot[]>(`/runs/${id}/snapshots`);
 }
 
+/**
+ * Host-relative by default so it keeps working regardless of which fixed port the
+ * servers are bound to, proxied through next.config.js's /ws/:path* rewrite.
+ *
+ * Next's rewrite cannot proxy WebSocket upgrade requests (next dev / next start both
+ * throw internally on an upgrade to a rewritten route — confirmed via manual testing),
+ * so NEXT_PUBLIC_FORGESIM_WS_URL lets local dev / non-Ingress deployments point the
+ * browser straight at the API instead. Unset by default: behind an Ingress (see
+ * deploy/kubernetes/ingress.yaml), /ws/* is already routed directly to the API
+ * service, bypassing the Next.js layer entirely, so the default same-origin path
+ * works correctly there without this override.
+ */
+export function runWebSocketUrl(id: string): string {
+  const override = process.env.NEXT_PUBLIC_FORGESIM_WS_URL;
+  if (override) return `${override.replace(/\/+$/, "")}/ws/runs/${id}`;
+  const proto = typeof window !== "undefined" && window.location.protocol === "https:" ? "wss" : "ws";
+  const host = typeof window !== "undefined" ? window.location.host : "";
+  return `${proto}://${host}/ws/runs/${id}`;
+}
+
 export async function compareConfigs(configs: string[]): Promise<{ results: CompareResult[] }> {
   return apiFetch("/compare", {
     method: "POST",

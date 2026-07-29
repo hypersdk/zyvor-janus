@@ -10,9 +10,11 @@ resources:
   - ingress.yaml
 
 images:
+  # BEGIN forgesim-images (managed by deploy/build-images.sh — do not hand-edit)
   - name: forgesim-api
     newName: forgesim-api
     newTag: "0.1.0"
   - name: forgesim-web
     newName: forgesim-web
     newTag: "0.1.0"
+  # END forgesim-images

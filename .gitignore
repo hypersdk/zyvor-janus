@@ -32,6 +32,7 @@ scripts/get-pip.py
 # Outputs
 outputs/
 runs/
+!web/src/app/runs/
 
 # IDE
 .idea/

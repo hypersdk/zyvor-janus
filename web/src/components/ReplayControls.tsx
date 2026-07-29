@@ -21,20 +21,31 @@ function DecisionKindBadge({ kind }: { kind: string }) {
 export function ReplayControls({
   snapshots,
   decisions,
+  live = false,
 }: {
   snapshots: ClusterSnapshot[];
   decisions: SchedulerDecision[];
+  live?: boolean;
 }) {
   const { index, playing, speed, setSnapshots, setDecisions, setPlaying, setSpeed, next, prev } =
     useReplayStore();
 
   useEffect(() => {
+    if (live) {
+      // Keep index pinned to the newest frame instead of resetting to 0 on every append.
+      useReplayStore.setState({
+        snapshots,
+        decisions,
+        index: Math.max(snapshots.length, decisions.length, 1) - 1,
+      });
+      return;
+    }
     setSnapshots(snapshots);
     setDecisions(decisions);
-  }, [snapshots, decisions, setSnapshots, setDecisions]);
+  }, [snapshots, decisions, live, setSnapshots, setDecisions]);
 
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || live) return;
     const timer = setInterval(() => {
       const max = Math.max(snapshots.length, decisions.length, 1) - 1;
       if (index >= max) {
@@ -44,7 +55,7 @@ export function ReplayControls({
       next();
     }, 500 / speed);
     return () => clearInterval(timer);
-  }, [playing, speed, index, snapshots.length, decisions.length, next, setPlaying]);
+  }, [playing, live, speed, index, snapshots.length, decisions.length, next, setPlaying]);
 
   const decision = decisions[index] ?? decisions[decisions.length - 1];
   const snapshot = snapshots[index] ?? snapshots[snapshots.length - 1];
@@ -57,31 +68,37 @@ export function ReplayControls({
       className="run-detail-span-2"
     >
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Button variant="secondary" onClick={() => setPlaying(!playing)}>
-          {playing ? "Pause" : "Play"}
-        </Button>
-        <Button variant="secondary" onClick={prev}>
-          Prev
-        </Button>
-        <Button variant="secondary" onClick={next}>
-          Next
-        </Button>
-        {[0.5, 1, 2, 10].map((s) => (
-          <button
-            key={s}
-            type="button"
-            aria-pressed={speed === s}
-            className={clsx(
-              "rounded-hs px-2 py-1 text-xs transition",
-              speed === s
-                ? "bg-hs-indigo/30 text-hs-purple-light border border-hs-indigo/40"
-                : "bg-hs-bg border border-hs-border text-hs-muted hover:border-hs-border-accent"
-            )}
-            onClick={() => setSpeed(s)}
-          >
-            {s}x
-          </button>
-        ))}
+        {live ? (
+          <span className="run-detail-live">Live</span>
+        ) : (
+          <>
+            <Button variant="secondary" onClick={() => setPlaying(!playing)}>
+              {playing ? "Pause" : "Play"}
+            </Button>
+            <Button variant="secondary" onClick={prev}>
+              Prev
+            </Button>
+            <Button variant="secondary" onClick={next}>
+              Next
+            </Button>
+            {[0.5, 1, 2, 10].map((s) => (
+              <button
+                key={s}
+                type="button"
+                aria-pressed={speed === s}
+                className={clsx(
+                  "rounded-hs px-2 py-1 text-xs transition",
+                  speed === s
+                    ? "bg-hs-indigo/30 text-hs-purple-light border border-hs-indigo/40"
+                    : "bg-hs-bg border border-hs-border text-hs-muted hover:border-hs-border-accent"
+                )}
+                onClick={() => setSpeed(s)}
+              >
+                {s}x
+              </button>
+            ))}
+          </>
+        )}
         <span className="font-mono text-xs text-hs-muted">
           step {index + 1} / {totalSteps}
         </span>

@@ -8,6 +8,11 @@ source "$ROOT/scripts/common.sh"
 
 API_PORT="${API_PORT:-8080}"
 UI_PORT="${UI_PORT:-3000}"
+export FORGESIM_API_URL="http://127.0.0.1:${API_PORT}"
+# Next's dev/start server can't proxy WebSocket upgrades through rewrites (see
+# web/src/lib/api.ts's runWebSocketUrl for details), so point the browser at the
+# API directly for the live run view.
+export NEXT_PUBLIC_FORGESIM_WS_URL="${NEXT_PUBLIC_FORGESIM_WS_URL:-ws://127.0.0.1:${API_PORT}}"
 
 fix_homebrew_pyexpat
 require_venv "$ROOT"

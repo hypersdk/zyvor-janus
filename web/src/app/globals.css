@@ -457,6 +457,55 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .ops-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    border-radius: var(--hs-radius-pill);
+    border: 1px solid var(--hs-border);
+    background: color-mix(in srgb, var(--hs-surface) 80%, transparent);
+    padding: 0.4rem 0.875rem 0.4rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--hs-text-muted);
+  }
+
+  .status-lamp {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    animation: pulse-live 1.6s ease-in-out infinite;
+  }
+
+  .status-lamp-live {
+    background: var(--hs-success);
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+  }
+
+  .status-lamp-warn {
+    background: var(--hs-warning);
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.7);
+  }
+
+  .status-lamp-idle {
+    background: var(--hs-text-dim);
+    box-shadow: none;
+    animation: none;
+  }
+
+  .ops-kpi-grid {
+    margin-bottom: 1.75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: 768px) {
+    .ops-kpi-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
   @media (min-width: 768px) {
     .metrics-grid {
       grid-template-columns: repeat(4, minmax(0, 1fr));

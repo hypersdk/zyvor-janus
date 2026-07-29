@@ -36,4 +36,6 @@ Full steps (secrets, ingress, PVC, kustomize): **[deploy/kubernetes/README.md](.
 kubectl apply -k deploy/kubernetes
 ```
 
+No cluster yet? See **[Local cluster (kind)](../deploy/kubernetes/README.md#local-cluster-kind)** for a from-scratch walkthrough (kind create cluster → build → load images → deploy → port-forward).
+
 There is no `docker-compose.yml` in-tree; use the scripts above or Kubernetes.
