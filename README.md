@@ -2,11 +2,66 @@
 
 ForgeSim is a discrete-event simulator for Kubernetes-native GPU scheduling inspired by Zyvor Forge ( https://zyvor.dev/forge ). It models clusters, MIG, topology, tenants, quotas, gang scheduling, and AI workloads, enabling scheduler development, RL research, and performance evaluation without requiring physical NVIDIA GPUs.
 
+**▶ [Watch the demo](https://youtu.be/p0GQVaZ_X1A)** — Forge (production GPU/Kubernetes control plane) and ZyForgeSim (its simulator) running side by side, ~3 min.
+
 ## Architecture
 
 - **Rust core** — event engine, cluster model, schedulers, metrics, Forge bundle loader, inference timing model
 - **Python API** — PyO3 bindings, Forge CRD adapters, Gymnasium env, visualization, FastAPI server, AIPerf adapters
 - **Web UI** — Next.js dashboard (runs, benchmark, what-if) + Rich CLI live dashboard
+
+## Installation
+
+### Container images (GHCR)
+
+Pre-built images are published to GitHub Container Registry on every release:
+
+```bash
+docker pull ghcr.io/hypersdk/forgesim-api:latest
+docker pull ghcr.io/hypersdk/forgesim-web:latest
+
+# Run the API + web dashboard locally:
+docker network create forgesim 2>/dev/null || true
+docker run -d --name forgesim-api --network forgesim -p 8080:8080 \
+  ghcr.io/hypersdk/forgesim-api:latest
+docker run -d --name forgesim-web --network forgesim -p 3000:3000 \
+  -e FORGESIM_API_URL=http://forgesim-api:8080 \
+  ghcr.io/hypersdk/forgesim-web:latest
+```
+
+Then open http://localhost:3000 (default login `Admin` / `Admin@321` — override via
+`FORGESIM_DASHBOARD_USER` / `FORGESIM_DASHBOARD_PASSWORD` env vars on the web container).
+
+Pin a specific release instead of `latest` with `ghcr.io/hypersdk/forgesim-api:vX.Y.Z`.
+
+### Kubernetes
+
+```bash
+cd deploy/kubernetes
+cp secret.example.yaml secret.yaml   # edit credentials
+kubectl apply -f secret.yaml
+kubectl apply -k .
+```
+
+See [`deploy/kubernetes/README.md`](deploy/kubernetes/README.md) for the full guide
+(local `kind`/`minikube` cluster, Ingress, remote k3s deploy via
+`scripts/deploy-remote.sh`).
+
+### From source (Rust CLI + Python bindings)
+
+```bash
+git clone https://github.com/hypersdk/ZyForgeSim.git
+cd ZyForgeSim
+cargo build --release -p forgesim-cli
+
+# Optional: Python bindings + web API (builds the PyO3 extension)
+./scripts/setup_dev.sh
+source .venv/bin/activate
+pip install -e '.[server]'     # FastAPI / uvicorn (web API)
+```
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full dev setup, including
+optional `viz`, `rl`, and `dashboard` extras.
 
 ## Quick start
 
