@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -15,9 +16,15 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-CONFIG_DIR = REPO_ROOT / "configs" / "clusters"
-RUNS_DIR = REPO_ROOT / "outputs" / "runs"
+# Source checkout: python/forgesim/server/app.py → parents[3] = repo root.
+# Installed wheel: prefer FORGESIM_ROOT (Docker sets this to /app).
+# All three are resolved so `path.relative_to(REPO_ROOT)` below can't fail from a
+# symlink mismatch (e.g. macOS /tmp -> /private/tmp) between an unresolved
+# CONFIG_DIR/RUNS_DIR and the resolved REPO_ROOT.
+_DEFAULT_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(os.environ.get("FORGESIM_ROOT", str(_DEFAULT_ROOT))).resolve()
+CONFIG_DIR = Path(os.environ.get("FORGESIM_CONFIG_DIR", str(REPO_ROOT / "configs" / "clusters"))).resolve()
+RUNS_DIR = Path(os.environ.get("FORGESIM_RUNS_DIR", str(REPO_ROOT / "outputs" / "runs"))).resolve()
 
 
 class RunStatus(str, Enum):

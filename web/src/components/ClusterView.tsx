@@ -1,4 +1,6 @@
+import { motion } from "framer-motion";
 import type { ClusterSnapshot } from "@/types/simulation";
+import { fadeInUp, staggerContainer } from "@/lib/motion";
 import { Card } from "./ui";
 
 function gpuColor(gpu: ClusterSnapshot["nodes"][0]["gpus"][0]) {
@@ -12,25 +14,27 @@ export function ClusterView({ snapshot }: { snapshot: ClusterSnapshot | null }) 
 
   return (
     <Card title="Cluster View">
-      <div className="space-y-4">
+      <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
         {snapshot.nodes.map((node) => (
           <div key={node.id}>
             <div className="mb-2 text-sm font-medium text-hs-heading">{node.id}</div>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
               {node.gpus.map((gpu) => (
-                <div
+                <motion.div
                   key={gpu.id}
-                  className={`rounded-hs border p-2 font-mono text-xs ${gpuColor(gpu)}`}
+                  layout
+                  variants={fadeInUp}
+                  className={`rounded-hs border p-2 font-mono text-xs transition-colors duration-300 ${gpuColor(gpu)}`}
                   title={gpu.job_name ?? "idle"}
                 >
                   <div className="font-semibold">{gpu.id}</div>
                   <div>{gpu.busy ? (gpu.job_name ?? "busy") : "idle"}</div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
         ))}
-      </div>
+      </motion.div>
     </Card>
   );
 }

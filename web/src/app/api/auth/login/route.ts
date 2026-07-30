@@ -6,6 +6,16 @@ import {
   verifyCredentials,
 } from "@/lib/auth";
 
+function cookieSecure(request: NextRequest): boolean {
+  // Lab/NodePort deploys are often plain HTTP. Never force Secure just because
+  // NODE_ENV=production — browsers drop Secure cookies on http:// hosts.
+  if (process.env.FORGESIM_COOKIE_SECURE === "0") return false;
+  if (process.env.FORGESIM_COOKIE_SECURE === "1") return true;
+  const forwarded = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const proto = forwarded || request.nextUrl.protocol.replace(":", "");
+  return proto === "https";
+}
+
 export async function POST(request: NextRequest) {
   let username = "";
   let password = "";
@@ -28,7 +38,7 @@ export async function POST(request: NextRequest) {
     value: token,
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(request),
     path: "/",
     maxAge: SESSION_MAX_AGE,
   });

@@ -17,9 +17,13 @@ web/.env.local
 *.md
 !LICENSE
 !NOTICE
+!README.md
+!CHANGELOG.md
 tests
 docs
 benchmarks
 python/examples
 python/baselines
+python/forgesim/_forgesim*.so
+python/forgesim/*.so
 scripts/get-pip.py

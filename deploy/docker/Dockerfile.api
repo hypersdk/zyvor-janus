@@ -17,13 +17,14 @@ WORKDIR /build
 COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
 COPY .cargo .cargo
 COPY crates crates
-COPY pyproject.toml LICENSE NOTICE ./
+COPY pyproject.toml LICENSE NOTICE README.md ./
 COPY python python
 
-RUN pip3 install --no-cache-dir "maturin>=1.7,<2.0" \
-  && maturin build --release --out /wheels
+RUN python3 -m venv /opt/maturin-venv \
+  && /opt/maturin-venv/bin/pip install --no-cache-dir "maturin>=1.7,<2.0" \
+  && /opt/maturin-venv/bin/maturin build --release --out /wheels
 
-FROM python:3.12-slim-bookworm
+FROM python:3.11-slim-bookworm
 
 WORKDIR /app
 
@@ -32,18 +33,22 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/* \
   && useradd --create-home --shell /usr/sbin/nologin forgesim
 
+# Configs only — Python package comes from the maturin wheel (do not put
+# source tree on PYTHONPATH or a host-built macOS .so will shadow Linux).
 COPY configs configs
-COPY python python
-COPY pyproject.toml LICENSE NOTICE ./
 COPY --from=builder /wheels /wheels
 
-RUN pip install --no-cache-dir /wheels/forgesim-*.whl ".[server]" \
+RUN WHEEL="$(ls /wheels/forgesim-*.whl)" \
+  && pip install --no-cache-dir "${WHEEL}[server]" \
   && rm -rf /wheels \
   && mkdir -p outputs/runs \
   && chown -R forgesim:forgesim /app
 
-ENV PYTHONPATH=/app/python
 ENV PYTHONUNBUFFERED=1
+ENV FORGESIM_ROOT=/app
+ENV FORGESIM_CONFIG_DIR=/app/configs/clusters
+ENV FORGESIM_RUNS_DIR=/app/outputs/runs
+ENV FORGESIM_PROFILES_DIR=/app/configs/profiles
 
 USER forgesim
 EXPOSE 8080

@@ -20,7 +20,7 @@ export function GanttChart({ timeline }: { timeline: JobsTimeline | null }) {
       return (
         <div
           key={`${job.job_id}-failed`}
-          className="absolute top-1 h-4 rounded border border-dashed"
+          className="absolute top-1 h-4 rounded border border-dashed gantt-bar-grow"
           style={{
             left: `${left}%`,
             width: `${Math.max(width, 1)}%`,
@@ -40,7 +40,7 @@ export function GanttChart({ timeline }: { timeline: JobsTimeline | null }) {
       return (
         <div
           key={`${job.job_id}-unschedulable`}
-          className="absolute top-1 h-4 rounded border border-dashed"
+          className="absolute top-1 h-4 rounded border border-dashed gantt-bar-grow"
           style={{
             left: `${left}%`,
             width: `${Math.max(width, 1)}%`,
@@ -63,7 +63,7 @@ export function GanttChart({ timeline }: { timeline: JobsTimeline | null }) {
       <Fragment key={job.job_id}>
         {waitWidth > 0 ? (
           <div
-            className="absolute top-1 h-4 rounded"
+            className="absolute top-1 h-4 rounded gantt-bar-grow"
             style={{
               left: `${waitLeft}%`,
               width: `${waitWidth}%`,
@@ -74,7 +74,7 @@ export function GanttChart({ timeline }: { timeline: JobsTimeline | null }) {
           />
         ) : null}
         <div
-          className="absolute top-1 h-4 rounded"
+          className="absolute top-1 h-4 rounded gantt-bar-grow"
           style={{
             left: `${runLeft}%`,
             width: `${Math.max(runWidth, 0.5)}%`,

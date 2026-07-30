@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui";
 
 export function HeaderAuth() {
   const router = useRouter();
@@ -26,14 +25,13 @@ export function HeaderAuth() {
   if (!username) return null;
 
   return (
-    <div className="header-actions">
-      <div className="user-pill">
-        <span className="user-avatar">{username.slice(0, 1).toUpperCase()}</span>
-        <span>{username}</span>
-      </div>
-      <Button variant="secondary" onClick={logout}>
+    <div className="topbar-session">
+      <span>
+        <b>{username}</b>
+      </span>
+      <button type="button" className="run-btn" onClick={logout}>
         Sign out
-      </Button>
+      </button>
     </div>
   );
 }

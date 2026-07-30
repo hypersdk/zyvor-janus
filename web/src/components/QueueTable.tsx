@@ -1,6 +1,8 @@
 "use client";
 
+import { motion } from "framer-motion";
 import type { JobsTimeline } from "@/types/simulation";
+import { fadeInUp, staggerContainer } from "@/lib/motion";
 import { Card } from "./ui";
 
 export function QueueTable({ timeline }: { timeline: JobsTimeline | null }) {
@@ -21,7 +23,7 @@ export function QueueTable({ timeline }: { timeline: JobsTimeline | null }) {
               <th>Status</th>
             </tr>
           </thead>
-          <tbody>
+          <motion.tbody variants={staggerContainer} initial="hidden" animate="visible">
             {jobs.length === 0 ? (
               <tr>
                 <td colSpan={5} className="text-center text-hs-muted">
@@ -30,16 +32,16 @@ export function QueueTable({ timeline }: { timeline: JobsTimeline | null }) {
               </tr>
             ) : (
               jobs.map((job) => (
-                <tr key={job.job_id}>
+                <motion.tr key={job.job_id} variants={fadeInUp}>
                   <td className="font-medium text-hs-heading">{job.name}</td>
                   <td className="font-mono">{job.priority}</td>
                   <td className="text-hs-muted">{job.tenant ?? "—"}</td>
                   <td className="font-mono">{job.gpu_count}</td>
                   <td className="capitalize text-hs-body">{job.state}</td>
-                </tr>
+                </motion.tr>
               ))
             )}
-          </tbody>
+          </motion.tbody>
         </table>
       </div>
     </Card>

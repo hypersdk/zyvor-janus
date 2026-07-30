@@ -2,6 +2,8 @@ import type { SimulationMetrics } from "@/types/simulation";
 import { hasInferenceMetrics } from "@/types/simulation";
 import { chartColors } from "@/lib/theme";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { motion } from "framer-motion";
+import { staggerContainer } from "@/lib/motion";
 import { Card, MetricTile } from "./ui";
 
 function cumulativeWait(metrics: SimulationMetrics): number {
@@ -30,7 +32,7 @@ export function MetricsDashboard({ metrics }: { metrics: SimulationMetrics | nul
 
   return (
     <div className="space-y-4">
-      <div className="metrics-grid">
+      <motion.div className="metrics-grid" variants={staggerContainer} initial="hidden" animate="visible">
         <MetricTile label="Makespan" value={`${metrics.makespan.toFixed(1)}s`} />
         <MetricTile label="GPU Utilization" value={`${(metrics.gpu_utilization * 100).toFixed(1)}%`} />
         <MetricTile label="Mean Cumulative Wait" value={`${meanWait.toFixed(2)}s`} />
@@ -48,7 +50,7 @@ export function MetricsDashboard({ metrics }: { metrics: SimulationMetrics | nul
             <MetricTile label="Queue delay p99" value={`${(metrics.queue_delay_p99 ?? 0).toFixed(3)}s`} />
           </>
         ) : null}
-      </div>
+      </motion.div>
       <Card title="Metrics Charts">
         <div className="grid gap-4 md:grid-cols-2">
           <div>

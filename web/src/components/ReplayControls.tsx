@@ -3,7 +3,8 @@
 import { useEffect } from "react";
 import type { ClusterSnapshot, SchedulerDecision } from "@/types/simulation";
 import { useReplayStore } from "@/store/useReplayStore";
-import { Button, Card } from "./ui";
+import { Button, Card, FormField, Select } from "./ui";
+import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import clsx from "clsx";
 
 const DECISION_STYLES: Record<string, string> = {
@@ -27,7 +28,7 @@ export function ReplayControls({
   decisions: SchedulerDecision[];
   live?: boolean;
 }) {
-  const { index, playing, speed, setSnapshots, setDecisions, setPlaying, setSpeed, next, prev } =
+  const { index, playing, speed, setSnapshots, setDecisions, setPlaying, setSpeed, setIndex, next, prev } =
     useReplayStore();
 
   useEffect(() => {
@@ -60,6 +61,13 @@ export function ReplayControls({
   const decision = decisions[index] ?? decisions[decisions.length - 1];
   const snapshot = snapshots[index] ?? snapshots[snapshots.length - 1];
   const totalSteps = Math.max(snapshots.length, decisions.length, 1);
+  const maxIndex = Math.max(totalSteps - 1, 0);
+
+  const clockMax =
+    snapshots[snapshots.length - 1]?.clock ??
+    decisions[decisions.length - 1]?.time ??
+    1;
+  const markers = [0, 0.25, 0.5, 0.75, 1].map((p) => (clockMax * p).toFixed(1));
 
   return (
     <Card
@@ -69,17 +77,25 @@ export function ReplayControls({
     >
       <div className="mb-3 flex flex-wrap items-center gap-2">
         {live ? (
-          <span className="run-detail-live">Live</span>
+          <span className="run-detail-live">Live · {snapshots.length} snapshots</span>
         ) : (
           <>
             <Button variant="secondary" onClick={() => setPlaying(!playing)}>
-              {playing ? "Pause" : "Play"}
+              {playing ? (
+                <>
+                  <Pause size={14} /> Pause
+                </>
+              ) : (
+                <>
+                  <Play size={14} /> Play
+                </>
+              )}
             </Button>
             <Button variant="secondary" onClick={prev}>
-              Prev
+              <SkipBack size={14} /> Prev
             </Button>
             <Button variant="secondary" onClick={next}>
-              Next
+              Next <SkipForward size={14} />
             </Button>
             {[0.5, 1, 2, 10].map((s) => (
               <button
@@ -103,10 +119,54 @@ export function ReplayControls({
           step {index + 1} / {totalSteps}
         </span>
       </div>
+
+      {!live && totalSteps > 1 ? (
+        <div className="replay-scrubber">
+          <input
+            type="range"
+            className="replay-scrubber-track"
+            min={0}
+            max={maxIndex}
+            value={Math.min(index, maxIndex)}
+            onChange={(e) => {
+              setPlaying(false);
+              setIndex(Number(e.target.value));
+            }}
+            aria-label="Replay timeline scrubber"
+          />
+          <div className="replay-scrubber-labels">
+            {markers.map((m, i) => (
+              <span key={i}>{m}s</span>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {!live && decisions.length > 0 ? (
+        <div className="replay-jump">
+          <FormField label="Jump to event">
+            <Select
+              value={String(Math.min(index, decisions.length - 1))}
+              onChange={(e) => {
+                setPlaying(false);
+                setIndex(Number(e.target.value));
+              }}
+            >
+              {decisions.map((d, i) => (
+                <option key={`${d.time}-${d.kind}-${i}`} value={i}>
+                  [{i + 1}] t={d.time.toFixed(2)}s · {d.kind.replace(/_/g, " ")}
+                  {d.job_name ? ` · ${d.job_name}` : ""}
+                </option>
+              ))}
+            </Select>
+          </FormField>
+        </div>
+      ) : null}
+
       {decision ? (
         <div
           className={clsx(
-            "decision-panel",
+            "decision-panel mt-3",
             decision.kind === "job_preempted" && "decision-panel-preempted"
           )}
         >
