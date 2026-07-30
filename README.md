@@ -2,6 +2,8 @@
 
 ForgeSim is a discrete-event simulator for Kubernetes-native GPU scheduling inspired by Zyvor Forge ( https://zyvor.dev/forge ). It models clusters, MIG, topology, tenants, quotas, gang scheduling, and AI workloads, enabling scheduler development, RL research, and performance evaluation without requiring physical NVIDIA GPUs.
 
+[![Watch the Forge + ZyForgeSim demo](https://img.youtube.com/vi/p0GQVaZ_X1A/maxresdefault.jpg)](https://youtu.be/p0GQVaZ_X1A "Watch the Forge + ZyForgeSim demo on YouTube")
+
 **▶ [Watch the demo](https://youtu.be/p0GQVaZ_X1A)** — Forge (production GPU/Kubernetes control plane) and ZyForgeSim (its simulator) running side by side, ~3 min.
 
 ## Architecture
