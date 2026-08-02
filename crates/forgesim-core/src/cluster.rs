@@ -103,6 +103,10 @@ impl Cluster {
         job.state = JobState::Running;
         job.start_time = Some(start_time);
         job.assigned_gpus = placement_resource_ids.to_vec();
+        job.assigned_nodes = placement_resource_ids
+            .iter()
+            .filter_map(|id| self.gpu(id).map(|g| g.node_id.clone()))
+            .collect();
         self.running_jobs.insert(job.id.clone(), job);
     }
 

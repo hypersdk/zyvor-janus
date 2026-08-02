@@ -11,6 +11,17 @@ pub enum JobState {
     Failed,
 }
 
+/// One continuous run on a fixed GPU set (cleared/restarted on preemption).
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct JobRunSegment {
+    pub gpu_ids: Vec<String>,
+    /// Nodes for `gpu_ids` (same order; may repeat for multi-GPU on one host).
+    #[serde(default)]
+    pub node_ids: Vec<String>,
+    pub start: f64,
+    pub end: f64,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Job {
     pub id: String,
@@ -46,6 +57,12 @@ pub struct Job {
     pub finish_time: Option<f64>,
     #[serde(default, skip_serializing)]
     pub assigned_gpus: Vec<String>,
+    /// Node ids parallel to `assigned_gpus` for the current run.
+    #[serde(default, skip_serializing)]
+    pub assigned_nodes: Vec<String>,
+    /// Closed run segments across preemptions (GPU set + start/end).
+    #[serde(default)]
+    pub run_segments: Vec<JobRunSegment>,
     /// Seconds of work left, set when a job has been preempted at least
     /// once. `None` means "use the full `runtime`" (never preempted).
     #[serde(default, skip_serializing)]
@@ -123,6 +140,8 @@ impl Job {
             start_time: None,
             finish_time: None,
             assigned_gpus: Vec::new(),
+            assigned_nodes: Vec::new(),
+            run_segments: Vec::new(),
             remaining_runtime: None,
             preemption_count: 0,
             run_generation: 0,
@@ -158,6 +177,14 @@ impl Job {
     pub(crate) fn record_gpu_segment(&mut self, segment_start: f64, segment_end: f64) {
         let elapsed = (segment_end - segment_start).max(0.0);
         self.gpu_seconds_consumed += elapsed * self.gpu_count as f64;
+        if !self.assigned_gpus.is_empty() {
+            self.run_segments.push(JobRunSegment {
+                gpu_ids: self.assigned_gpus.clone(),
+                node_ids: self.assigned_nodes.clone(),
+                start: segment_start,
+                end: segment_end,
+            });
+        }
     }
 
     pub fn enter_waiting(&mut self, at_time: f64) {
@@ -194,6 +221,7 @@ impl Job {
         self.remaining_runtime = Some((self.duration_remaining() - elapsed).max(0.0));
         self.start_time = None;
         self.assigned_gpus.clear();
+        self.assigned_nodes.clear();
         self.preemption_count += 1;
         self.gang_timeout_generation += 1;
         if self.gang_enabled {
@@ -293,6 +321,22 @@ mod job_tests {
         job.start_time = Some(0.0);
         job.requeue_after_preemption(25.0);
         assert_eq!(job.gpu_seconds_consumed, 50.0);
+    }
+
+    #[test]
+    fn requeue_records_run_segment_with_gpu_ids() {
+        let mut job = Job::new("j1", "mover", 0.0, 100.0, 1);
+        job.start_time = Some(0.0);
+        job.assigned_gpus = vec!["gpu-0".into()];
+        job.assigned_nodes = vec!["node-0".into()];
+        job.requeue_after_preemption(10.0);
+        assert_eq!(job.run_segments.len(), 1);
+        assert_eq!(job.run_segments[0].gpu_ids, vec!["gpu-0".to_string()]);
+        assert_eq!(job.run_segments[0].node_ids, vec!["node-0".to_string()]);
+        assert_eq!(job.run_segments[0].start, 0.0);
+        assert_eq!(job.run_segments[0].end, 10.0);
+        assert!(job.assigned_gpus.is_empty());
+        assert!(job.assigned_nodes.is_empty());
     }
 
     #[test]

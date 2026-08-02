@@ -84,6 +84,82 @@ fn integration_preemptive_scheduler_evicts_for_higher_priority_arrival() {
 }
 
 #[test]
+fn integration_dual_gpu_preempt_migrates_mover_to_other_gpu() {
+    use forgesim_config::run_simulation_report;
+
+    let config = repo_root().join("configs/clusters/dual_gpu_preempt.yaml");
+    if !config.exists() {
+        return;
+    }
+    let report = run_simulation_report(&config).expect("dual gpu preempt simulation");
+    assert_eq!(report.metrics.jobs_completed, report.metrics.jobs_total);
+    assert_eq!(report.metrics.preemptions, 1);
+    assert!(
+        report
+            .decisions
+            .iter()
+            .any(|d| d.kind == "job_preempted" && d.job_id.as_deref() == Some("job-mover")),
+        "expected job_preempted for mover"
+    );
+
+    let mover = report
+        .timeline
+        .jobs
+        .iter()
+        .find(|j| j.job_id == "job-mover")
+        .expect("mover in timeline");
+    assert!(
+        mover.segments.len() >= 2,
+        "mover should have ≥2 run segments, got {:?}",
+        mover.segments
+    );
+    let first_gpus = &mover.segments[0].gpu_ids;
+    let last_gpus = &mover.segments[mover.segments.len() - 1].gpu_ids;
+    assert_ne!(
+        first_gpus, last_gpus,
+        "mover should resume on a different GPU: {:?}",
+        mover.segments
+    );
+    assert_eq!(report.timeline.gpu_count, 2);
+}
+
+#[test]
+fn integration_dual_node_preempt_migrates_mover_to_other_machine() {
+    use forgesim_config::run_simulation_report;
+
+    let config = repo_root().join("configs/clusters/dual_node_preempt.yaml");
+    if !config.exists() {
+        return;
+    }
+    let report = run_simulation_report(&config).expect("dual node preempt simulation");
+    assert_eq!(report.metrics.jobs_completed, report.metrics.jobs_total);
+    assert_eq!(report.metrics.preemptions, 1);
+
+    let mover = report
+        .timeline
+        .jobs
+        .iter()
+        .find(|j| j.job_id == "job-mover")
+        .expect("mover in timeline");
+    assert!(
+        mover.segments.len() >= 2,
+        "mover should have ≥2 run segments, got {:?}",
+        mover.segments
+    );
+    let first_nodes = &mover.segments[0].node_ids;
+    let last_nodes = &mover.segments[mover.segments.len() - 1].node_ids;
+    assert_eq!(first_nodes, &vec!["node-0".to_string()]);
+    assert_eq!(last_nodes, &vec!["node-1".to_string()]);
+    assert_ne!(
+        &mover.segments[0].gpu_ids,
+        &mover.segments[mover.segments.len() - 1].gpu_ids,
+        "mover should also change GPU id across machines: {:?}",
+        mover.segments
+    );
+    assert_eq!(report.timeline.gpu_count, 2);
+}
+
+#[test]
 fn integration_forge_bundle_fifo_simulation() {
     let bundle = repo_root().join("tests/fixtures/forge");
     if !bundle.exists() {

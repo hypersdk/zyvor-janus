@@ -1,5 +1,5 @@
 use forgesim_core::cluster::Cluster;
-use forgesim_core::models::JobState;
+use forgesim_core::models::{JobRunSegment, JobState};
 use forgesim_core::inference::percentile;
 use serde::{Deserialize, Serialize};
 
@@ -16,6 +16,9 @@ pub struct JobTimelineRecord {
     pub runtime: f64,
     pub gpu_count: u32,
     pub assigned_gpus: Vec<String>,
+    /// Closed run segments across preemptions (empty when never started).
+    #[serde(default)]
+    pub segments: Vec<JobRunSegment>,
     pub priority: u32,
     pub tenant: Option<String>,
     pub state: String,
@@ -66,6 +69,20 @@ impl JobsTimeline {
 }
 
 fn job_to_timeline_record(job: &forgesim_core::models::Job) -> JobTimelineRecord {
+    let mut segments = job.run_segments.clone();
+    // Running jobs have an open segment not yet closed by finish/preempt.
+    if job.state == JobState::Running {
+        if let Some(start) = job.start_time {
+            if !job.assigned_gpus.is_empty() {
+                segments.push(JobRunSegment {
+                    gpu_ids: job.assigned_gpus.clone(),
+                    node_ids: job.assigned_nodes.clone(),
+                    start,
+                    end: job.finish_time.unwrap_or(start),
+                });
+            }
+        }
+    }
     JobTimelineRecord {
         job_id: job.id.clone(),
         name: job.name.clone(),
@@ -75,6 +92,7 @@ fn job_to_timeline_record(job: &forgesim_core::models::Job) -> JobTimelineRecord
         runtime: job.runtime,
         gpu_count: job.gpu_count,
         assigned_gpus: job.assigned_gpus.clone(),
+        segments,
         priority: job.priority,
         tenant: job.tenant.clone(),
         state: format!("{:?}", job.state).to_lowercase(),

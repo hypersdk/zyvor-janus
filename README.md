@@ -275,6 +275,20 @@ See [docs/milestones.md](docs/milestones.md). **M1–M8 complete**, including to
 
 Schedulers: `fifo`, `priority`, `preemptive`, `forge` (alias for preemptive), `bestfit`.
 
+## Dual-node “migrate” demo (placement, not live CUDA)
+
+Preemptive scheduler moves a low-priority job across **machines** after preemption:
+
+```bash
+cargo run -p forgesim-cli -- run --config configs/clusters/dual_node_preempt.yaml
+# Dashboard + wow reel (writes ~/Desktop/forgesim-client-dual-node-migrate-wow-reel.mp4)
+./scripts/run_web_dashboard.sh   # separate terminal
+FORGESIM_DEMO_CONFIG=dual_node_preempt.yaml \
+  node scripts/demo-videos/record-forgesim-2gpu-migrate-wow-reel.mjs
+```
+
+This is a **digital-twin placement migrate**. Forge’s production live migrate is KubeVirt VMs (Path A); pod checkpoint/restore is experimental Path B — see Forge [`docs/product/POD_VS_VM_MIGRATION.md`](https://github.com/ssahani/forge/blob/main/docs/product/POD_VS_VM_MIGRATION.md).
+
 ## Forge input
 
 See [docs/forge_input.md](docs/forge_input.md) for CRD mapping rules, export workflow, and adapter levels.

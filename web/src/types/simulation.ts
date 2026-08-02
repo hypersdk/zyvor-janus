@@ -35,6 +35,14 @@ export function hasInferenceMetrics(metrics: SimulationMetrics | null | undefine
   return Boolean(metrics && (metrics.inference_jobs ?? 0) > 0);
 }
 
+export interface JobRunSegment {
+  gpu_ids: string[];
+  /** Nodes for gpu_ids (same order); used for machine→machine migrate labels. */
+  node_ids?: string[];
+  start: number;
+  end: number;
+}
+
 export interface JobTimelineRecord {
   job_id: string;
   name: string;
@@ -44,6 +52,8 @@ export interface JobTimelineRecord {
   runtime: number;
   gpu_count: number;
   assigned_gpus: string[];
+  /** Closed run segments across preemptions (empty when never started). */
+  segments?: JobRunSegment[];
   priority: number;
   tenant: string | null;
   state: string;

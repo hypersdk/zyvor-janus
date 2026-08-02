@@ -41,6 +41,8 @@ export function SimulateStage({
   const spritesRef = useRef<Sprite[]>([]);
   const [sprites, setSprites] = useState<Sprite[]>([]);
   const lastDecisionKey = useRef<string>("");
+  /** Last GPU a job occupied (from schedule/preempt) — used for GPU→GPU migrate sprites. */
+  const lastGpuByJob = useRef<Map<string, string>>(new Map());
 
   const gpus = useMemo(() => {
     if (!snapshot) return [];
@@ -56,12 +58,35 @@ export function SimulateStage({
     lastDecisionKey.current = key;
 
     const stage = stageRef.current.getBoundingClientRect();
-    const startX = 48;
-    const startY = Math.min(stage.height * 0.35, 160);
+    let startX = 48;
+    let startY = Math.min(stage.height * 0.35, 160);
 
     let targetX = stage.width * 0.55;
     let targetY = stage.height * 0.45;
     const gpuId = decision.gpu_ids[0];
+    const jobKey = decision.job_id ?? decision.job_name ?? "";
+
+    if (decision.kind.includes("preempt") && gpuId && jobKey) {
+      lastGpuByJob.current.set(jobKey, gpuId);
+    }
+
+    // After preemption, reschedule: fly from previous GPU tile → new GPU.
+    if (
+      decision.kind.includes("scheduled") &&
+      jobKey &&
+      lastGpuByJob.current.has(jobKey) &&
+      gpuId &&
+      lastGpuByJob.current.get(jobKey) !== gpuId
+    ) {
+      const prevId = lastGpuByJob.current.get(jobKey)!;
+      const prevEl = gpuRefs.current.get(prevId);
+      if (prevEl) {
+        const r = prevEl.getBoundingClientRect();
+        startX = r.left - stage.left + r.width / 2;
+        startY = r.top - stage.top + r.height / 2;
+      }
+    }
+
     if (gpuId) {
       const el = gpuRefs.current.get(gpuId);
       if (el) {
@@ -69,12 +94,16 @@ export function SimulateStage({
         targetX = r.left - stage.left + r.width / 2;
         targetY = r.top - stage.top + r.height / 2;
       }
+      if (decision.kind.includes("scheduled") && jobKey) {
+        lastGpuByJob.current.set(jobKey, gpuId);
+      }
     } else if (decision.kind.includes("arrival")) {
       targetX = 120;
       targetY = stage.height * 0.55;
     } else if (decision.kind.includes("complete")) {
       targetX = stage.width - 64;
       targetY = 48;
+      if (jobKey) lastGpuByJob.current.delete(jobKey);
     }
 
     const sprite: Sprite = {
