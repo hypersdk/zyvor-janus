@@ -256,10 +256,24 @@ fn memory_eligible(gpu: &crate::models::Gpu, job: &Job) -> bool {
     job.gpu_memory_gb <= 0.0 || gpu.memory_gb >= job.gpu_memory_gb
 }
 
+/// A job tagged with a federation site only matches nodes tagged with that
+/// same site; an untagged job matches any node (no partitioning in play).
+fn site_matches(cluster: &Cluster, gpu: &crate::models::Gpu, job: &Job) -> bool {
+    match job.site.as_deref() {
+        Some(requested) => cluster.node_site(&gpu.node_id) == Some(requested),
+        None => true,
+    }
+}
+
 fn eligible_free_gpus<'a>(cluster: &'a Cluster, job: &Job) -> Vec<&'a crate::models::Gpu> {
     cluster
         .all_gpus()
-        .filter(|g| g.is_whole_gpu_free() && memory_eligible(g, job) && gpu_type_matches(g, job))
+        .filter(|g| {
+            g.is_whole_gpu_free()
+                && memory_eligible(g, job)
+                && gpu_type_matches(g, job)
+                && site_matches(cluster, g, job)
+        })
         .collect()
 }
 
@@ -291,7 +305,12 @@ fn select_gang_gpus(cluster: &Cluster, job: &Job, nodes: u32) -> Option<(Vec<Str
             let free: Vec<_> = node
                 .gpus
                 .iter()
-                .filter(|g| g.is_whole_gpu_free() && memory_eligible(g, job) && gpu_type_matches(g, job))
+                .filter(|g| {
+                    g.is_whole_gpu_free()
+                        && memory_eligible(g, job)
+                        && gpu_type_matches(g, job)
+                        && site_matches(cluster, g, job)
+                })
                 .collect();
             if free.len() < per_node as usize {
                 return None;
@@ -361,7 +380,11 @@ fn wants_topology_aware(job: &Job) -> bool {
 fn select_gpus_scatter(cluster: &Cluster, job: &Job) -> Option<Vec<String>> {
     let mut selected = Vec::new();
     for gpu in cluster.all_gpus() {
-        if !gpu.is_whole_gpu_free() || !memory_eligible(gpu, job) || !gpu_type_matches(gpu, job) {
+        if !gpu.is_whole_gpu_free()
+            || !memory_eligible(gpu, job)
+            || !gpu_type_matches(gpu, job)
+            || !site_matches(cluster, gpu, job)
+        {
             continue;
         }
         selected.push(gpu.id.clone());
@@ -590,6 +613,62 @@ mod tests {
 
         let mut job = Job::new("j1", "big", 0.0, 10.0, 2);
         job.tenant = Some("acme".into());
+        assert!(rm.can_place(&cluster, &job));
+    }
+
+    fn two_site_cluster() -> Cluster {
+        let mut cluster = Cluster::new(vec![
+            Node {
+                id: "n-site-a".into(),
+                gpus: vec![Gpu::new("g-a", "n-site-a", "H100", 80.0)],
+            },
+            Node {
+                id: "n-site-b".into(),
+                gpus: vec![Gpu::new("g-b", "n-site-b", "H100", 80.0)],
+            },
+        ]);
+        cluster
+            .node_sites
+            .insert("n-site-a".into(), "site-a".into());
+        cluster
+            .node_sites
+            .insert("n-site-b".into(), "site-b".into());
+        cluster
+    }
+
+    #[test]
+    fn site_tagged_job_only_places_on_its_own_site() {
+        let cluster = two_site_cluster();
+        let rm = ResourceManager::new();
+
+        let mut job = Job::new("j1", "site-a-job", 0.0, 10.0, 1);
+        job.site = Some("site-a".into());
+        let p = rm.allocate(&mut cluster.clone(), &job, 0.0).unwrap();
+        assert_eq!(p.gpu_ids, vec!["g-a".to_string()]);
+    }
+
+    #[test]
+    fn site_tagged_job_is_blocked_once_its_own_site_is_full() {
+        let mut cluster = two_site_cluster();
+        let rm = ResourceManager::new();
+
+        let mut running = Job::new("j0", "running", 0.0, 10.0, 1);
+        running.site = Some("site-a".into());
+        cluster.start_job(running, &["g-a".into()], 0.0);
+
+        // site-b has a free GPU, but a site-a job must not spill onto it.
+        let mut job = Job::new("j1", "second-site-a-job", 0.0, 10.0, 1);
+        job.site = Some("site-a".into());
+        assert!(!rm.can_place(&cluster, &job));
+    }
+
+    #[test]
+    fn job_without_a_site_tag_is_unpartitioned() {
+        let cluster = two_site_cluster();
+        let rm = ResourceManager::new();
+
+        // No site set — matches either node, same as pre-federation behavior.
+        let job = Job::new("j1", "untagged", 0.0, 10.0, 2);
         assert!(rm.can_place(&cluster, &job));
     }
 

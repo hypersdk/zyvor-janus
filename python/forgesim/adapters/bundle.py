@@ -13,7 +13,7 @@ try:
 except ImportError:  # pragma: no cover - fallback when PyYAML is unavailable
     from forgesim.adapters import simple_yaml as yaml
 
-from forgesim.adapters.crd import fabric_ai_job_to_job
+from forgesim.adapters.crd import fabric_ai_job_to_job, site_of
 from forgesim.adapters.profiles import ProfileLookupError, ProfileRegistry
 
 FORGE_API_VERSION = "forge.ai/v1"
@@ -45,6 +45,13 @@ class ForgeBundle:
     jobs: list[dict[str, Any]] = field(default_factory=list)
     quotas: list[dict[str, Any]] = field(default_factory=list)
     gpu_nodes: list[dict[str, Any]] = field(default_factory=list)
+    # Federation site tag per node name (from FEDERATION_SITE_LABEL), mirrors
+    # forgesim-config's Cluster.node_sites. Nodes with no entry are unpartitioned.
+    node_sites: dict[str, str] = field(default_factory=dict)
+    # FabricFederatedTrainingRun docs found under federation/, if any —
+    # informational only (mirrors forgesim-config's ForgeBundle.federation),
+    # recognized rather than silently dropped like any other unknown kind.
+    federation: list[dict[str, Any]] = field(default_factory=list)
 
 
 class ForgeBundleAdapter:
@@ -66,6 +73,16 @@ class ForgeBundleAdapter:
                 if doc.get("kind") == "FabricGpuNode":
                     _validate_api_version(doc)
                     bundle.gpu_nodes.append(doc)
+                    site = site_of(doc)
+                    node_name = (doc.get("spec") or {}).get("nodeName")
+                    if site and node_name:
+                        bundle.node_sites[node_name] = site
+
+        for file in _collect_yaml_files(root / "federation"):
+            for doc in _yaml_documents(file.read_text()):
+                if doc.get("kind") == "FabricFederatedTrainingRun":
+                    _validate_api_version(doc)
+                    bundle.federation.append(doc)
 
         for file in _collect_yaml_files(root / "jobs"):
             for doc in _yaml_documents(file.read_text()):

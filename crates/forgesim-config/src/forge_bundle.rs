@@ -17,6 +17,12 @@ use crate::{
 };
 
 const FORGE_API_GROUP: &str = "forge.ai/v1";
+/// Real label the ai-operator's federated-training-run controller sets on
+/// every per-site `FabricAIJob` it creates (see
+/// `fabricfederatedtrainingrun_controller.go`'s per-site job labels). Reused
+/// here on hand-authored `FabricGpuNode` fixtures too, tagging which
+/// federation site a node belongs to.
+const FEDERATION_SITE_LABEL: &str = "forge.ai/federated-training-site";
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GpuTypeRegistry {
@@ -55,10 +61,24 @@ pub struct ModelProfile {
     pub profiles: HashMap<String, ModelProfileEntry>,
 }
 
+/// Metadata read from a `FabricFederatedTrainingRun` in the bundle's
+/// `federation/` directory, if present. Informational only — it doesn't
+/// currently change scheduling, but recognizing the kind (instead of
+/// silently dropping it like every non-Job/Node/Quota kind) lets a report
+/// show what federation config the bundle's jobs were generated under.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct FederationRunMeta {
+    pub name: String,
+    pub target_clusters: Vec<String>,
+    pub secure_aggregation: bool,
+    pub dropout_recovery: bool,
+}
+
 #[derive(Debug, Clone)]
 pub struct ForgeBundle {
     pub jobs: Vec<Job>,
     pub cluster: Cluster,
+    pub federation: Option<FederationRunMeta>,
 }
 
 pub fn load_gpu_type_registry(path: &Path) -> ConfigResult<GpuTypeRegistry> {
@@ -127,6 +147,13 @@ fn api_version_of(doc: &Value) -> Option<&str> {
     doc.get("apiVersion").and_then(|k| k.as_str())
 }
 
+fn site_label_of(meta: &Value) -> Option<String> {
+    meta.get("labels")
+        .and_then(|l| l.get(FEDERATION_SITE_LABEL))
+        .and_then(|v| v.as_str())
+        .map(String::from)
+}
+
 fn validate_forge_doc(doc: &Value) -> ConfigResult<()> {
     match api_version_of(doc) {
         Some(v) if v == FORGE_API_GROUP => Ok(()),
@@ -191,6 +218,57 @@ fn parse_tenant_quotas(quotas: &[Value]) -> HashMap<String, u32> {
         result.insert(team.to_string(), max_gpus as u32);
     }
     result
+}
+
+fn parse_federated_training_runs(dir: &Path) -> ConfigResult<Vec<Value>> {
+    let mut runs = Vec::new();
+    for path in collect_yaml_files(dir)? {
+        let content = fs::read_to_string(&path)?;
+        for doc in yaml_documents(&content)? {
+            if kind_of(&doc) == Some("FabricFederatedTrainingRun") {
+                validate_forge_doc(&doc)?;
+                runs.push(doc);
+            }
+        }
+    }
+    Ok(runs)
+}
+
+/// Only one federated-training-run's worth of jobs is expected per bundle
+/// (the export command in `docs/forge_input.md` scopes to a single run's
+/// namespace); the first document wins if more than one is present.
+fn federation_meta_from(runs: &[Value]) -> Option<FederationRunMeta> {
+    let doc = runs.first()?;
+    let name = doc
+        .get("metadata")
+        .and_then(|m| m.get("name"))
+        .and_then(|n| n.as_str())
+        .unwrap_or("unknown")
+        .to_string();
+    let spec = doc.get("spec")?;
+    let target_clusters = spec
+        .get("targetClusters")
+        .and_then(|t| t.as_sequence())
+        .map(|seq| {
+            seq.iter()
+                .filter_map(|v| v.as_str().map(String::from))
+                .collect()
+        })
+        .unwrap_or_default();
+    let secure_aggregation = spec
+        .get("secureAggregation")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let dropout_recovery = spec
+        .get("dropoutRecovery")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    Some(FederationRunMeta {
+        name,
+        target_clusters,
+        secure_aggregation,
+        dropout_recovery,
+    })
 }
 
 fn resolve_tenant(namespace: &str, quotas: &[Value]) -> Option<String> {
@@ -363,6 +441,7 @@ pub fn parse_fabric_ai_job(
         network_bw_gbps: network_bw,
         gpu_type: Some(gpu_type),
         namespace: Some(namespace),
+        site: site_label_of(meta),
         gang_enabled,
         gang_size_nodes,
         gang_timeout_secs,
@@ -380,6 +459,7 @@ pub fn parse_fabric_gpu_nodes(
     hw_profiles: &HashMap<String, HardwareProfile>,
 ) -> ConfigResult<Cluster> {
     let mut nodes = Vec::new();
+    let mut node_sites: HashMap<String, String> = HashMap::new();
     for path in collect_yaml_files(dir)? {
         let content = fs::read_to_string(&path)?;
         for doc in yaml_documents(&content)? {
@@ -390,6 +470,7 @@ pub fn parse_fabric_gpu_nodes(
             let spec = doc
                 .get("spec")
                 .ok_or_else(|| ConfigError::Invalid("missing spec".into()))?;
+            let site = doc.get("metadata").and_then(site_label_of);
             let node_name = spec
                 .get("nodeName")
                 .and_then(|n| n.as_str())
@@ -425,6 +506,9 @@ pub fn parse_fabric_gpu_nodes(
                 gpu.mig_capable = hw_profile.map(|p| p.mig).unwrap_or(false);
                 gpus.push(gpu);
             }
+            if let Some(site) = site {
+                node_sites.insert(node_name.to_string(), site);
+            }
             nodes.push(Node {
                 id: node_name.to_string(),
                 gpus,
@@ -452,6 +536,7 @@ pub fn parse_fabric_gpu_nodes(
     }
     let mut cluster = Cluster::new(nodes);
     cluster.topology = TopologyGraph::from_profile_bandwidths(nvlink_bw, pcie_bw);
+    cluster.node_sites = node_sites;
     Ok(cluster)
 }
 
@@ -464,8 +549,10 @@ pub fn load_forge_bundle(
     let quotas_dir = bundle_dir.join("quotas");
     let jobs_dir = bundle_dir.join("jobs");
     let cluster_dir = bundle_dir.join("cluster");
+    let federation_dir = bundle_dir.join("federation");
 
     let quotas = parse_fabric_quotas(&quotas_dir)?;
+    let federation = federation_meta_from(&parse_federated_training_runs(&federation_dir)?);
     let model_profiles = load_model_profiles(profiles_dir)?;
     let gpu_registry = load_gpu_type_registry(gpu_registry_path)?;
     let hw_profiles = load_hardware_profiles(hardware_profiles_dir)?;
@@ -494,7 +581,11 @@ pub fn load_forge_bundle(
     let mut cluster = parse_fabric_gpu_nodes(&cluster_dir, &gpu_registry, &hw_profiles)?;
     cluster.tenant_quotas = parse_tenant_quotas(&quotas);
 
-    Ok(ForgeBundle { jobs, cluster })
+    Ok(ForgeBundle {
+        jobs,
+        cluster,
+        federation,
+    })
 }
 
 pub fn run_forge_bundle_report(
@@ -512,6 +603,7 @@ pub fn run_forge_bundle_report(
         hardware_profiles_dir,
     )?;
     let jobs_total = bundle.jobs.len();
+    let federation = bundle.federation.clone();
     let hardware_names: Vec<String> = bundle
         .cluster
         .all_gpus()
@@ -545,6 +637,7 @@ pub fn run_forge_bundle_report(
         scheduler: scheduler.to_string(),
         config_hash: String::new(),
         benchmark: None,
+        federation,
     })
 }
 
@@ -649,6 +742,132 @@ metadata:
         let content = "apiVersion: v1\nitems: []\nkind: List\n";
         let docs = yaml_documents(content).expect("parse empty list");
         assert!(docs.is_empty());
+    }
+
+    #[test]
+    fn site_label_of_reads_the_federation_site_label() {
+        let meta: Value =
+            serde_yaml::from_str("labels:\n  forge.ai/federated-training-site: site-a\n")
+                .unwrap();
+        assert_eq!(site_label_of(&meta).as_deref(), Some("site-a"));
+    }
+
+    #[test]
+    fn site_label_of_returns_none_without_the_label() {
+        let meta: Value = serde_yaml::from_str("labels:\n  other: x\n").unwrap();
+        assert_eq!(site_label_of(&meta), None);
+    }
+
+    #[test]
+    fn parse_fabric_ai_job_carries_the_site_label_onto_the_job() {
+        let doc: Value = serde_yaml::from_str(
+            r#"
+apiVersion: forge.ai/v1
+kind: FabricAIJob
+metadata:
+  name: job-a
+  namespace: default
+  labels:
+    forge.ai/federated-training-site: site-a
+spec:
+  model: llama-7b
+  gpus: 1
+  gpuType: H100
+"#,
+        )
+        .unwrap();
+        let registry = GpuTypeRegistry {
+            mappings: HashMap::from([("H100".to_string(), "H100_80GB".to_string())]),
+        };
+        let mut profiles = HashMap::new();
+        profiles.insert(
+            "llama-7b".to_string(),
+            ModelProfile {
+                model: "llama-7b".to_string(),
+                profiles: HashMap::from([(
+                    "H100".to_string(),
+                    ModelProfileEntry {
+                        runtime_seconds: 10.0,
+                        gpu_memory_gb: 40.0,
+                        prefill_ms_per_token: None,
+                        decode_tps: None,
+                        max_batch: None,
+                    },
+                )]),
+            },
+        );
+        let job = parse_fabric_ai_job(&doc, &[], &profiles, &registry).unwrap();
+        assert_eq!(job.site.as_deref(), Some("site-a"));
+    }
+
+    #[test]
+    fn parse_fabric_ai_job_without_the_label_has_no_site() {
+        let doc: Value = serde_yaml::from_str(
+            r#"
+apiVersion: forge.ai/v1
+kind: FabricAIJob
+metadata:
+  name: job-a
+  namespace: default
+spec:
+  model: llama-7b
+  gpus: 1
+  gpuType: H100
+"#,
+        )
+        .unwrap();
+        let registry = GpuTypeRegistry {
+            mappings: HashMap::from([("H100".to_string(), "H100_80GB".to_string())]),
+        };
+        let mut profiles = HashMap::new();
+        profiles.insert(
+            "llama-7b".to_string(),
+            ModelProfile {
+                model: "llama-7b".to_string(),
+                profiles: HashMap::from([(
+                    "H100".to_string(),
+                    ModelProfileEntry {
+                        runtime_seconds: 10.0,
+                        gpu_memory_gb: 40.0,
+                        prefill_ms_per_token: None,
+                        decode_tps: None,
+                        max_batch: None,
+                    },
+                )]),
+            },
+        );
+        let job = parse_fabric_ai_job(&doc, &[], &profiles, &registry).unwrap();
+        assert_eq!(job.site, None);
+    }
+
+    #[test]
+    fn federation_meta_from_parses_target_clusters_and_flags() {
+        let doc: Value = serde_yaml::from_str(
+            r#"
+apiVersion: forge.ai/v1
+kind: FabricFederatedTrainingRun
+metadata:
+  name: run-a
+spec:
+  targetClusters: [site-a, site-b, site-c]
+  secureAggregation: true
+  dropoutRecovery: true
+"#,
+        )
+        .unwrap();
+        let meta = federation_meta_from(&[doc]).expect("federation meta");
+        assert_eq!(meta.name, "run-a");
+        assert_eq!(
+            meta.target_clusters,
+            vec!["site-a".to_string(), "site-b".to_string(), "site-c".to_string()]
+        );
+        assert!(meta.secure_aggregation);
+        assert!(meta.dropout_recovery);
+    }
+
+    #[test]
+    fn federation_meta_from_empty_is_none() {
+        assert!(federation_meta_from(&[]).is_none());
     }
 
     #[test]
