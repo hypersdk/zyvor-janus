@@ -4,6 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
+# Real label the ai-operator's federated-training-run controller sets on
+# every per-site FabricAIJob it creates (fabricfederatedtrainingrun_controller.go).
+# Reused here on FabricGpuNode fixtures too, to tag which federation site a
+# node belongs to. Mirrors forgesim-config/src/forge_bundle.rs.
+FEDERATION_SITE_LABEL = "forge.ai/federated-training-site"
+
 
 def gpu_count_from_spec(spec: dict[str, Any]) -> int:
     mig = spec.get("mig") or {}
@@ -16,6 +22,13 @@ def gpu_count_from_spec(spec: dict[str, Any]) -> int:
         gpn = int(distributed.get("gpusPerNode", 1))
         return nodes * gpn
     return int(spec.get("gpus", 1))
+
+
+def site_of(manifest: dict[str, Any]) -> str | None:
+    """Federation site label off a manifest's metadata, or None if unset."""
+    meta = manifest.get("metadata") or {}
+    labels = meta.get("labels") or {}
+    return labels.get(FEDERATION_SITE_LABEL)
 
 
 def resolve_tenant(namespace: str, quotas: list[dict[str, Any]]) -> str | None:
@@ -43,8 +56,10 @@ def fabric_ai_job_to_job(
     meta = manifest.get("metadata") or {}
     spec = manifest.get("spec") or {}
     annotations = meta.get("annotations") or {}
+    labels = meta.get("labels") or {}
     namespace = meta.get("namespace", "default")
     name = meta.get("name", "unknown")
+    site = labels.get(FEDERATION_SITE_LABEL)
 
     gang_enabled = annotations.get("forge.ai/gang-schedule") == "true"
     gang_size_raw = annotations.get("forge.ai/gang-size")
@@ -65,6 +80,7 @@ def fabric_ai_job_to_job(
         "gpu_type": spec.get("gpuType", "any"),
         "priority": int(spec.get("priority", 0)),
         "tenant": resolve_tenant(namespace, quotas or []),
+        "site": site,
         "network_bw_gbps": network_bw,
         "gang_enabled": gang_enabled,
         "gang_size_nodes": gang_size_nodes,

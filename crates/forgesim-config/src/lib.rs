@@ -5,7 +5,8 @@ mod trace;
 
 pub use forge_bundle::{
     load_forge_bundle, load_gpu_type_registry, load_model_profiles, parse_fabric_ai_job,
-    run_forge_bundle, run_forge_bundle_report, ForgeBundle, GpuTypeRegistry, ModelProfile,
+    run_forge_bundle, run_forge_bundle_report, FederationRunMeta, ForgeBundle, GpuTypeRegistry,
+    ModelProfile,
 };
 pub use mig::{
     load_mig_registry, load_mig_registry_for_hardware, resolve_mig_registry_for_cluster,
@@ -55,6 +56,10 @@ pub struct SimulationReport {
     pub config_hash: String,
     #[serde(default)]
     pub benchmark: Option<SchedulerBenchmarkReport>,
+    /// Federation metadata from the bundle's `federation/` dir, if a
+    /// `FabricFederatedTrainingRun` was present (Forge-bundle path only).
+    #[serde(default)]
+    pub federation: Option<forge_bundle::FederationRunMeta>,
 }
 
 #[derive(Debug, Error)]
@@ -491,6 +496,7 @@ pub fn run_simulation_report_with_scheduler(
         scheduler: scheduler_name,
         config_hash,
         benchmark,
+        federation: None,
     })
 }
 

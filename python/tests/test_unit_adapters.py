@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -80,6 +81,30 @@ class TestFabricAIJobMapping(unittest.TestCase):
         job = fabric_ai_job_to_job(manifest)
         self.assertNotIn("runtime", job)
 
+    def test_site_label_carried_onto_the_job(self) -> None:
+        from forgesim.adapters.crd import fabric_ai_job_to_job
+
+        manifest = {
+            "metadata": {
+                "name": "j",
+                "namespace": "default",
+                "labels": {"forge.ai/federated-training-site": "site-a"},
+            },
+            "spec": {"gpus": 1},
+        }
+        job = fabric_ai_job_to_job(manifest)
+        self.assertEqual(job["site"], "site-a")
+
+    def test_no_site_label_means_no_site(self) -> None:
+        from forgesim.adapters.crd import fabric_ai_job_to_job
+
+        manifest = {
+            "metadata": {"name": "j", "namespace": "default"},
+            "spec": {"gpus": 1},
+        }
+        job = fabric_ai_job_to_job(manifest)
+        self.assertIsNone(job["site"])
+
 
 class TestProfileRegistry(unittest.TestCase):
     def test_lookup_known_model(self) -> None:
@@ -117,6 +142,57 @@ class TestForgeBundleAdapterUnit(unittest.TestCase):
         bundle = adapter.from_directory(FIXTURES)
         mig = next(j for j in bundle.jobs if j["name"] == "mig-inference")
         self.assertEqual(mig["gpu_count"], 2)
+
+    def test_node_sites_and_federation_run_are_recognized(self) -> None:
+        from forgesim.adapters.bundle import ForgeBundleAdapter
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "jobs").mkdir()
+            (root / "cluster").mkdir()
+            (root / "federation").mkdir()
+
+            (root / "jobs" / "job.yaml").write_text(
+                "apiVersion: forge.ai/v1\n"
+                "kind: FabricAIJob\n"
+                "metadata:\n"
+                "  name: j\n"
+                "  namespace: default\n"
+                "  labels:\n"
+                "    forge.ai/federated-training-site: site-a\n"
+                "spec:\n"
+                "  gpus: 1\n"
+            )
+            (root / "cluster" / "nodes.yaml").write_text(
+                "apiVersion: forge.ai/v1\n"
+                "kind: FabricGpuNode\n"
+                "metadata:\n"
+                "  name: n0\n"
+                "  labels:\n"
+                "    forge.ai/federated-training-site: site-a\n"
+                "spec:\n"
+                "  nodeName: n0\n"
+                "  gpuType: any\n"
+                "  gpuCount: 1\n"
+            )
+            (root / "federation" / "run.yaml").write_text(
+                "apiVersion: forge.ai/v1\n"
+                "kind: FabricFederatedTrainingRun\n"
+                "metadata:\n"
+                "  name: run-a\n"
+                "spec:\n"
+                "  targetClusters: [site-a, site-b]\n"
+                "  secureAggregation: true\n"
+                "  dropoutRecovery: true\n"
+            )
+
+            adapter = ForgeBundleAdapter()
+            bundle = adapter.from_directory(root)
+
+            self.assertEqual(bundle.jobs[0]["site"], "site-a")
+            self.assertEqual(bundle.node_sites, {"n0": "site-a"})
+            self.assertEqual(len(bundle.federation), 1)
+            self.assertEqual(bundle.federation[0]["metadata"]["name"], "run-a")
 
 
 if __name__ == "__main__":

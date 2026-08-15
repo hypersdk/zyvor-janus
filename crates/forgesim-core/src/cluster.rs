@@ -21,6 +21,10 @@ pub struct Cluster {
     /// Max GPUs a tenant may hold across running jobs, keyed by tenant name.
     /// Tenants with no entry are unrestricted.
     pub tenant_quotas: HashMap<String, u32>,
+    /// Federation site tag per node id (Forge `forge.ai/federated-training-site`
+    /// label). Nodes with no entry are unpartitioned — eligible for jobs of
+    /// any site (or no site).
+    pub node_sites: HashMap<String, String>,
     /// Scheduler decisions recorded for replay / UI animation.
     pub decision_log: Vec<crate::decision_log::SchedulerDecision>,
     /// Peak waiting queue length observed during the simulation.
@@ -43,6 +47,7 @@ impl Cluster {
             topology_runtime_inflation: 0.0,
             topology: TopologyGraph::default(),
             tenant_quotas: HashMap::new(),
+            node_sites: HashMap::new(),
             decision_log: Vec::new(),
             queue_max_length: 0,
             gang_timeout_rearm_ids: Vec::new(),
@@ -64,6 +69,11 @@ impl Cluster {
             .filter(|j| j.tenant.as_deref() == Some(tenant))
             .map(|j| j.gpu_count)
             .sum()
+    }
+
+    /// Federation site tag for `node_id`, or `None` if the node is unpartitioned.
+    pub fn node_site(&self, node_id: &str) -> Option<&str> {
+        self.node_sites.get(node_id).map(|s| s.as_str())
     }
 
     pub fn all_gpus(&self) -> impl Iterator<Item = &Gpu> {

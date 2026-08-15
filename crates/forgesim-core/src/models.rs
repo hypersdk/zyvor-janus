@@ -39,6 +39,10 @@ pub struct Job {
     pub gpu_type: Option<String>,
     #[serde(default)]
     pub namespace: Option<String>,
+    /// Federation site tag (Forge `forge.ai/federated-training-site` label).
+    /// `None` means unpartitioned — matches any node regardless of site.
+    #[serde(default)]
+    pub site: Option<String>,
     #[serde(default)]
     pub gang_enabled: bool,
     #[serde(default)]
@@ -131,6 +135,7 @@ impl Job {
             network_bw_gbps: None,
             gpu_type: None,
             namespace: None,
+            site: None,
             gang_enabled: false,
             gang_size_nodes: None,
             gang_timeout_secs: None,
