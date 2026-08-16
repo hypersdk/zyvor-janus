@@ -24,6 +24,6 @@ docs
 benchmarks
 python/examples
 python/baselines
-python/forgesim/_forgesim*.so
-python/forgesim/*.so
+python/zyvor_janus/_zyvor_janus*.so
+python/zyvor_janus/*.so
 scripts/get-pip.py

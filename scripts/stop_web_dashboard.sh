@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stop ForgeSim web dashboard servers (FastAPI + Next.js).
+# Stop Zyvor Janus web dashboard servers (FastAPI + Next.js).
 set -euo pipefail
 
 API_PORT="${API_PORT:-8080}"
@@ -11,7 +11,7 @@ usage() {
   cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Stop ForgeSim web dashboard processes started by run_web_dashboard.sh
+Stop Zyvor Janus web dashboard processes started by run_web_dashboard.sh
 (or run_web_api.sh / run_web_ui.sh).
 
 Options:
@@ -77,9 +77,9 @@ kill_listeners_on_port() {
 
 stop_api() {
   kill_listeners_on_port "$API_PORT" "FastAPI"
-  if pgrep -f "uvicorn forgesim\\.server\\.app:app" >/dev/null 2>&1; then
-    echo "Stopping remaining uvicorn (forgesim.server.app) processes..."
-    pkill -f "uvicorn forgesim\\.server\\.app:app" 2>/dev/null || true
+  if pgrep -f "uvicorn zyvor_janus\\.server\\.app:app" >/dev/null 2>&1; then
+    echo "Stopping remaining uvicorn (zyvor_janus.server.app) processes..."
+    pkill -f "uvicorn zyvor_janus\\.server\\.app:app" 2>/dev/null || true
   fi
 }
 
@@ -91,7 +91,7 @@ stop_ui() {
   fi
 }
 
-echo "Stopping ForgeSim web dashboard..."
+echo "Stopping Zyvor Janus web dashboard..."
 
 if [[ "$STOP_API" -eq 1 ]]; then
   stop_api

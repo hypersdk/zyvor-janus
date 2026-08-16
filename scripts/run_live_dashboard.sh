@@ -25,8 +25,8 @@ fi
 
 export PYTHONPATH="$ROOT/python${PYTHONPATH:+:$PYTHONPATH}"
 
-if ! "$PY" -c "import forgesim._forgesim" 2>/dev/null; then
-  echo "ForgeSim extension not built. Run ./scripts/setup_dev.sh" >&2
+if ! "$PY" -c "import zyvor_janus._zyvor_janus" 2>/dev/null; then
+  echo "Zyvor Janus extension not built. Run ./scripts/setup_dev.sh" >&2
   exit 1
 fi
 

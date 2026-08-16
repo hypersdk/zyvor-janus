@@ -82,7 +82,7 @@ find_remove() {
   )
 }
 
-echo "Cleaning ForgeSim workspace (${ROOT})..."
+echo "Cleaning Zyvor Janus workspace (${ROOT})..."
 
 # Rust / Cargo
 remove_path "$ROOT/target"

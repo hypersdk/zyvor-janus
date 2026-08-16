@@ -1,6 +1,6 @@
 # Test-only profile for the forge MIG lab scenario
 # (../forge/scripts/test-lab-mig-scheduling.sh) — not real calibration
-# data, just enough to let ZyForgeSim simulate the exported job.
+# data, just enough to let Zyvor Janus simulate the exported job.
 model: mig-dispatch-test
 profiles:
   H100:
