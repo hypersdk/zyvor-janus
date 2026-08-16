@@ -160,7 +160,7 @@ export function DashboardHome() {
   return (
     <>
       <PageHero
-        kicker="FORGESIM · MISSION CONTROL"
+        kicker="ZYVOR JANUS · MISSION CONTROL"
         titleAccent={bannerTitle}
         title=""
         subtitle={healthLabel}

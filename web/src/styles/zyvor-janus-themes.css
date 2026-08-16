@@ -1,7 +1,7 @@
 /* Zeus-inspired theme packs remapping Mission Control tokens.
-   Default is forgesim (orange). Set via html[data-theme]. */
+   Default is zyvor-janus (orange). Set via html[data-theme]. */
 
-html[data-theme="forgesim"],
+html[data-theme="zyvor-janus"],
 html:not([data-theme]) {
   color-scheme: dark;
   --hs-accent: #f0583a;
