@@ -19,7 +19,7 @@ import { ReplayControls } from "@/components/ReplayControls";
 import { ShadowRace } from "@/components/ShadowRace";
 import { TopologyView } from "@/components/TopologyView";
 import { AppLink, PageHero, Skeleton, StatusBadge, TabPanel, Tabs } from "@/components/ui";
-import { fetchEvents, fetchRun, fetchSnapshots, fetchTimeline, fetchWsTicket, pollRun, runWebSocketUrl } from "@/lib/api";
+import { fetchEvents, fetchRun, fetchShadowEvents, fetchSnapshots, fetchTimeline, fetchWsTicket, pollRun, runWebSocketUrl } from "@/lib/api";
 import { easeOut } from "@/lib/motion";
 import { useReplayStore } from "@/store/useReplayStore";
 import type { ClusterSnapshot, JobsTimeline, RunDetail, SchedulerDecision, ShadowStepEvent } from "@/types/simulation";
@@ -43,16 +43,28 @@ export function RunDetailView({ runId }: { runId: string }) {
 
     useReplayStore.getState().reset();
 
-    async function loadCompletedExtras() {
-      const [snaps, events, tl] = await Promise.all([
+    async function loadCompletedExtras(detail: RunDetail) {
+      const [snaps, events, tl, shadowEvents] = await Promise.all([
         fetchSnapshots(runId).catch(() => []),
         fetchEvents(runId).catch(() => []),
         fetchTimeline(runId).catch(() => null),
+        detail.shadow_scheduler ? fetchShadowEvents(runId).catch(() => []) : Promise.resolve([]),
       ]);
       if (cancelled) return;
       setSnapshots(snaps);
       setDecisions(events);
       setTimeline(tl);
+      if (detail.shadow_scheduler) {
+        // Reconstructs the full step-by-step race from stored decisions --
+        // needed when this run is loaded after the fact (no live WS steps
+        // were ever seen), and also corrects any undercount from a WS
+        // connection that joined mid-run.
+        const steps: ShadowStepEvent[] = [
+          ...events.map((d) => ({ side: "primary" as const, time: d.time, kind: d.kind, decisions: [d] })),
+          ...shadowEvents.map((d) => ({ side: "shadow" as const, time: d.time, kind: d.kind, decisions: [d] })),
+        ].sort((a, b) => a.time - b.time);
+        setShadowSteps(steps);
+      }
     }
 
     async function settle(detail: RunDetail) {
@@ -61,7 +73,7 @@ export function RunDetailView({ runId }: { runId: string }) {
       stopPoll?.();
       ws?.close();
       setRun(detail);
-      if (detail.status === "completed") await loadCompletedExtras();
+      if (detail.status === "completed") await loadCompletedExtras(detail);
       if (!cancelled) setPhase(detail.status === "failed" ? "failed" : "completed");
     }
 

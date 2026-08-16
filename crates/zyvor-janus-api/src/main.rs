@@ -41,6 +41,10 @@ async fn main() {
         .route("/api/runs/:id/snapshots", get(routes::runs::get_snapshots))
         .route("/api/runs/:id/timeline", get(routes::runs::get_timeline))
         .route("/api/runs/:id/events", get(routes::runs::get_events))
+        .route(
+            "/api/runs/:id/shadow-events",
+            get(routes::runs::get_shadow_events),
+        )
         .route("/api/compare", axum::routing::post(routes::batch::compare))
         .route(
             "/api/benchmark/presets",

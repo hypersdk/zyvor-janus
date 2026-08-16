@@ -75,6 +75,10 @@ export async function fetchEvents(id: string): Promise<SchedulerDecision[]> {
   return apiFetch<SchedulerDecision[]>(`/runs/${id}/events`);
 }
 
+export async function fetchShadowEvents(id: string): Promise<SchedulerDecision[]> {
+  return apiFetch<SchedulerDecision[]>(`/runs/${id}/shadow-events`);
+}
+
 export async function fetchSnapshots(id: string): Promise<ClusterSnapshot[]> {
   return apiFetch<ClusterSnapshot[]>(`/runs/${id}/snapshots`);
 }

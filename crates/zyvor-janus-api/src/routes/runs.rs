@@ -382,3 +382,21 @@ pub async fn get_events(
         .unwrap_or_default();
     Ok(Json(decisions))
 }
+
+/// `GET /api/runs/{id}/shadow-events` -- the shadow-side counterpart to
+/// `get_events`, empty for a non-shadow run or one that hasn't finished yet.
+pub async fn get_shadow_events(
+    State(state): State<AppState>,
+    AxumPath(id): AxumPath<Uuid>,
+) -> Result<impl IntoResponse, ApiError> {
+    let registry = state.inner.runs.read().await;
+    let run = registry
+        .get(&id)
+        .ok_or_else(|| ApiError::not_found("run not found"))?;
+    let decisions = run
+        .shadow_report
+        .as_ref()
+        .map(|r| r.decisions.clone())
+        .unwrap_or_default();
+    Ok(Json(decisions))
+}
