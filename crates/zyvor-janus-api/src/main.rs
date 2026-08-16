@@ -1,6 +1,7 @@
 mod auth;
 mod error;
 mod routes;
+mod run_registry;
 mod state;
 
 use axum::routing::get;
@@ -28,6 +29,14 @@ async fn main() {
 
     let authenticated_routes = Router::new()
         .route("/api/configs", get(routes::configs::list_configs))
+        .route(
+            "/api/runs",
+            get(routes::runs::list_runs).post(routes::runs::start_run),
+        )
+        .route("/api/runs/:id", get(routes::runs::get_run))
+        .route("/api/runs/:id/snapshots", get(routes::runs::get_snapshots))
+        .route("/api/runs/:id/timeline", get(routes::runs::get_timeline))
+        .route("/api/runs/:id/events", get(routes::runs::get_events))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             auth::require_bearer_token,

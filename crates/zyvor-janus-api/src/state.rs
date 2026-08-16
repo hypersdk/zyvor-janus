@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::run_registry::{new_registry, RunRegistry};
+
 /// Shared application state, mirroring the env-driven paths the Python
 /// server resolves today (`ZYVOR_JANUS_ROOT`/`CONFIG_DIR`/`RUNS_DIR`/`PROFILES_DIR`).
 #[derive(Clone)]
@@ -11,13 +13,13 @@ pub struct AppState {
 pub struct AppStateInner {
     pub repo_root: PathBuf,
     pub config_dir: PathBuf,
-    // Read starting in Phase 2 (run JSON persistence) / Phase 4 (MIG/model
-    // profile loading for run submission).
-    #[allow(dead_code)]
     pub runs_dir: PathBuf,
+    // Read starting in Phase 4 (MIG/model profile loading for run
+    // submission with explicit profile overrides).
     #[allow(dead_code)]
     pub profiles_dir: PathBuf,
     pub api_key: String,
+    pub runs: RunRegistry,
 }
 
 impl AppState {
@@ -43,6 +45,7 @@ impl AppState {
                 runs_dir,
                 profiles_dir,
                 api_key,
+                runs: new_registry(),
             }),
         }
     }
