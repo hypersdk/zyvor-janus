@@ -15,3 +15,4 @@ pyo3 = { workspace = true }
 zyvor-janus-core = { path = "../zyvor-janus-core" }
 zyvor-janus-config = { path = "../zyvor-janus-config" }
 zyvor-janus-metrics = { path = "../zyvor-janus-metrics" }
+zyvor-janus-simulator = { path = "../zyvor-janus-simulator" }

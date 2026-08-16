@@ -5,11 +5,12 @@ use std::fs;
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
-use zyvor_janus_core::cluster::Cluster;
-use zyvor_janus_core::engine::{Scheduler, SimulationEngine};
-use zyvor_janus_core::models::{Job, JobState};
 use zyvor_janus_metrics::SimulationMetrics;
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::{Job, JobState};
+use zyvor_janus_scheduler::Scheduler;
 use zyvor_janus_scheduler::{BestFitScheduler, FifoScheduler, ForgeScheduler, PriorityScheduler};
+use zyvor_janus_simulator::SimulationEngine;
 
 use crate::{
     build_cluster, build_resource_manager, load_hardware_profiles, load_simulation_config,
@@ -446,7 +447,7 @@ pub fn parse_trace_line(line: &str) -> ConfigResult<TraceEvent> {
 mod tests {
     use super::*;
     use std::path::PathBuf;
-    use zyvor_janus_core::models::{Gpu, Node};
+    use zyvor_janus_model::models::{Gpu, Node};
 
     fn one_gpu_cluster() -> Cluster {
         Cluster::new(vec![Node {

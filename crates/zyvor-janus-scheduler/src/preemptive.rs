@@ -1,7 +1,7 @@
-use zyvor_janus_core::cluster::Cluster;
-use zyvor_janus_core::engine::Scheduler;
-use zyvor_janus_core::models::{Job, Placement};
-use zyvor_janus_core::resource::ResourceManager;
+use crate::resource::ResourceManager;
+use crate::Scheduler;
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::{Job, Placement};
 
 /// A job that's already been preempted this many times becomes exempt from
 /// further preemption, so a persistently low-priority job still eventually
@@ -160,7 +160,7 @@ fn attempt_preemption(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use zyvor_janus_core::models::{Gpu, Node};
+    use zyvor_janus_model::models::{Gpu, Node};
 
     fn one_gpu_cluster() -> Cluster {
         Cluster::new(vec![Node {
@@ -278,7 +278,10 @@ mod tests {
         let rm = ResourceManager::new();
         sched.schedule(&mut cluster, &rm);
 
-        assert!(cluster.decision_log.iter().any(|d| d.kind == "job_preempted"));
+        assert!(cluster
+            .decision_log
+            .iter()
+            .any(|d| d.kind == "job_preempted"));
     }
 
     #[test]

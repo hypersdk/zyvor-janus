@@ -1,8 +1,8 @@
-use crate::cluster::Cluster;
-use crate::events::{Event, EventKind, EventQueue};
-use crate::models::{Job, JobState, Placement};
-use crate::resource::ResourceManager;
 use crate::snapshot::{obs_size, ClusterSnapshot, DEFAULT_OBS_TOP_K};
+use zyvor_janus_core::events::{Event, EventKind, EventQueue};
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::{Job, JobState, Placement};
+use zyvor_janus_scheduler::resource::ResourceManager;
 
 #[derive(Debug, Clone)]
 pub struct StepResult {
@@ -101,7 +101,7 @@ impl RlSession {
         self.observe().to_feature_vector()
     }
 
-    pub fn decisions(&self) -> &[crate::decision_log::SchedulerDecision] {
+    pub fn decisions(&self) -> &[zyvor_janus_core::decision_log::SchedulerDecision] {
         &self.cluster.decision_log
     }
 
@@ -211,7 +211,7 @@ impl RlSession {
         self.cluster
             .start_job(job.clone(), &placement.gpu_ids, placement.start_time);
         self.cluster.record_decision(
-            crate::decision_log::SchedulerDecision::new(
+            zyvor_janus_core::decision_log::SchedulerDecision::new(
                 placement.start_time,
                 "job_scheduled",
                 format!(

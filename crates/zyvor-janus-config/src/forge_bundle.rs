@@ -6,9 +6,9 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 use serde_yaml::Value;
-use zyvor_janus_core::cluster::Cluster;
-use zyvor_janus_core::models::{Gpu, Job, Node};
 use zyvor_janus_metrics::{JobsTimeline, SimulationMetrics};
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::{Gpu, Job, Node};
 use zyvor_janus_topology::TopologyGraph;
 
 use crate::{

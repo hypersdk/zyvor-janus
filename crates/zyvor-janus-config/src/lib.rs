@@ -29,15 +29,16 @@ pub use trace::{
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use zyvor_janus_core::cluster::Cluster;
-use zyvor_janus_core::engine::{Scheduler, SimulationEngine};
-use zyvor_janus_core::inference::{estimate_inference, InferenceProfile, InferenceRequest};
-use zyvor_janus_core::models::{Gpu, Job, Node};
-use zyvor_janus_core::resource::{GpuSelectionPolicy, ResourceManager};
-use zyvor_janus_core::rl::RlSession;
-use zyvor_janus_core::snapshot::ClusterSnapshot;
 use zyvor_janus_metrics::{CostModel, JobsTimeline, SchedulerBenchmarkReport, SimulationMetrics};
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::{Gpu, Job, Node};
+use zyvor_janus_scheduler::resource::{GpuSelectionPolicy, ResourceManager};
+use zyvor_janus_scheduler::Scheduler;
 use zyvor_janus_scheduler::{BestFitScheduler, FifoScheduler, ForgeScheduler, PriorityScheduler};
+use zyvor_janus_simulator::inference::{estimate_inference, InferenceProfile, InferenceRequest};
+use zyvor_janus_simulator::rl::RlSession;
+use zyvor_janus_simulator::snapshot::ClusterSnapshot;
+use zyvor_janus_simulator::SimulationEngine;
 use zyvor_janus_topology::TopologyGraph;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -47,7 +48,7 @@ pub struct SimulationReport {
     #[serde(default)]
     pub decisions: Vec<zyvor_janus_core::SchedulerDecision>,
     #[serde(default)]
-    pub snapshots: Vec<zyvor_janus_core::ClusterSnapshot>,
+    pub snapshots: Vec<zyvor_janus_simulator::ClusterSnapshot>,
     #[serde(default)]
     pub scheduler: String,
     #[serde(default)]
@@ -559,12 +560,12 @@ pub fn load_rl_session(config_path: &Path) -> ConfigResult<RlSession> {
         cluster,
         resource_manager,
         jobs,
-        zyvor_janus_core::DEFAULT_OBS_TOP_K,
+        zyvor_janus_simulator::DEFAULT_OBS_TOP_K,
     ))
 }
 
 pub fn build_resource_manager(
-    mig_registry: Option<zyvor_janus_core::mig::MigProfileRegistry>,
+    mig_registry: Option<zyvor_janus_model::mig::MigProfileRegistry>,
     scheduler: &str,
 ) -> ResourceManager {
     let rm = match mig_registry {

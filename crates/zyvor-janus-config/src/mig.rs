@@ -3,7 +3,7 @@
 use std::fs;
 use std::path::Path;
 
-use zyvor_janus_core::{MigHardwareConfig, MigProfileRegistry};
+use zyvor_janus_model::{MigHardwareConfig, MigProfileRegistry};
 
 use crate::{ConfigError, ConfigResult};
 

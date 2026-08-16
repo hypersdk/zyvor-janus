@@ -26,7 +26,7 @@ pub struct Cluster {
     /// any site (or no site).
     pub node_sites: HashMap<String, String>,
     /// Scheduler decisions recorded for replay / UI animation.
-    pub decision_log: Vec<crate::decision_log::SchedulerDecision>,
+    pub decision_log: Vec<zyvor_janus_core::decision_log::SchedulerDecision>,
     /// Peak waiting queue length observed during the simulation.
     pub queue_max_length: usize,
     /// Gang jobs requeued after preemption that need a new timeout event.
@@ -58,7 +58,7 @@ impl Cluster {
         self.gang_timeout_rearm_ids.push(job_id.into());
     }
 
-    pub fn record_decision(&mut self, decision: crate::decision_log::SchedulerDecision) {
+    pub fn record_decision(&mut self, decision: zyvor_janus_core::decision_log::SchedulerDecision) {
         self.decision_log.push(decision);
     }
 

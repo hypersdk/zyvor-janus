@@ -465,7 +465,9 @@ dependencies = [
  "thiserror",
  "zyvor-janus-core",
  "zyvor-janus-metrics",
+ "zyvor-janus-model",
  "zyvor-janus-scheduler",
+ "zyvor-janus-simulator",
  "zyvor-janus-topology",
 ]
 
@@ -476,7 +478,6 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
- "zyvor-janus-topology",
 ]
 
 [[package]]
@@ -486,6 +487,16 @@ dependencies = [
  "serde",
  "serde_json",
  "zyvor-janus-core",
+ "zyvor-janus-model",
+]
+
+[[package]]
+name = "zyvor-janus-model"
+version = "0.2.0"
+dependencies = [
+ "serde",
+ "zyvor-janus-core",
+ "zyvor-janus-topology",
 ]
 
 [[package]]
@@ -496,6 +507,7 @@ dependencies = [
  "zyvor-janus-config",
  "zyvor-janus-core",
  "zyvor-janus-metrics",
+ "zyvor-janus-simulator",
 ]
 
 [[package]]
@@ -503,6 +515,18 @@ name = "zyvor-janus-scheduler"
 version = "0.2.0"
 dependencies = [
  "zyvor-janus-core",
+ "zyvor-janus-model",
+ "zyvor-janus-topology",
+]
+
+[[package]]
+name = "zyvor-janus-simulator"
+version = "0.2.0"
+dependencies = [
+ "serde",
+ "zyvor-janus-core",
+ "zyvor-janus-model",
+ "zyvor-janus-scheduler",
 ]
 
 [[package]]

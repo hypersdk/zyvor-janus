@@ -1,13 +1,12 @@
 [package]
-name = "zyvor-janus-metrics"
+name = "zyvor-janus-model"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
-description = "Zyvor Janus simulation metrics"
+description = "Zyvor Janus domain model: cluster state, node/GPU/job types, and MIG partitioning"
 
 [dependencies]
 zyvor-janus-core = { path = "../zyvor-janus-core" }
-zyvor-janus-model = { path = "../zyvor-janus-model" }
+zyvor-janus-topology = { path = "../zyvor-janus-topology" }
 serde = { workspace = true }
-serde_json = { workspace = true }

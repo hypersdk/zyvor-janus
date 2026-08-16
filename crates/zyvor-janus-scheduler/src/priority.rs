@@ -1,7 +1,7 @@
-use zyvor_janus_core::cluster::Cluster;
-use zyvor_janus_core::engine::Scheduler;
-use zyvor_janus_core::models::Placement;
-use zyvor_janus_core::resource::ResourceManager;
+use crate::resource::ResourceManager;
+use crate::Scheduler;
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::Placement;
 
 use crate::common::place_in_order;
 
@@ -24,7 +24,7 @@ impl Scheduler for PriorityScheduler {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use zyvor_janus_core::models::{Gpu, Job, Node};
+    use zyvor_janus_model::models::{Gpu, Job, Node};
 
     #[test]
     fn priority_schedules_higher_priority_job_first_despite_later_arrival() {
