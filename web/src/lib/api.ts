@@ -48,11 +48,18 @@ export async function fetchRuns(): Promise<RunSummary[]> {
   return apiFetch<RunSummary[]>("/runs");
 }
 
-export async function startRun(config: string): Promise<{ id: string }> {
+export async function startRun(
+  config: string,
+  opts?: { scheduler?: string; shadowScheduler?: string }
+): Promise<{ id: string }> {
   return apiFetch<{ id: string }>("/runs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ config }),
+    body: JSON.stringify({
+      config,
+      scheduler: opts?.scheduler,
+      shadow_scheduler: opts?.shadowScheduler || undefined,
+    }),
   });
 }
 
