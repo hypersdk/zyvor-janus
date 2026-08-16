@@ -1,9 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { COOKIE_NAME, isAuthEnabled, isPublicPath, verifySessionToken } from "@/lib/auth";
 
+/**
+ * Paths that next.config.js's rewrites() proxy through to zyvor-janus-api
+ * (excluding /api/auth/* -- those are Next's own route handlers and never
+ * reach the Rust backend, per next.config.js's comment on rewrite ordering).
+ */
+function isBackendPath(pathname: string): boolean {
+  return pathname.startsWith("/api/") || pathname.startsWith("/ws/");
+}
+
+/**
+ * zyvor-janus-api requires this shared secret as a bearer token on every
+ * route except /api/health (see crates/zyvor-janus-api/src/auth.rs). Reused
+ * from the OpenAI-shim's existing env var. Injected here, server-side only,
+ * so the browser never sees it -- it only ever holds the session cookie.
+ */
+function withBackendAuth(request: NextRequest): NextResponse {
+  const headers = new Headers(request.headers);
+  headers.set("Authorization", `Bearer ${process.env.ZYVOR_JANUS_API_KEY ?? "dev-zyvor-janus-key"}`);
+  return NextResponse.next({ request: { headers } });
+}
+
+function proceed(request: NextRequest): NextResponse {
+  return isBackendPath(request.nextUrl.pathname) ? withBackendAuth(request) : NextResponse.next();
+}
+
 export async function middleware(request: NextRequest) {
   if (!isAuthEnabled()) {
-    return NextResponse.next();
+    return proceed(request);
   }
 
   const { pathname } = request.nextUrl;
@@ -18,7 +43,7 @@ export async function middleware(request: NextRequest) {
 
   const token = request.cookies.get(COOKIE_NAME)?.value;
   if (await verifySessionToken(token)) {
-    return NextResponse.next();
+    return proceed(request);
   }
 
   if (pathname.startsWith("/api/")) {

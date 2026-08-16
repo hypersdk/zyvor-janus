@@ -17,7 +17,7 @@ import { QueueTable } from "@/components/QueueTable";
 import { ReplayControls } from "@/components/ReplayControls";
 import { TopologyView } from "@/components/TopologyView";
 import { AppLink, PageHero, Skeleton, StatusBadge, TabPanel, Tabs } from "@/components/ui";
-import { fetchEvents, fetchRun, fetchSnapshots, fetchTimeline, pollRun, runWebSocketUrl } from "@/lib/api";
+import { fetchEvents, fetchRun, fetchSnapshots, fetchTimeline, fetchWsTicket, pollRun, runWebSocketUrl } from "@/lib/api";
 import { easeOut } from "@/lib/motion";
 import { useReplayStore } from "@/store/useReplayStore";
 import type { ClusterSnapshot, JobsTimeline, RunDetail, SchedulerDecision } from "@/types/simulation";
@@ -91,7 +91,9 @@ export function RunDetailView({ runId }: { runId: string }) {
 
       setPhase("live");
       try {
-        ws = new WebSocket(runWebSocketUrl(runId));
+        const ticket = await fetchWsTicket(runId);
+        if (cancelled) return;
+        ws = new WebSocket(runWebSocketUrl(runId, ticket));
       } catch {
         fallbackToPolling();
         return;
