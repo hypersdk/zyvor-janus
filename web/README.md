@@ -1,6 +1,6 @@
-# ForgeSim Web Dashboard
+# Zyvor Janus Web Dashboard
 
-Next.js frontend for monitoring ForgeSim simulations and benchmark scenarios.
+Next.js frontend for monitoring Zyvor Janus simulations and benchmark scenarios.
 
 **Full documentation:** [../docs/ui_dashboard.md](../docs/ui_dashboard.md)
 
@@ -58,7 +58,7 @@ The web UI matches the [Zyvor](https://zyvor.dev) / HyperSDK dark palette:
 - CSS variables: [`src/styles/zyvor-tokens.css`](src/styles/zyvor-tokens.css)
 - Tailwind mapping: [`tailwind.config.ts`](tailwind.config.ts)
 - Chart/topology constants: [`src/lib/theme.ts`](src/lib/theme.ts)
-- Shared Python palette (CLI + matplotlib): [`../python/forgesim/theme.py`](../python/forgesim/theme.py)
+- Shared Python palette (CLI + matplotlib): [`../python/zyvor_janus/theme.py`](../python/zyvor_janus/theme.py)
 
 Fonts: **Inter** (UI), **JetBrains Mono** (metrics). Header uses the Zyvor logo from `public/zyvor-logo.png`.
 

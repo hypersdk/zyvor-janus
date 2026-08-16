@@ -1,4 +1,4 @@
-# ForgeSim Milestones
+# Zyvor Janus Milestones
 
 | Milestone | Status | Deliverable |
 |-----------|--------|-------------|
@@ -17,15 +17,15 @@
 - [x] Correct GPU count for distributed/gang jobs (32 not 8)
 - [x] Tenant resolved from `FabricQuota`, not job spec
 - [x] Calibrated profiles with fail-on-missing runtime
-- [x] `forge-sim run --forge-bundle` CLI
+- [x] `zyvor-janus run --forge-bundle` CLI
 - [x] Golden fixtures in `tests/fixtures/forge/`
 - [x] Export workflow documented in `docs/forge_input.md`
 
 ## M3 success criteria
 
 - [x] JSONL trace format with `JobSubmitted` / `JobScheduled` events
-- [x] `TraceAdapter` (Python) + `forgesim-config::trace` (Rust)
-- [x] `forge-sim replay --trace` CLI with cluster from config or forge bundle
+- [x] `TraceAdapter` (Python) + `zyvor-janus-config::trace` (Rust)
+- [x] `zyvor-janus replay --trace` CLI with cluster from config or forge bundle
 - [x] Oracle vs simulated placement diff report JSON
 - [x] Golden fixture `tests/fixtures/traces/fifo_match.jsonl`
 
@@ -33,29 +33,29 @@
 
 ```bash
 # Internal synthetic workload (M1)
-cargo run -p forgesim-cli -- run --config configs/clusters/small_h100.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/small_h100.yaml
 
 # Forge export bundle (M2)
-cargo run -p forgesim-cli -- run --forge-bundle tests/fixtures/forge --profiles-dir configs/profiles
+cargo run -p zyvor-janus-cli -- run --forge-bundle tests/fixtures/forge --profiles-dir configs/profiles
 
 # Trace replay + decision diff (M3)
-cargo run -p forgesim-cli -- replay \
+cargo run -p zyvor-janus-cli -- replay \
   --trace tests/fixtures/traces/fifo_match.jsonl \
   --config configs/clusters/single_gpu.yaml
 
 # Priority / preemption (M6)
-cargo run -p forgesim-cli -- run --config configs/clusters/preemption_preemptive.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/preemption_preemptive.yaml
 
 # Topology + gang (M5 / M6)
-cargo run -p forgesim-cli -- run --config configs/clusters/topology_penalty.yaml
-cargo run -p forgesim-cli -- run --config configs/clusters/gang_m6.yaml
-cargo run -p forgesim-cli -- run --config configs/clusters/gang_timeout_m6.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/topology_penalty.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/gang_m6.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/gang_timeout_m6.yaml
 
 # Inference metrics (P1)
-cargo run -p forgesim-cli -- run --config configs/clusters/inference_llama.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/inference_llama.yaml
 
 # Timeline export + viz (M8)
-cargo run -p forgesim-cli -- run \
+cargo run -p zyvor-janus-cli -- run \
   --config configs/clusters/small_h100.yaml \
   --jobs-output outputs/jobs.json
 
@@ -68,11 +68,11 @@ cargo run -p forgesim-cli -- run \
 
 ```bash
 # Rust unit tests (all crates)
-cargo test --workspace --exclude forgesim-py
+cargo test --workspace --exclude zyvor-janus-py
 
 # Rust integration tests
-cargo test -p forgesim-config --test integration
-cargo test -p forgesim-cli --test cli_integration
+cargo test -p zyvor-janus-config --test integration
+cargo test -p zyvor-janus-cli --test cli_integration
 
 # Python unit + integration tests
 PYTHONPATH=python python3 -m unittest discover -s python/tests -v
@@ -84,7 +84,7 @@ bash benchmarks/ci/run_golden.sh
 ### MIG simulation (M4)
 
 ```bash
-cargo run -p forgesim-cli -- run --config configs/clusters/mig_single.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/mig_single.yaml
 ```
 
 ## M4 success criteria
@@ -119,7 +119,7 @@ cargo run -p forgesim-cli -- run --config configs/clusters/mig_single.yaml
 
 - [x] `RlSession` stepped DES interface in Rust
 - [x] `SimSession` PyO3 bindings (`reset`, `observe`, `step`, `metrics`)
-- [x] `ForgeSimEnv` Gymnasium wrapper
+- [x] `ZyvorJanusEnv` Gymnasium wrapper
 - [x] PPO baseline in `python/baselines/ppo_cleanrl.py`
 - [x] Integration test `integration_rl_session_fifo_completes`
 
@@ -137,14 +137,14 @@ PYTHONPATH=python python3 -m unittest python.tests.test_rl_env -v
 ## M8 success criteria
 
 - [x] `JobsTimeline` JSON export via `--jobs-output`
-- [x] Python `forgesim.viz` module (Gantt + GPU heatmap)
+- [x] Python `zyvor_janus.viz` module (Gantt + GPU heatmap)
 - [x] Example script `python/examples/plot_run.py`
 - [x] Integration test `integration_simulation_writes_jobs_timeline`
 
 ### Visualization (M8)
 
 ```bash
-cargo run -p forgesim-cli -- run \
+cargo run -p zyvor-janus-cli -- run \
   --config configs/clusters/small_h100.yaml \
   --jobs-output outputs/jobs.json
 pip install -e '.[viz]'
@@ -153,7 +153,7 @@ python python/examples/plot_run.py outputs/jobs.json
 
 ## Benchmark platform (P0–P10)
 
-Extends ForgeSim from GPU scheduler simulation into a platform connecting **scheduling decisions** to **LLM serving metrics** (TTFT, TPS, goodput), with AIPerf calibration and optional digital twin.
+Extends Zyvor Janus from GPU scheduler simulation into a platform connecting **scheduling decisions** to **LLM serving metrics** (TTFT, TPS, goodput), with AIPerf calibration and optional digital twin.
 
 | Phase | Status | Deliverable |
 |-------|--------|-------------|
