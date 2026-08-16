@@ -1,10 +1,10 @@
-use zyvor_janus_config::{load_rl_session, run_simulation, run_simulation_report_with_scheduler};
-use zyvor_janus_core::rl::RlSession;
-use zyvor_janus_core::ClusterSnapshot;
-use zyvor_janus_metrics::SimulationMetrics;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
+use zyvor_janus_config::{load_rl_session, run_simulation, run_simulation_report_with_scheduler};
+use zyvor_janus_metrics::SimulationMetrics;
+use zyvor_janus_simulator::rl::RlSession;
+use zyvor_janus_simulator::ClusterSnapshot;
 
 #[pyclass]
 #[derive(Clone)]
@@ -153,7 +153,10 @@ impl SimSession {
     }
 }
 
-fn job_snapshot_to_py(py: Python<'_>, job: &zyvor_janus_core::JobSnapshot) -> PyResult<Py<PyAny>> {
+fn job_snapshot_to_py(
+    py: Python<'_>,
+    job: &zyvor_janus_simulator::JobSnapshot,
+) -> PyResult<Py<PyAny>> {
     let dict = PyDict::new_bound(py);
     dict.set_item("id", &job.id)?;
     dict.set_item("name", &job.name)?;
@@ -230,7 +233,7 @@ fn snapshot_to_py(py: Python<'_>, snap: &ClusterSnapshot) -> PyResult<Py<PyAny>>
 
 fn step_result_to_py(
     py: Python<'_>,
-    result: &zyvor_janus_core::StepResult,
+    result: &zyvor_janus_simulator::StepResult,
 ) -> PyResult<Py<PyAny>> {
     let dict = PyDict::new_bound(py);
     dict.set_item("observation", snapshot_to_py(py, &result.observation)?)?;
@@ -273,11 +276,8 @@ fn run_report_from_config(
     config_path: &str,
     scheduler: Option<&str>,
 ) -> PyResult<Py<PyAny>> {
-    let report = run_simulation_report_with_scheduler(
-        std::path::Path::new(config_path),
-        scheduler,
-    )
-    .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+    let report = run_simulation_report_with_scheduler(std::path::Path::new(config_path), scheduler)
+        .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
     let dict = PyDict::new_bound(py);
     dict.set_item("metrics", SimResult::from(report.metrics))?;
     dict.set_item("timeline", report.timeline.to_json_pretty())?;

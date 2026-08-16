@@ -2,21 +2,12 @@
 
 use std::collections::HashMap;
 
-use zyvor_janus_core::cluster::Cluster;
-use zyvor_janus_core::models::JobState;
 use serde::{Deserialize, Serialize};
+use zyvor_janus_cost::CostModel;
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::JobState;
 
 use crate::SimulationMetrics;
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct CostModel {
-    #[serde(default = "default_gpu_hour_usd")]
-    pub gpu_hour_usd: f64,
-}
-
-fn default_gpu_hour_usd() -> f64 {
-    3.50
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SchedulerBenchmarkReport {
@@ -102,8 +93,14 @@ impl SchedulerBenchmarkReport {
 fn normalize_score(key: &str, value: f64) -> f64 {
     match key {
         "gpu_utilization" | "goodput" | "jain_fairness" | "tps_mean" => value.min(1.0),
-        "makespan" | "mean_cumulative_wait" | "queue_delay_p99" | "ttft_p50" | "ttft_p99"
-        | "fragmentation" | "cost_usd" | "preemptions" => 1.0 / (1.0 + value.max(0.0)),
+        "makespan"
+        | "mean_cumulative_wait"
+        | "queue_delay_p99"
+        | "ttft_p50"
+        | "ttft_p99"
+        | "fragmentation"
+        | "cost_usd"
+        | "preemptions" => 1.0 / (1.0 + value.max(0.0)),
         _ => value,
     }
 }
@@ -153,7 +150,7 @@ fn gpu_fragmentation(cluster: &Cluster, makespan: f64) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use zyvor_janus_core::models::{Gpu, Job, Node};
+    use zyvor_janus_model::models::{Gpu, Job, Node};
 
     #[test]
     fn composite_score_changes_with_weights() {

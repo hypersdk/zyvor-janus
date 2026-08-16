@@ -6,11 +6,11 @@ use zyvor_janus_config::{
     load_forge_bundle, run_forge_bundle, run_simulation, run_trace_file, trace_diff_to_json,
     TraceDiffReport,
 };
-use zyvor_janus_core::cluster::Cluster;
-use zyvor_janus_core::engine::SimulationEngine;
-use zyvor_janus_core::models::{Gpu, Job, JobState, Node};
-use zyvor_janus_core::resource::ResourceManager;
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::{Gpu, Job, JobState, Node};
+use zyvor_janus_scheduler::resource::ResourceManager;
 use zyvor_janus_scheduler::ForgeScheduler;
+use zyvor_janus_simulator::SimulationEngine;
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -244,7 +244,8 @@ fn integration_trace_replay_matches_fifo_oracle() {
     if !trace.exists() || !cluster_config.exists() {
         return;
     }
-    let cluster = zyvor_janus_config::load_cluster_from_config(&cluster_config).expect("load cluster");
+    let cluster =
+        zyvor_janus_config::load_cluster_from_config(&cluster_config).expect("load cluster");
     let result = run_trace_file(&trace, cluster, "fifo").expect("trace replay");
     assert_eq!(result.report.differing_placements, 0);
     assert_eq!(result.report.matching_placements, 2);
@@ -257,7 +258,8 @@ fn integration_trace_diff_report_serializes() {
     if !trace.exists() || !cluster_config.exists() {
         return;
     }
-    let cluster = zyvor_janus_config::load_cluster_from_config(&cluster_config).expect("load cluster");
+    let cluster =
+        zyvor_janus_config::load_cluster_from_config(&cluster_config).expect("load cluster");
     let result = run_trace_file(&trace, cluster, "fifo").expect("trace replay");
     let json = trace_diff_to_json(&result.report);
     assert!(json.contains("\"matching_placements\": 2"));
@@ -369,7 +371,10 @@ fn integration_topology_runtime_inflation_on_cross_domain_placement() {
         .iter()
         .find(|j| j.name == "cross-domain")
         .expect("job");
-    assert_eq!(job.finish_time, Some(10.0 + report.metrics.topology_runtime_inflation));
+    assert_eq!(
+        job.finish_time,
+        Some(10.0 + report.metrics.topology_runtime_inflation)
+    );
 }
 
 #[test]
@@ -386,10 +391,8 @@ fn integration_rl_session_fifo_completes() {
         let action = if obs.waiting > 0 { 0 } else { top_k };
         session.step(action);
     }
-    let metrics = zyvor_janus_metrics::SimulationMetrics::from_cluster(
-        &session.cluster,
-        session.jobs_total,
-    );
+    let metrics =
+        zyvor_janus_metrics::SimulationMetrics::from_cluster(&session.cluster, session.jobs_total);
     assert_eq!(metrics.jobs_completed, metrics.jobs_total);
     assert!(metrics.makespan > 0.0);
 }
@@ -421,7 +424,7 @@ fn integration_preemption_gpu_utilization_accounts_all_segments() {
 #[test]
 fn integration_preemption_restart_penalty_delays_resumed_job() {
     use zyvor_janus_config::load_simulation_config;
-    use zyvor_janus_core::engine::SimulationEngine;
+    use zyvor_janus_simulator::SimulationEngine;
 
     let config_path = repo_root().join("configs/clusters/preemption_preemptive.yaml");
     if !config_path.exists() {
@@ -468,7 +471,10 @@ fn integration_gpu_type_blocks_mismatched_hardware() {
     job.gpu_type = Some("H100_80GB".into());
     assert!(rm.can_place(&cluster, &job));
     let placement = rm.allocate(&mut cluster, &job, 0.0).unwrap();
-    assert_eq!(cluster.gpu(&placement.gpu_ids[0]).unwrap().profile, "H100_80GB");
+    assert_eq!(
+        cluster.gpu(&placement.gpu_ids[0]).unwrap().profile,
+        "H100_80GB"
+    );
 }
 
 #[test]
@@ -477,8 +483,8 @@ fn integration_trace_diff_includes_failure_metadata() {
     if !cluster_config.exists() {
         return;
     }
-    let report =
-        zyvor_janus_config::run_simulation_report(&cluster_config).expect("gang timeout simulation");
+    let report = zyvor_janus_config::run_simulation_report(&cluster_config)
+        .expect("gang timeout simulation");
     assert_eq!(report.metrics.jobs_failed, 1);
     assert_eq!(report.metrics.jobs_completed, 1);
 }

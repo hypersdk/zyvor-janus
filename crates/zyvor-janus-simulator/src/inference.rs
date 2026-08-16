@@ -54,7 +54,7 @@ pub struct InferenceRequest {
 }
 
 impl InferenceRequest {
-    pub fn from_job(job: &crate::models::Job) -> Option<Self> {
+    pub fn from_job(job: &zyvor_janus_model::models::Job) -> Option<Self> {
         let input_tokens = job.input_tokens?;
         let output_tokens = job.output_tokens?;
         Some(Self {
@@ -99,15 +99,6 @@ pub fn estimate_inference(profile: &InferenceProfile, req: InferenceRequest) -> 
         tps: effective_tps,
         itl_secs,
     }
-}
-
-pub fn percentile(values: &mut [f64], p: f64) -> f64 {
-    if values.is_empty() {
-        return 0.0;
-    }
-    values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-    let idx = ((values.len() as f64 - 1.0) * p).round() as usize;
-    values[idx.min(values.len() - 1)]
 }
 
 #[cfg(test)]

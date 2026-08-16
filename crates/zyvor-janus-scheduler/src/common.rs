@@ -1,6 +1,6 @@
-use zyvor_janus_core::cluster::Cluster;
-use zyvor_janus_core::models::{Job, Placement};
-use zyvor_janus_core::resource::ResourceManager;
+use crate::resource::ResourceManager;
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::{Job, Placement};
 
 /// Try to place each job in `ordered` (already sorted by queue policy),
 /// skipping jobs that don't currently fit (insufficient GPUs, quota, etc.).
