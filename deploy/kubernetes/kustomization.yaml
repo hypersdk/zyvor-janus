@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: forgesim
+namespace: zyvor-janus
 
 resources:
   - namespace.yaml
@@ -10,11 +10,11 @@ resources:
   - ingress.yaml
 
 images:
-  # BEGIN forgesim-images (managed by deploy/build-images.sh — do not hand-edit)
-  - name: forgesim-api
-    newName: forgesim-api
+  # BEGIN zyvor-janus-images (managed by deploy/build-images.sh — do not hand-edit)
+  - name: zyvor-janus-api
+    newName: zyvor-janus-api
     newTag: "0.1.0"
-  - name: forgesim-web
-    newName: forgesim-web
+  - name: zyvor-janus-web
+    newName: zyvor-janus-web
     newTag: "0.1.0"
-  # END forgesim-images
+  # END zyvor-janus-images

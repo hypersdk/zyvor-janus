@@ -1,15 +1,15 @@
-# ForgeSim on Kubernetes
+# Zyvor Janus on Kubernetes
 
-Deploy the ForgeSim web dashboard (FastAPI API + Next.js UI) to a Kubernetes cluster.
+Deploy the Zyvor Janus web dashboard (FastAPI API + Next.js UI) to a Kubernetes cluster.
 
 ## Architecture
 
 ```text
 Ingress (nginx)
-  /api/auth/*  → forgesim-web:3000   (Next.js login)
-  /api/*       → forgesim-api:8080   (FastAPI + Rust sim)
-  /ws/*        → forgesim-api:8080   (WebSocket replay)
-  /*           → forgesim-web:3000   (UI)
+  /api/auth/*  → zyvor-janus-web:3000   (Next.js login)
+  /api/*       → zyvor-janus-api:8080   (FastAPI + Rust sim)
+  /ws/*        → zyvor-janus-api:8080   (WebSocket replay)
+  /*           → zyvor-janus-web:3000   (UI)
 ```
 
 ## Prerequisites
@@ -43,7 +43,7 @@ No remote cluster needed — this runs entirely on your machine.
 
 ```bash
 # 1. Create a local cluster
-kind create cluster --name forgesim
+kind create cluster --name zyvor-janus
 
 # 2. Build images (auto-syncs kustomization.yaml, see above)
 ./deploy/build-images.sh
@@ -51,23 +51,23 @@ kind create cluster --name forgesim
 # 3. Load the locally-built images into kind — kind's nodes run their own
 #    containerd, separate from your host Docker daemon, so images built with
 #    `docker build` aren't visible until loaded explicitly
-kind load docker-image forgesim-api:0.1.0 forgesim-web:0.1.0 --name forgesim
+kind load docker-image zyvor-janus-api:0.1.0 zyvor-janus-web:0.1.0 --name zyvor-janus
 
 # 4. Configure auth (see "2. Configure auth" below) and deploy (see "3. Deploy" below)
 cd deploy/kubernetes
 cp secret.example.yaml secret.yaml   # edit credentials
 kubectl apply -f secret.yaml
 kubectl apply -k .
-kubectl -n forgesim rollout status deploy/forgesim-api
-kubectl -n forgesim rollout status deploy/forgesim-web
+kubectl -n zyvor-janus rollout status deploy/zyvor-janus-api
+kubectl -n zyvor-janus rollout status deploy/zyvor-janus-web
 
 # 5. Reach the dashboard (port-forward — simplest, no ingress controller needed)
-kubectl -n forgesim port-forward svc/forgesim-web 3000:3000 &
-kubectl -n forgesim port-forward svc/forgesim-api 8080:8080 &
+kubectl -n zyvor-janus port-forward svc/zyvor-janus-web 3000:3000 &
+kubectl -n zyvor-janus port-forward svc/zyvor-janus-api 8080:8080 &
 open http://localhost:3000   # log in with credentials from secret.yaml
 ```
 
-If you used a different `TAG` when building, pass the same tag to `kind load docker-image` (e.g. `forgesim-api:$TAG forgesim-web:$TAG`).
+If you used a different `TAG` when building, pass the same tag to `kind load docker-image` (e.g. `zyvor-janus-api:$TAG zyvor-janus-web:$TAG`).
 
 ### Optional: exercise the real Ingress on kind
 
@@ -78,18 +78,18 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main
 kubectl -n ingress-nginx wait --for=condition=ready pod \
   --selector=app.kubernetes.io/component=controller --timeout=120s
 
-echo "127.0.0.1 forgesim.example.com" | sudo tee -a /etc/hosts
-open http://forgesim.example.com
+echo "127.0.0.1 zyvor-janus.example.com" | sudo tee -a /etc/hosts
+open http://zyvor-janus.example.com
 ```
 
 ### Optional: minikube instead of kind
 
 ```bash
-minikube start -p forgesim
-eval $(minikube -p forgesim docker-env)   # build directly into minikube's runtime
+minikube start -p zyvor-janus
+eval $(minikube -p zyvor-janus docker-env)   # build directly into minikube's runtime
 ./deploy/build-images.sh                  # skip `kind load` — no separate load step needed
 kubectl apply -f secret.yaml && kubectl apply -k .
-minikube -p forgesim service forgesim-web -n forgesim --url
+minikube -p zyvor-janus service zyvor-janus-web -n zyvor-janus --url
 ```
 
 ### Troubleshooting
@@ -106,7 +106,7 @@ minikube -p forgesim service forgesim-web -n forgesim --url
 ```bash
 cd deploy/kubernetes
 cp secret.example.yaml secret.yaml
-# Edit FORGESIM_DASHBOARD_PASSWORD and FORGESIM_AUTH_SECRET
+# Edit ZYVOR_JANUS_DASHBOARD_PASSWORD and ZYVOR_JANUS_AUTH_SECRET
 kubectl apply -f secret.yaml
 ```
 
@@ -114,7 +114,7 @@ kubectl apply -f secret.yaml
 
 ```bash
 kubectl apply -k deploy/kubernetes
-kubectl -n forgesim get pods
+kubectl -n zyvor-janus get pods
 ```
 
 Edit [`ingress.yaml`](ingress.yaml) and set `host:` to your domain before applying, or patch after deploy.
@@ -124,8 +124,8 @@ Edit [`ingress.yaml`](ingress.yaml) and set `host:` to your domain before applyi
 Port-forward (no ingress):
 
 ```bash
-kubectl -n forgesim port-forward svc/forgesim-web 3000:3000
-kubectl -n forgesim port-forward svc/forgesim-api 8080:8080
+kubectl -n zyvor-janus port-forward svc/zyvor-janus-web 3000:3000
+kubectl -n zyvor-janus port-forward svc/zyvor-janus-api 8080:8080
 ```
 
 Open http://localhost:3000 and log in with credentials from `secret.yaml`.
@@ -133,7 +133,7 @@ Open http://localhost:3000 and log in with credentials from `secret.yaml`.
 API health:
 
 ```bash
-kubectl -n forgesim exec deploy/forgesim-api -- \
+kubectl -n zyvor-janus exec deploy/zyvor-janus-api -- \
   python -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8080/api/health').read())"
 ```
 
@@ -142,8 +142,8 @@ kubectl -n forgesim exec deploy/forgesim-api -- \
 | Item | Location |
 |------|----------|
 | Cluster YAML configs | Baked into API image (`configs/`) |
-| Run artifacts | PVC `forgesim-outputs` → `/app/outputs` |
-| Dashboard login | Secret `forgesim-auth` |
+| Run artifacts | PVC `zyvor-janus-outputs` → `/app/outputs` |
+| Dashboard login | Secret `zyvor-janus-auth` |
 | Ingress host | `ingress.yaml` |
 
 Cluster YAML configs are baked into the API image under `configs/` at build time. There is currently no supported way to mount extra configs without rebuilding the image — a ConfigMap-based override is not wired into `api.yaml` today.
@@ -154,7 +154,7 @@ Apply [`job.example.yaml`](job.example.yaml) for a one-off simulation, or:
 
 ```bash
 kubectl apply -f deploy/kubernetes/job.example.yaml
-kubectl -n forgesim logs job/forgesim-run-once
+kubectl -n zyvor-janus logs job/zyvor-janus-run-once
 ```
 
 For interactive use, prefer the web UI or `POST /api/runs` on the API service.
@@ -164,8 +164,8 @@ Note: this Job is applied directly (`kubectl apply -f`), not through `kubectl ap
 ## Notes
 
 - **Run history** is in-memory in the API process; restarting the API pod clears the run list. Completed artifacts under `/app/outputs/runs` persist on the PVC.
-- **Web rewrites** use `FORGESIM_API_URL=http://forgesim-api:8080` at image build time as a fallback when traffic goes through the Next.js pod instead of ingress path rules.
-- **Production**: change default credentials; set a strong `FORGESIM_AUTH_SECRET`; use TLS on ingress.
+- **Web rewrites** use `ZYVOR_JANUS_API_URL=http://zyvor-janus-api:8080` at image build time as a fallback when traffic goes through the Next.js pod instead of ingress path rules.
+- **Production**: change default credentials; set a strong `ZYVOR_JANUS_AUTH_SECRET`; use TLS on ingress.
 
 ## Teardown
 
