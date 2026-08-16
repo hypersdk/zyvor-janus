@@ -1,7 +1,16 @@
+use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use std::time::Instant;
 
+use crate::profile_registry::ProfileRegistry;
 use crate::run_registry::{new_registry, RunRegistry};
+
+/// Sliding-window request timestamps per client key, guarded by a plain
+/// `std::sync::Mutex` since each critical section is a short, non-blocking
+/// `Vec` scan -- no need for an async lock. Mirrors Python's
+/// `_rate_buckets: dict[str, list[float]]`.
+pub type RateBuckets = Arc<Mutex<HashMap<String, Vec<Instant>>>>;
 
 /// Shared application state, mirroring the env-driven paths the Python
 /// server resolves today (`ZYVOR_JANUS_ROOT`/`CONFIG_DIR`/`RUNS_DIR`/`PROFILES_DIR`).
@@ -14,15 +23,12 @@ pub struct AppStateInner {
     pub repo_root: PathBuf,
     pub config_dir: PathBuf,
     pub runs_dir: PathBuf,
-    // Reserved: no route accepts explicit MIG/model profile overrides yet
-    // (Python's server doesn't either -- both always resolve profiles from
-    // the config file). Kept for parity with the env vars Python already
-    // reads, and for whenever that override lands.
-    #[allow(dead_code)]
-    pub profiles_dir: PathBuf,
     pub api_key: String,
     pub ws_ticket_secret: String,
     pub runs: RunRegistry,
+    pub model_profiles: ProfileRegistry,
+    pub shim_rate_limit_per_min: u32,
+    pub rate_buckets: RateBuckets,
 }
 
 impl AppState {
@@ -42,16 +48,23 @@ impl AppState {
             .unwrap_or_else(|_| "dev-zyvor-janus-key".to_string());
         let ws_ticket_secret = std::env::var("ZYVOR_JANUS_WS_TICKET_SECRET")
             .unwrap_or_else(|_| "dev-zyvor-janus-ws-ticket-secret".to_string());
+        let shim_rate_limit_per_min = std::env::var("ZYVOR_JANUS_SHIM_RATE_LIMIT")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(120);
+        let model_profiles = ProfileRegistry::load(&profiles_dir);
 
         Self {
             inner: Arc::new(AppStateInner {
                 repo_root,
                 config_dir,
                 runs_dir,
-                profiles_dir,
                 api_key,
                 ws_ticket_secret,
                 runs: new_registry(),
+                model_profiles,
+                shim_rate_limit_per_min,
+                rate_buckets: Arc::new(Mutex::new(HashMap::new())),
             }),
         }
     }
