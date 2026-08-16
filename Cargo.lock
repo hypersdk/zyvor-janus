@@ -481,12 +481,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "zyvor-janus-cost"
+version = "0.2.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "zyvor-janus-metrics"
 version = "0.2.0"
 dependencies = [
  "serde",
  "serde_json",
  "zyvor-janus-core",
+ "zyvor-janus-cost",
  "zyvor-janus-model",
 ]
 

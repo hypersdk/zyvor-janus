@@ -3,20 +3,11 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
+use zyvor_janus_cost::CostModel;
 use zyvor_janus_model::cluster::Cluster;
 use zyvor_janus_model::models::JobState;
 
 use crate::SimulationMetrics;
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct CostModel {
-    #[serde(default = "default_gpu_hour_usd")]
-    pub gpu_hour_usd: f64,
-}
-
-fn default_gpu_hour_usd() -> f64 {
-    3.50
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SchedulerBenchmarkReport {
