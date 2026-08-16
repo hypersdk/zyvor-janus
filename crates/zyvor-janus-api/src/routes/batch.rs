@@ -50,7 +50,7 @@ pub async fn compare(
             .runs
             .write()
             .await
-            .insert(id, RunRecord::new(id, config.clone(), None));
+            .insert(id, RunRecord::new(id, config.clone(), None, None));
         execute_run(state.clone(), id, config_path, None).await;
 
         let registry = state.inner.runs.read().await;
@@ -117,7 +117,7 @@ pub async fn benchmark_run(
     let id = Uuid::new_v4();
     state.inner.runs.write().await.insert(
         id,
-        RunRecord::new(id, body.config.clone(), body.scheduler.clone()),
+        RunRecord::new(id, body.config.clone(), body.scheduler.clone(), None),
     );
     execute_run(state.clone(), id, config_path, body.scheduler).await;
 
@@ -178,7 +178,7 @@ pub async fn what_if(
             let id = Uuid::new_v4();
             state.inner.runs.write().await.insert(
                 id,
-                RunRecord::new(id, config.clone(), Some(scheduler.clone())),
+                RunRecord::new(id, config.clone(), Some(scheduler.clone()), None),
             );
             execute_run(state.clone(), id, config_path, Some(scheduler.clone())).await;
 

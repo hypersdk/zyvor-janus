@@ -10,4 +10,5 @@ description = "Zyvor Janus discrete-event simulation engine, RL stepping session
 zyvor-janus-core = { path = "../zyvor-janus-core" }
 zyvor-janus-model = { path = "../zyvor-janus-model" }
 zyvor-janus-scheduler = { path = "../zyvor-janus-scheduler" }
+zyvor-janus-metrics = { path = "../zyvor-janus-metrics" }
 serde = { workspace = true }

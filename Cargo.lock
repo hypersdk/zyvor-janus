@@ -1678,6 +1678,7 @@ version = "0.2.0"
 dependencies = [
  "serde",
  "zyvor-janus-core",
+ "zyvor-janus-metrics",
  "zyvor-janus-model",
  "zyvor-janus-scheduler",
 ]

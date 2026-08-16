@@ -1,9 +1,50 @@
 use crate::snapshot::{ClusterSnapshot, DEFAULT_OBS_TOP_K};
+use zyvor_janus_core::decision_log::SchedulerDecision;
 use zyvor_janus_core::events::{Event, EventKind, EventQueue};
+use zyvor_janus_metrics::SimulationMetrics;
 use zyvor_janus_model::cluster::Cluster;
 use zyvor_janus_model::models::{Job, JobState};
 use zyvor_janus_scheduler::resource::ResourceManager;
 use zyvor_janus_scheduler::Scheduler;
+
+/// What happened while processing exactly one event, returned by
+/// [`SteppableSimulation::step_once`].
+#[derive(serde::Serialize)]
+pub struct StepOutcome {
+    pub event_time: f64,
+    pub kind: EventKind,
+    /// Decisions appended to `cluster.decision_log` while handling this
+    /// event (usually 0-2: e.g. one `job_arrival` plus, if a placement
+    /// followed immediately, one `job_scheduled`).
+    pub new_decisions: Vec<SchedulerDecision>,
+}
+
+/// Incremental variant of [`SimulationEngine::run`] -- processes one event
+/// at a time instead of blocking to completion, so a caller can observe
+/// per-step decisions/metrics as they happen (used by Shadow Scheduling to
+/// drive two engines side by side). Implemented for any `SimulationEngine<S>`
+/// regardless of scheduler type, so callers that need to hold two
+/// differently-scheduled engines can do so via `Box<dyn SteppableSimulation>`
+/// (`Scheduler::schedule` has no generics, so this is object-safe).
+pub trait SteppableSimulation {
+    /// Processes exactly one event and returns what happened, or `None` if
+    /// the event queue is already empty.
+    fn step_once(&mut self) -> Option<StepOutcome>;
+    /// The simulated time of the next event, if any -- lets a driver decide
+    /// which of two engines to step next without popping either queue.
+    fn peek_next_event_time(&self) -> Option<f64>;
+    /// True once the event queue is empty (no more events will ever occur).
+    fn is_done(&self) -> bool;
+    /// Metrics computed from whatever has completed so far -- valid at any
+    /// point during a run, not just after it finishes.
+    fn snapshot_metrics(&self, jobs_total: usize) -> SimulationMetrics;
+    /// The cluster as of the most recently processed event.
+    fn cluster(&self) -> &Cluster;
+    /// Drains and returns replay snapshots captured so far (only
+    /// accumulates anything if the engine was built `.with_replay_capture()`
+    /// before being boxed).
+    fn take_replay_snapshots(&mut self) -> Vec<ClusterSnapshot>;
+}
 
 pub struct SimulationEngine<S: Scheduler> {
     pub cluster: Cluster,
@@ -123,16 +164,7 @@ impl<S: Scheduler> SimulationEngine<S> {
     }
 
     pub fn run(&mut self) {
-        while let Some(event) = self.event_queue.pop() {
-            self.cluster.clock = event.time;
-            match event.kind {
-                EventKind::JobArrival => self.handle_arrival(&event.job_id),
-                EventKind::JobComplete => self.handle_complete(&event.job_id, event.run_generation),
-                EventKind::GangTimeout => {
-                    self.handle_gang_timeout(&event.job_id, event.run_generation)
-                }
-            }
-        }
+        while self.step_once().is_some() {}
     }
 
     fn handle_arrival(&mut self, job_id: &str) {
@@ -259,6 +291,47 @@ impl<S: Scheduler> SimulationEngine<S> {
             .iter()
             .position(|j| j.id == job_id)?;
         Some(self.cluster.waiting_queue.remove(idx))
+    }
+}
+
+impl<S: Scheduler> SteppableSimulation for SimulationEngine<S> {
+    fn step_once(&mut self) -> Option<StepOutcome> {
+        let event = self.event_queue.pop()?;
+        self.cluster.clock = event.time;
+        let decisions_before = self.cluster.decision_log.len();
+        match event.kind {
+            EventKind::JobArrival => self.handle_arrival(&event.job_id),
+            EventKind::JobComplete => self.handle_complete(&event.job_id, event.run_generation),
+            EventKind::GangTimeout => {
+                self.handle_gang_timeout(&event.job_id, event.run_generation)
+            }
+        }
+        let new_decisions = self.cluster.decision_log[decisions_before..].to_vec();
+        Some(StepOutcome {
+            event_time: event.time,
+            kind: event.kind,
+            new_decisions,
+        })
+    }
+
+    fn peek_next_event_time(&self) -> Option<f64> {
+        self.event_queue.peek().map(|e| e.time)
+    }
+
+    fn is_done(&self) -> bool {
+        self.event_queue.is_empty()
+    }
+
+    fn snapshot_metrics(&self, jobs_total: usize) -> SimulationMetrics {
+        SimulationMetrics::from_cluster(&self.cluster, jobs_total)
+    }
+
+    fn cluster(&self) -> &Cluster {
+        &self.cluster
+    }
+
+    fn take_replay_snapshots(&mut self) -> Vec<ClusterSnapshot> {
+        std::mem::take(&mut self.replay_snapshots)
     }
 }
 

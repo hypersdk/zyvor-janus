@@ -38,45 +38,92 @@ pub async fn ws_run(
     ws.on_upgrade(move |socket| relay(socket, state, id))
 }
 
-/// Replays collected snapshots (50ms apart), then polls every 200ms while
-/// the run is `Running`, then sends a final `complete` message -- a
-/// near-transliteration of Python's `ws_run`
-/// (`python/zyvor_janus/server/app.py`), including its "final message uses
-/// whatever metrics/decisions exist even if the run never actually ran"
-/// behavior for a run that's still `Pending`.
+/// For an ordinary run: replays collected snapshots (50ms apart), then
+/// polls every 200ms while the run is `Running` -- a near-transliteration
+/// of Python's `ws_run` (`python/zyvor_janus/server/app.py`), including its
+/// "final message uses whatever metrics/decisions exist even if the run
+/// never actually ran" behavior for a run that's still `Pending`.
+///
+/// For a shadow run that's still executing, skips the snapshot replay
+/// entirely and instead forwards each live `{"type": "step", ...}` message
+/// off `state.inner.shadow_streams` as the driver in `execute_shadow_run`
+/// produces it, until that channel closes (the run finished). A shadow run
+/// the client connects to *after* it already finished has no channel left,
+/// so it falls back to the ordinary snapshot-replay path like any other
+/// completed run.
+///
+/// Either way, ends with one final `complete` message carrying both sides'
+/// metrics/decisions (the shadow fields are simply absent for a
+/// non-shadow run).
 async fn relay(mut socket: WebSocket, state: AppState, id: Uuid) {
-    let snapshots = {
-        let registry = state.inner.runs.read().await;
-        registry
-            .get(&id)
-            .and_then(|run| run.report.as_ref())
-            .map(|report| report.snapshots.clone())
-            .unwrap_or_default()
-    };
-    for snap in snapshots {
-        let msg = json!({"type": "snapshot", "data": snap});
-        if socket.send(Message::Text(msg.to_string())).await.is_err() {
-            return;
+    let live_rx = state
+        .inner
+        .shadow_streams
+        .read()
+        .await
+        .get(&id)
+        .map(|tx| tx.subscribe());
+
+    match live_rx {
+        Some(mut rx) => {
+            use tokio::sync::broadcast::error::RecvError;
+            loop {
+                match rx.recv().await {
+                    Ok(msg) => {
+                        if socket.send(Message::Text(msg)).await.is_err() {
+                            return;
+                        }
+                    }
+                    Err(RecvError::Lagged(_)) => continue,
+                    Err(RecvError::Closed) => break,
+                }
+            }
         }
-        tokio::time::sleep(Duration::from_millis(50)).await;
+        None => {
+            let snapshots = {
+                let registry = state.inner.runs.read().await;
+                registry
+                    .get(&id)
+                    .and_then(|run| run.report.as_ref())
+                    .map(|report| report.snapshots.clone())
+                    .unwrap_or_default()
+            };
+            for snap in snapshots {
+                let msg = json!({"type": "snapshot", "data": snap});
+                if socket.send(Message::Text(msg.to_string())).await.is_err() {
+                    return;
+                }
+                tokio::time::sleep(Duration::from_millis(50)).await;
+            }
+
+            loop {
+                let status = state.inner.runs.read().await.get(&id).map(|run| run.status);
+                match status {
+                    Some(RunStatus::Running) => tokio::time::sleep(Duration::from_millis(200)).await,
+                    _ => break,
+                }
+            }
+        }
     }
 
-    loop {
-        let status = state.inner.runs.read().await.get(&id).map(|run| run.status);
-        match status {
-            Some(RunStatus::Running) => tokio::time::sleep(Duration::from_millis(200)).await,
-            _ => break,
-        }
-    }
-
-    let (metrics, decisions) = {
+    let (metrics, decisions, shadow_metrics, shadow_decisions) = {
         let registry = state.inner.runs.read().await;
-        let report = registry.get(&id).and_then(|run| run.report.as_ref());
+        let run = registry.get(&id);
+        let report = run.and_then(|r| r.report.as_ref());
+        let shadow_report = run.and_then(|r| r.shadow_report.as_ref());
         (
             report.map(|r| r.metrics.clone()),
             report.map(|r| r.decisions.clone()).unwrap_or_default(),
+            shadow_report.map(|r| r.metrics.clone()),
+            shadow_report.map(|r| r.decisions.clone()).unwrap_or_default(),
         )
     };
-    let msg = json!({"type": "complete", "metrics": metrics, "decisions": decisions});
+    let msg = json!({
+        "type": "complete",
+        "metrics": metrics,
+        "decisions": decisions,
+        "shadow_metrics": shadow_metrics,
+        "shadow_decisions": shadow_decisions,
+    });
     let _ = socket.send(Message::Text(msg.to_string())).await;
 }

@@ -33,24 +33,37 @@ pub struct RunRecord {
     /// User-requested scheduler override, if any -- distinct from the
     /// resolved scheduler name that ends up in `report.scheduler`.
     pub requested_scheduler: Option<String>,
+    /// Scheduler this run shadows the primary against, if it's a shadow
+    /// run at all -- `None` means an ordinary single-scheduler run.
+    pub requested_shadow_scheduler: Option<String>,
     pub status: RunStatus,
     pub created_at: DateTime<Utc>,
     pub finished_at: Option<DateTime<Utc>>,
     pub error: Option<String>,
     pub report: Option<SimulationReport>,
+    /// The shadow scheduler's finished report, populated alongside `report`
+    /// once a shadow run completes.
+    pub shadow_report: Option<SimulationReport>,
 }
 
 impl RunRecord {
-    pub fn new(id: Uuid, config: String, requested_scheduler: Option<String>) -> Self {
+    pub fn new(
+        id: Uuid,
+        config: String,
+        requested_scheduler: Option<String>,
+        requested_shadow_scheduler: Option<String>,
+    ) -> Self {
         Self {
             id,
             config,
             requested_scheduler,
+            requested_shadow_scheduler,
             status: RunStatus::Pending,
             created_at: Utc::now(),
             finished_at: None,
             error: None,
             report: None,
+            shadow_report: None,
         }
     }
 
