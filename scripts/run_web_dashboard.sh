@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start FastAPI backend + Next.js frontend for the ForgeSim web dashboard.
+# Start FastAPI backend + Next.js frontend for the Zyvor Janus web dashboard.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -41,7 +41,7 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-echo "Starting ForgeSim web dashboard..."
+echo "Starting Zyvor Janus web dashboard..."
 echo "  API: http://127.0.0.1:${API_PORT}"
 echo "  UI:  http://127.0.0.1:${UI_PORT}"
 echo "  Login: ${ZYVOR_JANUS_DASHBOARD_USER} / ${ZYVOR_JANUS_DASHBOARD_PASSWORD}"
@@ -49,7 +49,7 @@ echo
 echo "Press Ctrl+C to stop both servers."
 echo
 
-"$PY" -m uvicorn forgesim.server.app:app --reload --host 127.0.0.1 --port "$API_PORT" &
+"$PY" -m uvicorn zyvor_janus.server.app:app --reload --host 127.0.0.1 --port "$API_PORT" &
 API_PID=$!
 
 # Give the API a moment to bind.
