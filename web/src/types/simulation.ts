@@ -100,6 +100,7 @@ export interface RunSummary {
   id: string;
   config: string;
   scheduler: string | null;
+  shadow_scheduler?: string | null;
   status: string;
   created_at: string;
   finished_at: string | null;
@@ -111,6 +112,17 @@ export interface RunDetail extends RunSummary {
   timeline: JobsTimeline | null;
   decision_count: number;
   benchmark?: SchedulerBenchmarkReport | null;
+  shadow_metrics?: SimulationMetrics | null;
+  shadow_decision_count?: number;
+  shadow_benchmark?: SchedulerBenchmarkReport | null;
+}
+
+/** One event off the live `/ws/runs/{id}` shadow stream (`{"type": "step", ...}`). */
+export interface ShadowStepEvent {
+  side: "primary" | "shadow";
+  time: number;
+  kind: string;
+  decisions: SchedulerDecision[];
 }
 
 export interface ConfigEntry {

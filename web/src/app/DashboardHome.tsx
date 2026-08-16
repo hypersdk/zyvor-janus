@@ -2,6 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Swords } from "lucide-react";
 import { ComparePanel } from "@/components/ComparePanel";
 import {
   AppLink,
@@ -11,6 +12,7 @@ import {
   FormField,
   MetricTile,
   PageHero,
+  SCHEDULERS,
   SchedulerPillGroup,
   Select,
   StatusBadge,
@@ -40,6 +42,7 @@ export function DashboardHome() {
   const [runs, setRuns] = useState<RunSummary[]>([]);
   const [selected, setSelected] = useState("");
   const [schedulerHint, setSchedulerHint] = useState("fifo");
+  const [shadowScheduler, setShadowScheduler] = useState("");
   const [compareA, setCompareA] = useState("");
   const [compareB, setCompareB] = useState("");
   const [compareResults, setCompareResults] = useState<CompareResult[]>([]);
@@ -127,7 +130,7 @@ export function DashboardHome() {
     setRunBusy(true);
     setRunError(null);
     try {
-      const { id } = await startRun(selected);
+      const { id } = await startRun(selected, { shadowScheduler: shadowScheduler || undefined });
       await refresh();
       window.location.href = `/runs/${id}`;
     } catch (e) {
@@ -202,10 +205,30 @@ export function DashboardHome() {
                 ))}
               </Select>
             </FormField>
+            <FormField label="Shadow vs (optional)">
+              <Select
+                value={shadowScheduler}
+                onChange={(e) => setShadowScheduler(e.target.value)}
+                disabled={runBusy || compareBusy}
+              >
+                <option value="">None</option>
+                {SCHEDULERS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
             <Button disabled={runBusy || compareBusy || !selected} onClick={handleRun}>
-              {runBusy ? "Starting…" : "▶ Run"}
+              {runBusy ? "Starting…" : shadowScheduler ? "⚔ Run + shadow" : "▶ Run"}
             </Button>
           </div>
+          {shadowScheduler ? (
+            <p className="shadow-hint">
+              <Swords size={12} strokeWidth={2} /> Steps <strong>{shadowScheduler}</strong> live alongside the
+              primary scheduler over the same job arrivals.
+            </p>
+          ) : null}
           {runError ? <p className="inline-error-banner">{runError}</p> : null}
         </Card>
 
@@ -315,6 +338,12 @@ export function DashboardHome() {
                                 >
                                   <div style={{ padding: "10px 4px" }}>
                                     <span className="chip">scheduler: {run.scheduler ?? "default"}</span>{" "}
+                                    {run.shadow_scheduler ? (
+                                      <span className="chip">
+                                        <Swords size={10} strokeWidth={2} style={{ display: "inline", marginRight: 4 }} />
+                                        shadow: {run.shadow_scheduler}
+                                      </span>
+                                    ) : null}{" "}
                                     <span className="chip">
                                       finished: {run.finished_at ? run.finished_at.slice(0, 19) : "—"}
                                     </span>

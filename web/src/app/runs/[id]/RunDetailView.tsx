@@ -7,6 +7,7 @@ import {
   Layers,
   ListOrdered,
   Network,
+  Swords,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ClusterView } from "@/components/ClusterView";
@@ -15,12 +16,13 @@ import { MetricsDashboard } from "@/components/MetricsCharts";
 import { MigView } from "@/components/MigView";
 import { QueueTable } from "@/components/QueueTable";
 import { ReplayControls } from "@/components/ReplayControls";
+import { ShadowRace } from "@/components/ShadowRace";
 import { TopologyView } from "@/components/TopologyView";
 import { AppLink, PageHero, Skeleton, StatusBadge, TabPanel, Tabs } from "@/components/ui";
 import { fetchEvents, fetchRun, fetchSnapshots, fetchTimeline, fetchWsTicket, pollRun, runWebSocketUrl } from "@/lib/api";
 import { easeOut } from "@/lib/motion";
 import { useReplayStore } from "@/store/useReplayStore";
-import type { ClusterSnapshot, JobsTimeline, RunDetail, SchedulerDecision } from "@/types/simulation";
+import type { ClusterSnapshot, JobsTimeline, RunDetail, SchedulerDecision, ShadowStepEvent } from "@/types/simulation";
 
 type Phase = "loading" | "live" | "completed" | "failed";
 
@@ -30,6 +32,7 @@ export function RunDetailView({ runId }: { runId: string }) {
   const [snapshots, setSnapshots] = useState<ClusterSnapshot[]>([]);
   const [decisions, setDecisions] = useState<SchedulerDecision[]>([]);
   const [timeline, setTimeline] = useState<JobsTimeline | null>(null);
+  const [shadowSteps, setShadowSteps] = useState<ShadowStepEvent[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -101,7 +104,10 @@ export function RunDetailView({ runId }: { runId: string }) {
 
       ws.onmessage = (event) => {
         if (cancelled) return;
-        let msg: { type: string; data?: ClusterSnapshot };
+        let msg: {
+          type: string;
+          data?: ClusterSnapshot | { side: "primary" | "shadow"; outcome: { event_time: number; kind: string; new_decisions: SchedulerDecision[] } };
+        };
         try {
           msg = JSON.parse(event.data);
         } catch {
@@ -109,6 +115,17 @@ export function RunDetailView({ runId }: { runId: string }) {
         }
         if (msg.type === "snapshot" && msg.data) {
           setSnapshots((prev) => [...prev, msg.data as ClusterSnapshot]);
+        } else if (msg.type === "step" && msg.data && "outcome" in msg.data) {
+          const raw = msg.data;
+          setShadowSteps((prev) => [
+            ...prev,
+            {
+              side: raw.side,
+              time: raw.outcome.event_time,
+              kind: raw.outcome.kind,
+              decisions: raw.outcome.new_decisions,
+            },
+          ]);
         } else if (msg.type === "complete") {
           fetchRun(runId)
             .then((detail) => settle(detail))
@@ -169,13 +186,14 @@ export function RunDetailView({ runId }: { runId: string }) {
         snapshots={snapshots}
         decisions={decisions}
         timeline={timeline}
+        shadowSteps={shadowSteps}
         runId={runId}
       />
     );
   }
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
+    <AnimatePresence initial={false}>
       <motion.div
         key={bodyKey}
         initial={{ opacity: 0 }}
@@ -195,6 +213,7 @@ function RunDetailContent({
   snapshots,
   decisions,
   timeline,
+  shadowSteps,
   runId,
 }: {
   run: RunDetail;
@@ -202,10 +221,12 @@ function RunDetailContent({
   snapshots: ClusterSnapshot[];
   decisions: SchedulerDecision[];
   timeline: JobsTimeline | null;
+  shadowSteps: ShadowStepEvent[];
   runId: string;
 }) {
   const index = useReplayStore((s) => s.index);
   const live = phase === "live";
+  const isShadow = Boolean(run.shadow_scheduler);
   const currentSnapshot = snapshots[index] ?? snapshots[snapshots.length - 1] ?? null;
   const heroStatus =
     phase === "failed" ? "down" : phase === "live" ? "go" : phase === "completed" ? "go" : "offline";
@@ -214,6 +235,7 @@ function RunDetailContent({
 
   const tabs = [
     { id: "overview", label: "Overview", icon: <Activity size={14} /> },
+    ...(isShadow ? [{ id: "shadow", label: "Shadow", icon: <Swords size={14} /> }] : []),
     { id: "cluster", label: "Cluster", icon: <Network size={14} /> },
     { id: "queue", label: "Queue", icon: <ListOrdered size={14} /> },
     { id: "mig", label: "MIG", icon: <Layers size={14} /> },
@@ -227,7 +249,13 @@ function RunDetailContent({
           kicker={run.config}
           titleAccent={banner}
           title={run.id.slice(0, 8)}
-          subtitle={run.scheduler ? `Scheduler: ${run.scheduler}` : undefined}
+          subtitle={
+            run.scheduler
+              ? isShadow
+                ? `${run.scheduler} vs ${run.shadow_scheduler} (shadow)`
+                : `Scheduler: ${run.scheduler}`
+              : undefined
+          }
           status={heroStatus}
           statusLabel={run.status}
           actions={<AppLink href="/">Back to dashboard</AppLink>}
@@ -251,7 +279,7 @@ function RunDetailContent({
         </p>
       ) : null}
 
-      <Tabs tabs={tabs} defaultTab={live ? "replay" : "overview"}>
+      <Tabs tabs={tabs} defaultTab={isShadow ? "shadow" : live ? "replay" : "overview"}>
         <TabPanel id="overview">
           <div className="run-detail-grid">
             {!live ? (
@@ -272,6 +300,12 @@ function RunDetailContent({
             ) : null}
           </div>
         </TabPanel>
+
+        {isShadow ? (
+          <TabPanel id="shadow">
+            <ShadowRace run={run} steps={shadowSteps} live={live} />
+          </TabPanel>
+        ) : null}
 
         <TabPanel id="cluster">
           <div className="run-detail-grid">
