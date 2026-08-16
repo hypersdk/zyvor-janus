@@ -65,7 +65,7 @@ function matchesPassword(input: string, expected: string): boolean {
 
 export async function createSessionToken(): Promise<string> {
   const exp = Date.now() + SESSION_MAX_AGE * 1000;
-  const payload = `zyvor-janus:`;
+  const payload = `zyvor-janus:${exp}`;
   const sig = await hmacSign(payload, getAuthSecret());
   return `${payload}.${sig}`;
 }
