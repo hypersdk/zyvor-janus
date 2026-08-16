@@ -27,6 +27,8 @@
 #   ZYVOR_JANUS_DASHBOARD_USER    default: Admin
 #   ZYVOR_JANUS_DASHBOARD_PASSWORD default: Admin@321
 #   ZYVOR_JANUS_AUTH_SECRET       default: zyvor-janus-dev-secret
+#   ZYVOR_JANUS_API_KEY           default: randomly generated each run
+#   ZYVOR_JANUS_WS_TICKET_SECRET  default: randomly generated each run
 # ============================================================================
 
 set -euo pipefail
@@ -69,6 +71,11 @@ API_NODE_PORT="${ZYVOR_JANUS_API_NODE_PORT:-30808}"
 DASH_USER="${ZYVOR_JANUS_DASHBOARD_USER:-Admin}"
 DASH_PASS="${ZYVOR_JANUS_DASHBOARD_PASSWORD:-Admin@321}"
 AUTH_SECRET="${ZYVOR_JANUS_AUTH_SECRET:-zyvor-janus-dev-secret}"
+# No fixed dev fallback for these two -- unlike AUTH_SECRET, a well-known
+# default here is directly usable as a bearer token against the live API,
+# so each deploy gets a fresh random one unless the caller pins one.
+API_KEY="${ZYVOR_JANUS_API_KEY:-$(openssl rand -hex 32)}"
+WS_TICKET_SECRET="${ZYVOR_JANUS_WS_TICKET_SECRET:-$(openssl rand -hex 32)}"
 
 REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 [ -f "$REPO_DIR/deploy/docker/Dockerfile.api" ] || error "Not in zyvor-janus repo: $REPO_DIR"
@@ -172,6 +179,8 @@ stringData:
   ZYVOR_JANUS_DASHBOARD_USER: ${DASH_USER}
   ZYVOR_JANUS_DASHBOARD_PASSWORD: ${DASH_PASS}
   ZYVOR_JANUS_AUTH_SECRET: ${AUTH_SECRET}
+  ZYVOR_JANUS_API_KEY: ${API_KEY}
+  ZYVOR_JANUS_WS_TICKET_SECRET: ${WS_TICKET_SECRET}
 EOF
 kubectl apply -f deploy/kubernetes/namespace.yaml
 kubectl apply -f deploy/kubernetes/secret.yaml"

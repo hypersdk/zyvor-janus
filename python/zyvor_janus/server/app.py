@@ -1,4 +1,11 @@
-"""FastAPI backend for Zyvor Janus web dashboard (Phase 2)."""
+"""FastAPI backend for Zyvor Janus web dashboard (Phase 2).
+
+Superseded by crates/zyvor-janus-api (see deploy/docker/Dockerfile.api,
+which now builds and ships the Rust binary instead of this package).
+Kept in-tree, unused by any deployed image, as a revert target during
+the Rust API's burn-in period -- not scheduled for deletion until that
+period ends.
+"""
 
 from __future__ import annotations
 

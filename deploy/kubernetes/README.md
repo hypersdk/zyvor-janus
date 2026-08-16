@@ -1,14 +1,14 @@
 # Zyvor Janus on Kubernetes
 
-Deploy the Zyvor Janus web dashboard (FastAPI API + Next.js UI) to a Kubernetes cluster.
+Deploy the Zyvor Janus web dashboard (Rust API + Next.js UI) to a Kubernetes cluster.
 
 ## Architecture
 
 ```text
 Ingress (nginx)
   /api/auth/*  → zyvor-janus-web:3000   (Next.js login)
-  /api/*       → zyvor-janus-api:8080   (FastAPI + Rust sim)
-  /ws/*        → zyvor-janus-api:8080   (WebSocket replay)
+  /api/*       → zyvor-janus-api:8080   (Rust API, bearer-auth required)
+  /ws/*        → zyvor-janus-api:8080   (WebSocket replay, ticket-auth required)
   /*           → zyvor-janus-web:3000   (UI)
 ```
 
@@ -106,9 +106,17 @@ minikube -p zyvor-janus service zyvor-janus-web -n zyvor-janus --url
 ```bash
 cd deploy/kubernetes
 cp secret.example.yaml secret.yaml
-# Edit ZYVOR_JANUS_DASHBOARD_PASSWORD and ZYVOR_JANUS_AUTH_SECRET
+# Edit ZYVOR_JANUS_DASHBOARD_PASSWORD, ZYVOR_JANUS_AUTH_SECRET,
+# ZYVOR_JANUS_API_KEY, and ZYVOR_JANUS_WS_TICKET_SECRET
 kubectl apply -f secret.yaml
 ```
+
+`ZYVOR_JANUS_API_KEY` and `ZYVOR_JANUS_WS_TICKET_SECRET` are shared between
+the `web` and `api` pods via the same `zyvor-janus-auth` Secret (`api.yaml`'s
+Deployment now has `envFrom` on it too, not just `web.yaml`'s). The API
+rejects every request without a matching bearer token except `/api/health`;
+`web`'s `middleware.ts` injects it automatically so the dashboard itself
+needs no separate configuration.
 
 ## 3. Deploy
 
@@ -134,7 +142,7 @@ API health:
 
 ```bash
 kubectl -n zyvor-janus exec deploy/zyvor-janus-api -- \
-  python -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8080/api/health').read())"
+  curl -fsS http://127.0.0.1:8080/api/health
 ```
 
 ## Configuration
@@ -143,7 +151,7 @@ kubectl -n zyvor-janus exec deploy/zyvor-janus-api -- \
 |------|----------|
 | Cluster YAML configs | Baked into API image (`configs/`) |
 | Run artifacts | PVC `zyvor-janus-outputs` → `/app/outputs` |
-| Dashboard login | Secret `zyvor-janus-auth` |
+| Dashboard login + API bearer token + WS ticket secret | Secret `zyvor-janus-auth` |
 | Ingress host | `ingress.yaml` |
 
 Cluster YAML configs are baked into the API image under `configs/` at build time. There is currently no supported way to mount extra configs without rebuilding the image — a ConfigMap-based override is not wired into `api.yaml` today.
@@ -165,7 +173,8 @@ Note: this Job is applied directly (`kubectl apply -f`), not through `kubectl ap
 
 - **Run history** is in-memory in the API process; restarting the API pod clears the run list. Completed artifacts under `/app/outputs/runs` persist on the PVC.
 - **Web rewrites** use `ZYVOR_JANUS_API_URL=http://zyvor-janus-api:8080` at image build time as a fallback when traffic goes through the Next.js pod instead of ingress path rules.
-- **Production**: change default credentials; set a strong `ZYVOR_JANUS_AUTH_SECRET`; use TLS on ingress.
+- **API auth**: every route except `/api/health` requires `Authorization: Bearer <ZYVOR_JANUS_API_KEY>`. This is why `ingress.yaml` routing `/api` and `/ws` directly to the API Service (bypassing the Next.js pod's session-cookie check) is safe — the API itself now enforces auth regardless of which path reaches it.
+- **Production**: change default credentials; set strong, distinct values for `ZYVOR_JANUS_AUTH_SECRET`, `ZYVOR_JANUS_API_KEY`, and `ZYVOR_JANUS_WS_TICKET_SECRET`; use TLS on ingress.
 
 ## Teardown
 
