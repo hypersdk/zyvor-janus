@@ -103,11 +103,7 @@ fn job_to_snapshot(job: &Job, clock: f64, placeable: bool) -> JobSnapshot {
 }
 
 impl ClusterSnapshot {
-    pub fn from_cluster(
-        cluster: &Cluster,
-        top_k: usize,
-        placeable_mask: &[bool],
-    ) -> Self {
+    pub fn from_cluster(cluster: &Cluster, top_k: usize, placeable_mask: &[bool]) -> Self {
         let queue_jobs: Vec<_> = cluster
             .waiting_queue
             .iter()

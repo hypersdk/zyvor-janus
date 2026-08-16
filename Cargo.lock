@@ -466,6 +466,7 @@ dependencies = [
  "zyvor-janus-core",
  "zyvor-janus-metrics",
  "zyvor-janus-scheduler",
+ "zyvor-janus-topology",
 ]
 
 [[package]]
@@ -475,6 +476,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
+ "zyvor-janus-topology",
 ]
 
 [[package]]
@@ -502,3 +504,7 @@ version = "0.2.0"
 dependencies = [
  "zyvor-janus-core",
 ]
+
+[[package]]
+name = "zyvor-janus-topology"
+version = "0.2.0"

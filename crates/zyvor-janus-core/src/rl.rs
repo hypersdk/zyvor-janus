@@ -117,10 +117,7 @@ impl RlSession {
             };
         }
         let mask = self.placeable_mask();
-        let action = mask
-            .iter()
-            .position(|&p| p)
-            .unwrap_or(self.top_k);
+        let action = mask.iter().position(|&p| p).unwrap_or(self.top_k);
         self.step(action)
     }
 
@@ -208,8 +205,7 @@ impl RlSession {
         let duration = job.duration_remaining() * placement.runtime_multiplier;
         if placement.runtime_multiplier > 1.0 {
             let base = job.duration_remaining();
-            self.cluster.topology_runtime_inflation +=
-                base * (placement.runtime_multiplier - 1.0);
+            self.cluster.topology_runtime_inflation += base * (placement.runtime_multiplier - 1.0);
         }
         let run_generation = job.run_generation;
         self.cluster
@@ -328,7 +324,8 @@ impl RlSession {
                         && j.gang_timeout_generation == event.run_generation
                 });
                 if still_waiting {
-                    self.cluster.fail_waiting_job(&event.job_id, self.cluster.clock);
+                    self.cluster
+                        .fail_waiting_job(&event.job_id, self.cluster.clock);
                 }
             }
         }

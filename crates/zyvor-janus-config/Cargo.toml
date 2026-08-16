@@ -8,6 +8,7 @@ description = "Zyvor Janus YAML configuration loading"
 
 [dependencies]
 zyvor-janus-core = { path = "../zyvor-janus-core" }
+zyvor-janus-topology = { path = "../zyvor-janus-topology" }
 zyvor-janus-scheduler = { path = "../zyvor-janus-scheduler" }
 zyvor-janus-metrics = { path = "../zyvor-janus-metrics" }
 serde = { workspace = true }

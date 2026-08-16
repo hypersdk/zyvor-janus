@@ -27,6 +27,8 @@ pub use trace::{
     SimulatedPlacement, TraceDiffReport, TraceEvent, TraceReplayResult,
 };
 
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
 use zyvor_janus_core::cluster::Cluster;
 use zyvor_janus_core::engine::{Scheduler, SimulationEngine};
 use zyvor_janus_core::inference::{estimate_inference, InferenceProfile, InferenceRequest};
@@ -34,13 +36,9 @@ use zyvor_janus_core::models::{Gpu, Job, Node};
 use zyvor_janus_core::resource::{GpuSelectionPolicy, ResourceManager};
 use zyvor_janus_core::rl::RlSession;
 use zyvor_janus_core::snapshot::ClusterSnapshot;
-use zyvor_janus_core::topology::TopologyGraph;
 use zyvor_janus_metrics::{CostModel, JobsTimeline, SchedulerBenchmarkReport, SimulationMetrics};
-use zyvor_janus_scheduler::{
-    BestFitScheduler, FifoScheduler, ForgeScheduler, PriorityScheduler,
-};
-use serde::{Deserialize, Serialize};
-use thiserror::Error;
+use zyvor_janus_scheduler::{BestFitScheduler, FifoScheduler, ForgeScheduler, PriorityScheduler};
+use zyvor_janus_topology::TopologyGraph;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SimulationReport {
@@ -241,7 +239,10 @@ pub fn load_workload_with_profiles(
 ) -> ConfigResult<Vec<Job>> {
     let content = fs::read_to_string(path)?;
     let workload: WorkloadConfig = serde_yaml::from_str(&content)?;
-    let default_gpu = default_gpu_types.first().cloned().unwrap_or_else(|| "H100".into());
+    let default_gpu = default_gpu_types
+        .first()
+        .cloned()
+        .unwrap_or_else(|| "H100".into());
     let mut jobs = Vec::new();
     for j in workload.jobs {
         if j.input_tokens == Some(0) && j.output_tokens == Some(0) {
@@ -296,7 +297,10 @@ fn apply_inference_runtime(
     let Some(output_tokens) = job.output_tokens else {
         return Ok(());
     };
-    let gpu_type = job.gpu_type.clone().unwrap_or_else(|| default_gpu.to_string());
+    let gpu_type = job
+        .gpu_type
+        .clone()
+        .unwrap_or_else(|| default_gpu.to_string());
     let profile = resolve_inference_profile(model_profiles, &model_id, &gpu_type)?;
     let req = InferenceRequest {
         input_tokens,
@@ -396,10 +400,7 @@ fn apply_topology_template(
     gpu_spec: &GpuSpec,
     node_spec: &NodeSpec,
 ) -> Option<u32> {
-    let gpu_index = node_spec
-        .gpus
-        .iter()
-        .position(|g| g.id == gpu_spec.id)?;
+    let gpu_index = node_spec.gpus.iter().position(|g| g.id == gpu_spec.id)?;
     match template {
         "full_mesh" => Some(0),
         "pcie_only" => Some(gpu_index as u32),
@@ -585,7 +586,9 @@ fn run_to_completion_with_policy_snapshots(
     jobs_total: usize,
 ) -> ConfigResult<(Cluster, SimulationMetrics, Vec<ClusterSnapshot>)> {
     Ok(match scheduler {
-        "fifo" => run_to_completion_snapshots(cluster, FifoScheduler, resource_manager, jobs, jobs_total),
+        "fifo" => {
+            run_to_completion_snapshots(cluster, FifoScheduler, resource_manager, jobs, jobs_total)
+        }
         "priority" => run_to_completion_snapshots(
             cluster,
             PriorityScheduler,
@@ -622,8 +625,13 @@ pub fn run_to_completion_with_policy(
     jobs: Vec<Job>,
     jobs_total: usize,
 ) -> ConfigResult<(Cluster, SimulationMetrics)> {
-    let (cluster, metrics, _snapshots) =
-        run_to_completion_with_policy_snapshots(cluster, scheduler, resource_manager, jobs, jobs_total)?;
+    let (cluster, metrics, _snapshots) = run_to_completion_with_policy_snapshots(
+        cluster,
+        scheduler,
+        resource_manager,
+        jobs,
+        jobs_total,
+    )?;
     Ok((cluster, metrics))
 }
 
@@ -634,8 +642,8 @@ fn run_to_completion_snapshots<S: Scheduler>(
     jobs: Vec<Job>,
     jobs_total: usize,
 ) -> (Cluster, SimulationMetrics, Vec<ClusterSnapshot>) {
-    let mut engine =
-        SimulationEngine::with_resource_manager(cluster, scheduler, resource_manager).with_replay_capture();
+    let mut engine = SimulationEngine::with_resource_manager(cluster, scheduler, resource_manager)
+        .with_replay_capture();
     engine.submit_jobs(jobs);
     engine.run();
     let snapshots = engine.take_replay_snapshots();

@@ -4,12 +4,12 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
 
+use serde::{Deserialize, Serialize};
 use zyvor_janus_core::cluster::Cluster;
 use zyvor_janus_core::engine::{Scheduler, SimulationEngine};
 use zyvor_janus_core::models::{Job, JobState};
 use zyvor_janus_metrics::SimulationMetrics;
 use zyvor_janus_scheduler::{BestFitScheduler, FifoScheduler, ForgeScheduler, PriorityScheduler};
-use serde::{Deserialize, Serialize};
 
 use crate::{
     build_cluster, build_resource_manager, load_hardware_profiles, load_simulation_config,
@@ -382,7 +382,13 @@ pub fn run_trace_replay(
     let (metrics, cluster) = match scheduler {
         "fifo" => run_and_finish(cluster, FifoScheduler, scheduler, jobs, jobs_total),
         "priority" => run_and_finish(cluster, PriorityScheduler, scheduler, jobs, jobs_total),
-        "preemptive" | "forge" => run_and_finish(cluster, ForgeScheduler::default(), scheduler, jobs, jobs_total),
+        "preemptive" | "forge" => run_and_finish(
+            cluster,
+            ForgeScheduler::default(),
+            scheduler,
+            jobs,
+            jobs_total,
+        ),
         "bestfit" => run_and_finish(cluster, BestFitScheduler, scheduler, jobs, jobs_total),
         other => {
             return Err(ConfigError::Invalid(format!(
@@ -439,8 +445,8 @@ pub fn parse_trace_line(line: &str) -> ConfigResult<TraceEvent> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use zyvor_janus_core::models::{Gpu, Node};
     use std::path::PathBuf;
+    use zyvor_janus_core::models::{Gpu, Node};
 
     fn one_gpu_cluster() -> Cluster {
         Cluster::new(vec![Node {
@@ -499,12 +505,7 @@ mod tests {
         assert_eq!(oracle[0].gpu_ids[0], "node-4-gpu-0");
     }
 
-    fn job_submitted(
-        timestamp: f64,
-        job: &str,
-        gpu_count: u32,
-        runtime: f64,
-    ) -> TraceEvent {
+    fn job_submitted(timestamp: f64, job: &str, gpu_count: u32, runtime: f64) -> TraceEvent {
         TraceEvent::JobSubmitted {
             timestamp,
             job: job.into(),

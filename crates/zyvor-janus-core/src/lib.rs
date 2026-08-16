@@ -9,7 +9,6 @@ pub mod models;
 pub mod resource;
 pub mod rl;
 pub mod snapshot;
-pub mod topology;
 
 pub use cluster::Cluster;
 pub use decision_log::SchedulerDecision;
@@ -25,4 +24,4 @@ pub use models::{Gpu, Job, JobRunSegment, JobState, MigSlice, Node, Placement};
 pub use resource::{GpuSelectionPolicy, ResourceManager};
 pub use rl::{default_top_k, RlSession, StepResult};
 pub use snapshot::{obs_size, ClusterSnapshot, JobSnapshot, DEFAULT_OBS_TOP_K};
-pub use topology::TopologyGraph;
+pub use zyvor_janus_topology::TopologyGraph;
