@@ -629,6 +629,7 @@ pub fn run_forge_bundle_report(
         bundle.jobs,
         jobs_total,
     )?;
+    let serving_trace = crate::serving_trace::export_serving_trace_from_cluster(&cluster);
     Ok(SimulationReport {
         metrics,
         timeline: JobsTimeline::from_cluster(&cluster),
@@ -638,6 +639,7 @@ pub fn run_forge_bundle_report(
         config_hash: String::new(),
         benchmark: None,
         federation,
+        serving_trace,
     })
 }
 
