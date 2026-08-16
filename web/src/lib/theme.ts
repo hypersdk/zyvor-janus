@@ -1,4 +1,4 @@
-/** Zyvor / HyperSDK chart and topology colors (mirrors python/forgesim/theme.py). */
+/** Zyvor / HyperSDK chart and topology colors (mirrors python/zyvor_janus/theme.py). */
 
 export const theme = {
   accent: "#f0583a",

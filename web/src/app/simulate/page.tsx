@@ -124,7 +124,7 @@ function SimulatePageInner() {
   return (
     <>
       <PageHero
-        kicker="FORGESIM · SIMULATE"
+        kicker="ZYVOR JANUS · SIMULATE"
         titleAccent="SIMULATE"
         title=""
         subtitle="Requests → queue → GPU assign → complete"
