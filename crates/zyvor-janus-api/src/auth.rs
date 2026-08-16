@@ -35,8 +35,9 @@ pub async fn require_bearer_token(
 }
 
 /// Constant-time byte comparison to avoid leaking the secret's length/prefix
-/// via response-timing side channels.
-fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
+/// via response-timing side channels. Also used by `ws_ticket` to verify
+/// ticket signatures.
+pub(crate) fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
     if a.len() != b.len() {
         return false;
     }

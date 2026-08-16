@@ -73,6 +73,22 @@ export async function fetchSnapshots(id: string): Promise<ClusterSnapshot[]> {
 }
 
 /**
+ * Mints a short-lived ticket for the `/ws/runs/{id}` upgrade. The Rust API
+ * requires it as a query param because browsers cannot set an
+ * `Authorization` header on a WebSocket handshake, so the bearer token
+ * `web/src/middleware.ts` injects on ordinary `/api/*` calls can't reach
+ * this route -- goes through apiFetch so it still carries the session
+ * cookie and gets the same 401-redirect-to-login handling as everything
+ * else.
+ */
+export async function fetchWsTicket(id: string): Promise<string> {
+  const { ticket } = await apiFetch<{ ticket: string }>(`/runs/${id}/ws-ticket`, {
+    method: "POST",
+  });
+  return ticket;
+}
+
+/**
  * Host-relative by default so it keeps working regardless of which fixed port the
  * servers are bound to, proxied through next.config.js's /ws/:path* rewrite.
  *
@@ -84,12 +100,13 @@ export async function fetchSnapshots(id: string): Promise<ClusterSnapshot[]> {
  * service, bypassing the Next.js layer entirely, so the default same-origin path
  * works correctly there without this override.
  */
-export function runWebSocketUrl(id: string): string {
+export function runWebSocketUrl(id: string, ticket: string): string {
   const override = process.env.NEXT_PUBLIC_ZYVOR_JANUS_WS_URL;
-  if (override) return `${override.replace(/\/+$/, "")}/ws/runs/${id}`;
+  const query = `?ticket=${encodeURIComponent(ticket)}`;
+  if (override) return `${override.replace(/\/+$/, "")}/ws/runs/${id}${query}`;
   const proto = typeof window !== "undefined" && window.location.protocol === "https:" ? "wss" : "ws";
   const host = typeof window !== "undefined" ? window.location.host : "";
-  return `${proto}://${host}/ws/runs/${id}`;
+  return `${proto}://${host}/ws/runs/${id}${query}`;
 }
 
 export async function compareConfigs(configs: string[]): Promise<{ results: CompareResult[] }> {

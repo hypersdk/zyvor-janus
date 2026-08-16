@@ -14,11 +14,14 @@ pub struct AppStateInner {
     pub repo_root: PathBuf,
     pub config_dir: PathBuf,
     pub runs_dir: PathBuf,
-    // Read starting in Phase 4 (MIG/model profile loading for run
-    // submission with explicit profile overrides).
+    // Reserved: no route accepts explicit MIG/model profile overrides yet
+    // (Python's server doesn't either -- both always resolve profiles from
+    // the config file). Kept for parity with the env vars Python already
+    // reads, and for whenever that override lands.
     #[allow(dead_code)]
     pub profiles_dir: PathBuf,
     pub api_key: String,
+    pub ws_ticket_secret: String,
     pub runs: RunRegistry,
 }
 
@@ -37,6 +40,8 @@ impl AppState {
             .unwrap_or_else(|_| repo_root.join("configs").join("profiles"));
         let api_key = std::env::var("ZYVOR_JANUS_API_KEY")
             .unwrap_or_else(|_| "dev-zyvor-janus-key".to_string());
+        let ws_ticket_secret = std::env::var("ZYVOR_JANUS_WS_TICKET_SECRET")
+            .unwrap_or_else(|_| "dev-zyvor-janus-ws-ticket-secret".to_string());
 
         Self {
             inner: Arc::new(AppStateInner {
@@ -45,6 +50,7 @@ impl AppState {
                 runs_dir,
                 profiles_dir,
                 api_key,
+                ws_ticket_secret,
                 runs: new_registry(),
             }),
         }

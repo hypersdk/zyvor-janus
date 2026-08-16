@@ -10,6 +10,7 @@ use zyvor_janus_config::run_simulation_report_with_scheduler;
 use crate::error::ApiError;
 use crate::run_registry::{RunRecord, RunStatus};
 use crate::state::AppState;
+use crate::ws_ticket::mint_ticket;
 
 #[derive(Deserialize)]
 pub struct StartRunRequest {
@@ -216,6 +217,27 @@ pub async fn get_timeline(
         .as_ref()
         .ok_or_else(|| ApiError::not_found("timeline not ready"))?;
     Ok(Json(report.timeline.clone()))
+}
+
+#[derive(Serialize)]
+struct WsTicketResponse {
+    ticket: String,
+}
+
+/// `POST /api/runs/{id}/ws-ticket` -- mints a short-lived HMAC ticket for the
+/// browser to attach to the `/ws/runs/{id}` upgrade as a query param, since
+/// browsers cannot set an `Authorization` header on a WebSocket handshake.
+pub async fn create_ws_ticket(
+    State(state): State<AppState>,
+    AxumPath(id): AxumPath<Uuid>,
+) -> Result<impl IntoResponse, ApiError> {
+    let registry = state.inner.runs.read().await;
+    if !registry.contains_key(&id) {
+        return Err(ApiError::not_found("run not found"));
+    }
+    drop(registry);
+    let ticket = mint_ticket(&state.inner.ws_ticket_secret, id);
+    Ok(Json(WsTicketResponse { ticket }))
 }
 
 /// `GET /api/runs/{id}/events`

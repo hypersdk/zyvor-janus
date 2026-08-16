@@ -5,6 +5,7 @@ mod routes;
 mod run_registry;
 mod state;
 mod twin_store;
+mod ws_ticket;
 
 use axum::routing::get;
 use axum::{middleware, Router};
@@ -58,13 +59,23 @@ async fn main() {
             get(routes::serving_trace::get_serving_trace),
         )
         .route("/api/twins", get(routes::twins::get_twins))
+        .route(
+            "/api/runs/:id/ws-ticket",
+            axum::routing::post(routes::runs::create_ws_ticket),
+        )
         .layer(middleware::from_fn_with_state(
             state.clone(),
             auth::require_bearer_token,
         ));
 
+    // Deliberately outside the bearer-auth layer -- see routes::ws for why
+    // (browsers can't set Authorization on a WS handshake). Ticket-verified
+    // per-connection instead.
+    let ws_routes = Router::new().route("/ws/runs/:id", get(routes::ws::ws_run));
+
     let app = public_routes
         .merge(authenticated_routes)
+        .merge(ws_routes)
         .layer(TraceLayer::new_for_http())
         .layer(CorsLayer::permissive())
         .with_state(state);
