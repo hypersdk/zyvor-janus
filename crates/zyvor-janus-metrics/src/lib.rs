@@ -1,10 +1,11 @@
-use zyvor_janus_core::cluster::Cluster;
-use zyvor_janus_core::models::{JobRunSegment, JobState};
-use zyvor_janus_core::inference::percentile;
 use serde::{Deserialize, Serialize};
+use zyvor_janus_core::stats::percentile;
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::{JobRunSegment, JobState};
 
 pub mod benchmark;
-pub use benchmark::{CostModel, SchedulerBenchmarkReport};
+pub use benchmark::SchedulerBenchmarkReport;
+pub use zyvor_janus_cost::CostModel;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JobTimelineRecord {
@@ -68,7 +69,7 @@ impl JobsTimeline {
     }
 }
 
-fn job_to_timeline_record(job: &zyvor_janus_core::models::Job) -> JobTimelineRecord {
+fn job_to_timeline_record(job: &zyvor_janus_model::models::Job) -> JobTimelineRecord {
     let mut segments = job.run_segments.clone();
     // Running jobs have an open segment not yet closed by finish/preempt.
     if job.state == JobState::Running {
@@ -186,35 +187,22 @@ impl SimulationMetrics {
             .collect();
         let inference_count = inference_jobs.len();
 
-        let mut ttft_values: Vec<f64> = inference_jobs
-            .iter()
-            .filter_map(|j| j.ttft_secs)
-            .collect();
+        let mut ttft_values: Vec<f64> = inference_jobs.iter().filter_map(|j| j.ttft_secs).collect();
         let ttft_p50 = percentile(&mut ttft_values.clone(), 0.50);
         let ttft_p99 = percentile(&mut ttft_values, 0.99);
 
-        let mut itl_values: Vec<f64> = inference_jobs
-            .iter()
-            .filter_map(|j| j.itl_secs)
-            .collect();
+        let mut itl_values: Vec<f64> = inference_jobs.iter().filter_map(|j| j.itl_secs).collect();
         let itl_p50 = percentile(&mut itl_values, 0.50);
 
         let tps_mean = if inference_jobs.is_empty() {
             0.0
         } else {
-            inference_jobs
-                .iter()
-                .filter_map(|j| j.tps)
-                .sum::<f64>()
-                / inference_count as f64
+            inference_jobs.iter().filter_map(|j| j.tps).sum::<f64>() / inference_count as f64
         };
 
         let mut queue_delays: Vec<f64> = inference_jobs
             .iter()
-            .filter_map(|j| {
-                j.start_time
-                    .map(|start| (start - j.arrival_time).max(0.0))
-            })
+            .filter_map(|j| j.start_time.map(|start| (start - j.arrival_time).max(0.0)))
             .collect();
         let queue_delay_p99 = percentile(&mut queue_delays, 0.99);
 
@@ -256,7 +244,7 @@ impl SimulationMetrics {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use zyvor_janus_core::models::{Gpu, Job, JobState, Node};
+    use zyvor_janus_model::models::{Gpu, Job, JobState, Node};
 
     #[test]
     fn computes_makespan_and_utilization() {

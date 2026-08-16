@@ -4,8 +4,8 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::{SimError, SimResult};
 use crate::models::{Gpu, MigSlice};
+use zyvor_janus_core::error::{SimError, SimResult};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MigProfileSpec {

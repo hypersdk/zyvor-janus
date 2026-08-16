@@ -1,6 +1,6 @@
-use crate::cluster::Cluster;
-use crate::models::{Job, JobState};
 use serde::{Deserialize, Serialize};
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::{Job, JobState};
 
 pub const DEFAULT_OBS_TOP_K: usize = 8;
 
@@ -103,11 +103,7 @@ fn job_to_snapshot(job: &Job, clock: f64, placeable: bool) -> JobSnapshot {
 }
 
 impl ClusterSnapshot {
-    pub fn from_cluster(
-        cluster: &Cluster,
-        top_k: usize,
-        placeable_mask: &[bool],
-    ) -> Self {
+    pub fn from_cluster(cluster: &Cluster, top_k: usize, placeable_mask: &[bool]) -> Self {
         let queue_jobs: Vec<_> = cluster
             .waiting_queue
             .iter()
@@ -215,8 +211,8 @@ pub fn obs_size(top_k: usize) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cluster::Cluster;
-    use crate::models::{Gpu, Job, Node};
+    use zyvor_janus_model::cluster::Cluster;
+    use zyvor_janus_model::models::{Gpu, Job, Node};
 
     #[test]
     fn obs_size_matches_feature_vector_length() {

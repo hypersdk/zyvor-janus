@@ -12,13 +12,32 @@ Python (Gymnasium, notebooks, viz, FastAPI, AIPerf adapters)
    PyO3 / maturin
         │
 Rust workspace
-  ├── zyvor-janus-core      Event engine, cluster, resources, RL, inference model
-  ├── zyvor-janus-scheduler Scheduling policies (fifo, priority, preemptive, forge, bestfit)
-  ├── zyvor-janus-config    YAML / Forge bundle / scheduler + serving trace loaders
+  ├── zyvor-janus-core      Foundational primitives: error, events, decision log, stats
+  ├── zyvor-janus-topology  Synthetic NVLink/PCIe bandwidth-penalty topology model
+  ├── zyvor-janus-model     Cluster state, node/GPU/job types, MIG partitioning
+  ├── zyvor-janus-scheduler Scheduling policies (fifo, priority, preemptive, forge,
+  │                         bestfit) + ResourceManager + the Scheduler trait
+  ├── zyvor-janus-simulator Discrete-event engine, RL stepping session, inference model
+  ├── zyvor-janus-cost      GPU cost model (seed for future multi-provider pricing)
   ├── zyvor-janus-metrics   Makespan, wait, utilization, timeline, benchmark score
+  ├── zyvor-janus-config    YAML / Forge bundle / scheduler + serving trace loaders
   ├── zyvor-janus-cli       zyvor-janus binary
   └── zyvor-janus-py        Python bindings (SimResult, SimSession)
 ```
+
+Dependency graph: `core` and `topology` have no path-dependencies; `model`
+depends on `{core, topology}`; `scheduler` depends on `{core, model,
+topology}`; `simulator` depends on `{core, model, scheduler}`; `cost` has
+no path-dependencies; `metrics` depends on `{core, model, cost}`; `config`
+sits above all of the above; `cli` depends on `{config, metrics}`; `py`
+depends on `{core, config, metrics, simulator}`.
+
+**Planned, not yet built:** a `zyvor-janus-api` crate for a Rust-native
+HTTP API server (today the API is Python/FastAPI, see `python/zyvor_janus/server/`).
+When it's built, its name will need to be reconciled with the *already
+published* `zyvor-janus-api` Docker image (`deploy/docker/Dockerfile.api`,
+`.github/workflows/docker-publish.yml`), which is the existing Python
+server, not this planned Rust crate.
 
 ## Simulation loop
 
@@ -104,7 +123,7 @@ Docker images and Kubernetes manifests live under `deploy/`. See [deploy/kuberne
 ## Design invariants
 
 - The Rust core never depends on Python or Gymnasium
-- Schedulers share a common `Scheduler` trait for benchmarking
+- Schedulers share a common `Scheduler` trait (defined in `zyvor-janus-scheduler`) for benchmarking
 - Forge CRDs and traces convert to internal models via adapters before entering the engine
 - Hardware is described by capability profiles (H100, H200, B200), not hardcoded logic
 

@@ -4,12 +4,12 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use zyvor_janus_core::cluster::Cluster;
-use zyvor_janus_core::models::{Gpu, Job, Node};
-use zyvor_janus_core::topology::TopologyGraph;
-use zyvor_janus_metrics::{JobsTimeline, SimulationMetrics};
 use serde::Deserialize;
 use serde_yaml::Value;
+use zyvor_janus_metrics::{JobsTimeline, SimulationMetrics};
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::{Gpu, Job, Node};
+use zyvor_janus_topology::TopologyGraph;
 
 use crate::{
     load_hardware_profiles, resolve_mig_registry_for_cluster, ConfigError, ConfigResult,
@@ -747,8 +747,7 @@ metadata:
     #[test]
     fn site_label_of_reads_the_federation_site_label() {
         let meta: Value =
-            serde_yaml::from_str("labels:\n  forge.ai/federated-training-site: site-a\n")
-                .unwrap();
+            serde_yaml::from_str("labels:\n  forge.ai/federated-training-site: site-a\n").unwrap();
         assert_eq!(site_label_of(&meta).as_deref(), Some("site-a"));
     }
 
@@ -859,7 +858,11 @@ spec:
         assert_eq!(meta.name, "run-a");
         assert_eq!(
             meta.target_clusters,
-            vec!["site-a".to_string(), "site-b".to_string(), "site-c".to_string()]
+            vec![
+                "site-a".to_string(),
+                "site-b".to_string(),
+                "site-c".to_string()
+            ]
         );
         assert!(meta.secure_aggregation);
         assert!(meta.dropout_recovery);

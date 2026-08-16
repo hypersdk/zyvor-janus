@@ -2,7 +2,11 @@
 resolver = "2"
 members = [
     "crates/zyvor-janus-core",
+    "crates/zyvor-janus-topology",
+    "crates/zyvor-janus-model",
     "crates/zyvor-janus-scheduler",
+    "crates/zyvor-janus-simulator",
+    "crates/zyvor-janus-cost",
     "crates/zyvor-janus-config",
     "crates/zyvor-janus-metrics",
     "crates/zyvor-janus-cli",
