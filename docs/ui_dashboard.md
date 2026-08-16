@@ -1,6 +1,6 @@
-# ForgeSim UI Dashboard Guide
+# Zyvor Janus UI Dashboard Guide
 
-ForgeSim provides two ways to monitor simulations: a **Rich terminal dashboard** (Phase 1) and a **web dashboard** (Phase 2). Both sit on top of the Rust core via PyO3 — the engine never depends on UI code.
+Zyvor Janus provides two ways to monitor simulations: a **Rich terminal dashboard** (Phase 1) and a **web dashboard** (Phase 2). Both sit on top of the Rust core via PyO3 — the engine never depends on UI code.
 
 See also: [UI roadmap](ui_roadmap.md) · [Architecture](architecture.md) · [Web app README](../web/README.md)
 
@@ -30,7 +30,7 @@ This script:
 1. Creates `.venv` (uses `python -m venv --without-pip` to avoid broken Homebrew `ensurepip`)
 2. Bootstraps pip via `get-pip.py` or `uv`
 3. Installs `rich`, `pyyaml`, `maturin`
-4. Builds the PyO3 extension (`forgesim._forgesim`)
+4. Builds the PyO3 extension (`zyvor_janus._zyvor_janus`)
 5. Patches `.venv/bin/activate` with the Homebrew expat fix (macOS)
 
 Activate the venv in new shells:
@@ -107,7 +107,7 @@ Options (passed through to the Python entry point):
 ```bash
 source .venv/bin/activate
 python python/examples/live_dashboard.py --config configs/clusters/small_h100.yaml
-python -m forgesim.dashboard --config configs/clusters/small_h100.yaml
+python -m zyvor_janus.dashboard --config configs/clusters/small_h100.yaml
 forge-sim-dashboard --config configs/clusters/small_h100.yaml   # after pip install -e .
 ```
 
@@ -115,7 +115,7 @@ forge-sim-dashboard --config configs/clusters/small_h100.yaml   # after pip inst
 
 - Uses `SimSession` (stepped DES) with `step_fifo()` to auto-advance
 - Reads extended `ClusterSnapshot` (nodes, GPUs, queue) from PyO3
-- Renders via [`python/forgesim/dashboard/`](../python/forgesim/dashboard/)
+- Renders via [`python/zyvor_janus/dashboard/`](../python/zyvor_janus/dashboard/)
 
 ---
 
@@ -220,7 +220,7 @@ Components such as `GanttChart`, `TopologyView`, and `ReplayControls` exist unde
 
 ## FastAPI backend
 
-**Module:** [`python/forgesim/server/app.py`](../python/forgesim/server/app.py)
+**Module:** [`python/zyvor_janus/server/app.py`](../python/zyvor_janus/server/app.py)
 
 ### REST endpoints
 
@@ -268,7 +268,7 @@ outputs/runs/{uuid}/
 ```bash
 source .venv/bin/activate
 export PYTHONPATH=python
-python -m uvicorn forgesim.server.app:app --reload --port 8080
+python -m uvicorn zyvor_janus.server.app:app --reload --port 8080
 ```
 
 ---
@@ -301,19 +301,19 @@ npm run start
 ## Architecture
 
 ```text
-ForgeSim Core (Rust)
+Zyvor Janus Core (Rust)
         │
 Python Bindings (PyO3: SimSession, SimResult, run_report_from_config)
         │
    ┌────┴────────────────────┐
    ▼                         ▼
 Rich CLI dashboard      FastAPI (REST + WebSocket)
-python/forgesim/              │
+python/zyvor_janus/              │
 /dashboard/                   ▼
                          Next.js (web/)
 ```
 
-**Scheduler decisions** for replay are recorded in [`crates/forgesim-core/src/decision_log.rs`](../crates/forgesim-core/src/decision_log.rs) and exported in `SimulationReport.decisions`.
+**Scheduler decisions** for replay are recorded in [`crates/zyvor-janus-core/src/decision_log.rs`](../crates/zyvor-janus-core/src/decision_log.rs) and exported in `SimulationReport.decisions`.
 
 ---
 
@@ -323,7 +323,7 @@ After `./scripts/setup_dev.sh`:
 
 ```bash
 source .venv/bin/activate
-python -c "import forgesim._forgesim; import rich; print('OK')"
+python -c "import zyvor_janus._zyvor_janus; import rich; print('OK')"
 ```
 
 After `./scripts/run_web_api.sh`:
@@ -345,15 +345,15 @@ See [deploy/kubernetes/README.md](../deploy/kubernetes/README.md) for Docker ima
 
 ## Brand / theming
 
-All ForgeSim UI surfaces share the Zyvor / HyperSDK design tokens from [zyvor.dev](https://zyvor.dev):
+All Zyvor Janus UI surfaces share the Zyvor / HyperSDK design tokens from [zyvor.dev](https://zyvor.dev):
 
 | Surface | Token source |
 |---------|--------------|
 | Web dashboard | [`web/src/styles/zyvor-tokens.css`](../web/src/styles/zyvor-tokens.css), [`web/src/lib/theme.ts`](../web/src/lib/theme.ts) |
-| Rich CLI dashboard | [`python/forgesim/theme.py`](../python/forgesim/theme.py) |
+| Rich CLI dashboard | [`python/zyvor_janus/theme.py`](../python/zyvor_janus/theme.py) |
 | Matplotlib Gantt / heatmap | Same Python module (`ACCENT_ORANGE`, `TEAL`, custom heatmap colormap) |
 
-Key colors: background `#050505`, primary accent `#f0583a`, busy GPU `#6366f1`, idle `#22c55e`, Gantt run `#10b981`. The web header displays the Zyvor logo with “ForgeSim · Zyvor AI Labs”.
+Key colors: background `#050505`, primary accent `#f0583a`, busy GPU `#6366f1`, idle `#22c55e`, Gantt run `#10b981`. The web header displays the Zyvor logo with “Zyvor Janus · Zyvor AI Labs”.
 
 ---
 
@@ -361,9 +361,9 @@ Key colors: background `#050505`, primary accent `#f0583a`, busy GPU `#6366f1`, 
 
 | Error | Fix |
 |-------|-----|
-| `No module named 'forgesim'` | Run `./scripts/setup_dev.sh`; use `.venv/bin/python` or activate venv |
+| `No module named 'zyvor-janus'` | Run `./scripts/setup_dev.sh`; use `.venv/bin/python` or activate venv |
 | `No module named pip` | `rm -rf .venv && ./scripts/setup_dev.sh` |
 | `pyexpat` / `libexpat` symbol error | `USE_UV=1 ./scripts/setup_dev.sh` or `brew reinstall expat python@3.13` |
-| `ForgeSim extension not built` | `./scripts/setup_dev.sh` (runs `maturin develop`) |
+| `Zyvor Janus extension not built` | `./scripts/setup_dev.sh` (runs `maturin develop`) |
 | UI shows no configs / API errors | Ensure `./scripts/run_web_api.sh` is running on port 8080 |
 | `typer` version warning from `zyvor-qa-agent` | Harmless outside `.venv`; ignore unless installed in `.venv` |

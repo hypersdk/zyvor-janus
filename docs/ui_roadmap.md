@@ -1,13 +1,13 @@
-# ForgeSim UI Roadmap
+# Zyvor Janus UI Roadmap
 
-ForgeSim's UI grows in stages on top of the Rust core and PyO3 bindings. The engine never depends on UI code.
+Zyvor Janus's UI grows in stages on top of the Rust core and PyO3 bindings. The engine never depends on UI code.
 
 **Full user guide:** [ui_dashboard.md](ui_dashboard.md)
 
 ## Architecture
 
 ```
-ForgeSim Core (Rust)
+Zyvor Janus Core (Rust)
         │
 Python Bindings (PyO3)
         │
@@ -31,13 +31,13 @@ Rich CLI dashboard    FastAPI (REST + WebSocket)
 
 ## Phase 1 — Rich CLI dashboard (done)
 
-- **Module:** `python/forgesim/dashboard/`
+- **Module:** `python/zyvor_janus/dashboard/`
 - **Run:** `./scripts/run_live_dashboard.sh --config configs/clusters/small_h100.yaml`
 - **Data:** `SimSession.step_fifo()` + extended `ClusterSnapshot`
 
 ## Phase 2 — Web dashboard (done, MVP)
 
-- **Backend:** `python/forgesim/server/app.py` — `./scripts/run_web_api.sh`
+- **Backend:** `python/zyvor_janus/server/app.py` — `./scripts/run_web_api.sh`
 - **Frontend:** `web/` — `./scripts/run_web_ui.sh` or `./scripts/run_web_dashboard.sh`
 - **Views:** home (run + compare), login
 - **Gap:** dedicated `/runs/:id` replay page not shipped (components exist; home may still link there)

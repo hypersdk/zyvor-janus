@@ -1,6 +1,6 @@
 # Scheduler Benchmark Score (P4)
 
-This document defines the ForgeSim scheduler benchmark report and optional composite score. **MVP implemented** in `crates/forgesim-metrics` (`SchedulerBenchmarkReport`). See the [benchmark platform roadmap](benchmark_platform.md).
+This document defines the Zyvor Janus scheduler benchmark report and optional composite score. **MVP implemented** in `crates/zyvor-janus-metrics` (`SchedulerBenchmarkReport`). See the [benchmark platform roadmap](benchmark_platform.md).
 
 ## Purpose
 

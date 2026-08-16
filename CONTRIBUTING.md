@@ -1,4 +1,4 @@
-# Contributing to ForgeSim
+# Contributing to Zyvor Janus
 
 ## Setup
 
@@ -29,17 +29,17 @@ cd web && npm install && cd ..
 Manual Rust-only build (no Python extension):
 
 ```bash
-cargo build --workspace --exclude forgesim-py
+cargo build --workspace --exclude zyvor-janus-py
 ```
 
 ## Before opening a PR
 
 ```bash
 cargo fmt --all
-cargo clippy --workspace --exclude forgesim-py -- -D warnings
-cargo test --workspace --exclude forgesim-py
-cargo test -p forgesim-config --test integration
-cargo test -p forgesim-cli --test cli_integration
+cargo clippy --workspace --exclude zyvor-janus-py -- -D warnings
+cargo test --workspace --exclude zyvor-janus-py
+cargo test -p zyvor-janus-config --test integration
+cargo test -p zyvor-janus-cli --test cli_integration
 PYTHONPATH=python python3 -m unittest discover -s python/tests -v
 ```
 

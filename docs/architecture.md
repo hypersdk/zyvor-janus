@@ -1,8 +1,8 @@
-# ForgeSim Architecture
+# Zyvor Janus Architecture
 
 ## Overview
 
-ForgeSim is a discrete-event GPU cluster scheduler simulator inspired by Zyvor Forge. It separates a high-performance **Rust simulation core** from a thin **Python research API**, with optional FastAPI + Next.js dashboards and a benchmark/analytics layer for LLM serving metrics.
+Zyvor Janus is a discrete-event GPU cluster scheduler simulator inspired by Zyvor Forge. It separates a high-performance **Rust simulation core** from a thin **Python research API**, with optional FastAPI + Next.js dashboards and a benchmark/analytics layer for LLM serving metrics.
 
 ## Layers
 
@@ -12,12 +12,12 @@ Python (Gymnasium, notebooks, viz, FastAPI, AIPerf adapters)
    PyO3 / maturin
         │
 Rust workspace
-  ├── forgesim-core      Event engine, cluster, resources, RL, inference model
-  ├── forgesim-scheduler Scheduling policies (fifo, priority, preemptive, forge, bestfit)
-  ├── forgesim-config    YAML / Forge bundle / scheduler + serving trace loaders
-  ├── forgesim-metrics   Makespan, wait, utilization, timeline, benchmark score
-  ├── forgesim-cli       forge-sim binary
-  └── forgesim-py        Python bindings (SimResult, SimSession)
+  ├── zyvor-janus-core      Event engine, cluster, resources, RL, inference model
+  ├── zyvor-janus-scheduler Scheduling policies (fifo, priority, preemptive, forge, bestfit)
+  ├── zyvor-janus-config    YAML / Forge bundle / scheduler + serving trace loaders
+  ├── zyvor-janus-metrics   Makespan, wait, utilization, timeline, benchmark score
+  ├── zyvor-janus-cli       zyvor-janus binary
+  └── zyvor-janus-py        Python bindings (SimResult, SimSession)
 ```
 
 ## Simulation loop
@@ -42,13 +42,13 @@ Rust workspace
 `RlSession` pauses the DES at scheduling decision points. An agent picks a
 waiting job index (or noop); the session places it, advances time to the
 next event, and returns a feature-vector observation plus wait-reduction
-reward. Exposed to Python as `SimSession` and wrapped by `ForgeSimEnv`.
+reward. Exposed to Python as `SimSession` and wrapped by `ZyvorJanusEnv`.
 
 ## Visualization (M8)
 
 `SimulationReport` bundles aggregate metrics with a `JobsTimeline` JSON
 (finished, running, and waiting jobs) and a `decisions` log for replay.
-The CLI writes timeline via `--jobs-output`; Python `forgesim.viz` renders
+The CLI writes timeline via `--jobs-output`; Python `zyvor_janus.viz` renders
 Gantt charts and GPU utilization heatmaps.
 
 ## UI stack
@@ -56,7 +56,7 @@ Gantt charts and GPU utilization heatmaps.
 The Rust core never knows about the UI — it exposes APIs and events only.
 
 ```
-ForgeSim Core (Rust)
+Zyvor Janus Core (Rust)
         │
 Python Bindings (PyO3: SimSession, SimResult, run_report_from_config)
         │
@@ -70,8 +70,8 @@ dashboard      │
 
 | Phase | Deliverable | Location | Status |
 |-------|-------------|----------|--------|
-| 1 | Rich live terminal dashboard | `python/forgesim/dashboard/` | Done |
-| 2 | FastAPI run registry + replay API | `python/forgesim/server/` | Done |
+| 1 | Rich live terminal dashboard | `python/zyvor_janus/dashboard/` | Done |
+| 2 | FastAPI run registry + replay API | `python/zyvor_janus/server/` | Done |
 | 2 | Next.js monitor (home, compare, login) | `web/` | Done (MVP) |
 | 4 | Benchmark + what-if pages | `web/src/app/benchmark`, `what-if` | Done (MVP) |
 
@@ -81,7 +81,7 @@ See [docs/ui_roadmap.md](ui_roadmap.md). **User guide:** [docs/ui_dashboard.md](
 
 ## Benchmark platform (MVP)
 
-ForgeSim connects scheduling decisions to LLM serving metrics (TTFT, TPS, goodput), calibrated via AIPerf.
+Zyvor Janus connects scheduling decisions to LLM serving metrics (TTFT, TPS, goodput), calibrated via AIPerf.
 
 ```text
 Simulation Layer (Rust DES + inference model)

@@ -1,6 +1,6 @@
 # Forge Input Adapters
 
-ForgeSim stays independent from Zyvor Forge (https://zyvor.dev/forge) via an adapter layer. Adapters convert external representations into internal `Job` objects before simulation.
+Zyvor Janus stays independent from Zyvor Forge (https://zyvor.dev/forge) via an adapter layer. Adapters convert external representations into internal `Job` objects before simulation.
 
 ## Primary goal
 
@@ -29,7 +29,7 @@ kubectl get fabricquotas -A -o yaml > forge-export/quotas/all.yaml
 Run simulation:
 
 ```bash
-cargo run -p forgesim-cli -- run \
+cargo run -p zyvor-janus-cli -- run \
   --forge-bundle tests/fixtures/forge \
   --profiles-dir configs/profiles
 ```
@@ -108,7 +108,7 @@ tenants' jobs. Internal YAML configs can set the same limits directly via
 
 **Known divergence from real Forge (as of this writing):** live-cluster
 testing found that Forge's actual quota enforcement is materially weaker
-than what ZyForgeSim simulates. `FabricQuota` is reconciled by a separate
+than what Zyvor Janus simulates. `FabricQuota` is reconciled by a separate
 `quota-operator`, asynchronously (event-driven plus a 1-minute poll)
 against jobs that already exist — it is never consulted by the
 ai-operator's scheduler or an admission webhook before a job is placed.
@@ -117,9 +117,9 @@ phase isn't recognized by the ai-operator's own reconcile loop, and the
 phases that create the job's PVC/Service/StatefulSet are unconditional —
 not gated on quota status at all. In a same-namespace test (two jobs
 requesting 1 GPU each against a `maxGPUs: 1` quota), **both jobs reached
-`Running` simultaneously** on a real Forge deployment, while ZyForgeSim
+`Running` simultaneously** on a real Forge deployment, while Zyvor Janus
 correctly serialized them (doubling the makespan, as designed). If
-you're using ZyForgeSim to predict what a live Forge cluster will
+you're using Zyvor Janus to predict what a live Forge cluster will
 actually do, don't assume quota caps hold — as of this writing, Forge
 will let a tenant exceed its quota if the raw GPU capacity is there. See
 `configs/profiles/quota-test-a.yaml`/`quota-test-b.yaml` for the test
@@ -128,8 +128,8 @@ scenario's calibrated profiles.
 ## Priority scheduling (M6)
 
 `spec.priority` (0–100, mapped to `Job.priority`) can drive placement order
-instead of arrival time: pass `--scheduler priority` to `forge-sim run
---forge-bundle` or `forge-sim replay`, or set `scheduler.type: priority` in
+instead of arrival time: pass `--scheduler priority` to `zyvor-janus run
+--forge-bundle` or `zyvor-janus replay`, or set `scheduler.type: priority` in
 an internal YAML config. The priority scheduler orders the waiting queue by
 highest priority first, breaking ties by earliest arrival — but it does not
 preempt jobs already running, so a low-priority job that started before a
@@ -151,7 +151,7 @@ non-zero.) A job that's been preempted 3 times becomes exempt from further
 eviction, so a persistently low-priority job still eventually finishes
 rather than being evicted forever. Only whole-GPU jobs trigger eviction; a
 MIG job that doesn't fit is left waiting. `SimulationMetrics.preemptions`
-counts how many evictions happened (`forge-sim run` prints a
+counts how many evictions happened (`zyvor-janus run` prints a
 `preemptions:` line when nonzero).
 
 ## Other schedulers (M6)
@@ -165,7 +165,7 @@ counts how many evictions happened (`forge-sim run` prints a
 | `bestfit` | Tightest-node GPU packing among feasible placements |
 
 ```bash
-cargo run -p forgesim-cli -- run \
+cargo run -p zyvor-janus-cli -- run \
   --forge-bundle tests/fixtures/forge \
   --scheduler bestfit
 ```
@@ -182,7 +182,7 @@ Internal YAML workloads set the same fields via `gang_enabled`,
 `gang_size_nodes`, and `gang_timeout_secs`:
 
 ```bash
-cargo run -p forgesim-cli -- run --config configs/clusters/gang_timeout_m6.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/gang_timeout_m6.yaml
 ```
 
 ## Calibrated profiles
@@ -222,7 +222,7 @@ Missing profiles cause an explicit error (no silent default runtime).
 
 ## GPU type registry
 
-[`configs/gpu_type_registry.yaml`](../configs/gpu_type_registry.yaml) maps Forge `gpuType` to ForgeSim hardware profiles:
+[`configs/gpu_type_registry.yaml`](../configs/gpu_type_registry.yaml) maps Forge `gpuType` to Zyvor Janus hardware profiles:
 
 ```yaml
 mappings:
@@ -232,7 +232,7 @@ mappings:
 
 ## FabricGpuNode → cluster
 
-Export `FabricGpuNode` CRDs into `forge-export/cluster/`. ForgeSim builds nodes and GPUs from `spec.nodeName`, `spec.gpuCount`, `spec.gpuType`, `spec.memoryGB`.
+Export `FabricGpuNode` CRDs into `forge-export/cluster/`. Zyvor Janus builds nodes and GPUs from `spec.nodeName`, `spec.gpuCount`, `spec.gpuType`, `spec.memoryGB`.
 
 ## MIG simulation (M4)
 
@@ -247,14 +247,14 @@ spec:
     count: 2
 ```
 
-MIG profiles live in [`configs/mig/`](../configs/mig/) keyed by hardware profile (`h100_80gb.yaml`). When a job needs slices that are not yet partitioned, ForgeSim simulates a **reconfiguration delay** (`reconfig_seconds`, default 30s) before the job starts.
+MIG profiles live in [`configs/mig/`](../configs/mig/) keyed by hardware profile (`h100_80gb.yaml`). When a job needs slices that are not yet partitioned, Zyvor Janus simulates a **reconfiguration delay** (`reconfig_seconds`, default 30s) before the job starts.
 
 Whole-GPU jobs cannot be placed on GPUs that are actively partitioned into MIG slices.
 
 Run the MIG example:
 
 ```bash
-cargo run -p forgesim-cli -- run --config configs/clusters/mig_single.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/mig_single.yaml
 ```
 
 ## Scheduler event trace (M3)
@@ -291,7 +291,7 @@ Derive traces from:
 ### Replay CLI
 
 ```bash
-cargo run -p forgesim-cli -- replay \
+cargo run -p zyvor-janus-cli -- replay \
   --trace tests/fixtures/traces/fifo_match.jsonl \
   --config configs/clusters/single_gpu.yaml
 ```
@@ -299,7 +299,7 @@ cargo run -p forgesim-cli -- replay \
 Or with a Forge cluster export:
 
 ```bash
-cargo run -p forgesim-cli -- replay \
+cargo run -p zyvor-janus-cli -- replay \
   --trace traces/production.jsonl \
   --forge-bundle forge-export
 ```
@@ -326,14 +326,14 @@ Output: `outputs/trace_diff.json` with per-job oracle vs simulated placement dif
 1. Load JSONL scheduler traces with `JobSubmitted` + `JobScheduled` events
 2. Replay jobs through FIFO simulation on a configured cluster
 3. Compare oracle placements vs simulated placements (GPUs + schedule time)
-4. Emit diff report JSON via `forge-sim replay`
+4. Emit diff report JSON via `zyvor-janus replay`
 5. Golden fixture in `tests/fixtures/traces/`
 
 ## Python API
 
 ```python
 from pathlib import Path
-from forgesim.adapters import ForgeBundleAdapter, TraceAdapter
+from zyvor_janus.adapters import ForgeBundleAdapter, TraceAdapter
 
 bundle = ForgeBundleAdapter(Path("configs/profiles")).from_directory("tests/fixtures/forge")
 assert bundle.jobs[0]["gpu_count"] == 32  # gang job
