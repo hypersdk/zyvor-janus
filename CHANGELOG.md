@@ -4,7 +4,18 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+> The project was renamed from ZyForgeSim/ForgeSim to **Zyvor Janus**.
+> Historical entries below have been relabeled to the new name; the
+> underlying milestones and code they describe are unchanged.
+
 ## [Unreleased]
+
+### Changed
+- Renamed the project from ZyForgeSim/ForgeSim to **Zyvor Janus**: Rust
+  crates (`forgesim-*` -> `zyvor-janus-*`), the CLI binary
+  (`forge-sim` -> `zyvor-janus`), the Python package/PyO3 module
+  (`forgesim` -> `zyvor_janus`), Docker images, the Kubernetes
+  namespace, and all `FORGESIM_*` env vars (-> `ZYVOR_JANUS_*`).
 
 ### Added
 
@@ -15,13 +26,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `PreemptivePriorityScheduler`, gang node spread + timeout,
   `ForgeScheduler` / `BestFitScheduler` (`fifo` | `priority` |
   `preemptive` | `forge` | `bestfit`).
-- **M7 — RL**: `RlSession` / `SimSession`, Gymnasium `ForgeSimEnv`,
+- **M7 — RL**: `RlSession` / `SimSession`, Gymnasium `ZyvorJanusEnv`,
   PPO baseline (`python/baselines/ppo_cleanrl.py`).
 - **M8 — Visualization**: `--jobs-output` timeline JSON, Gantt/heatmap
-  via `forgesim.viz`.
+  via `zyvor_janus.viz`.
 
 #### UI
-- Rich live terminal dashboard (`python/forgesim/dashboard/`,
+- Rich live terminal dashboard (`python/zyvor_janus/dashboard/`,
   `./scripts/run_live_dashboard.sh`).
 - FastAPI run registry + Next.js web dashboard (`web/`) with login,
   compare, `/benchmark`, and `/what-if` routes.
@@ -36,7 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `SchedulerBenchmarkReport` + cost model (`configs/analytics/cost.yaml`).
 - OpenAI-compatible shim at `POST /v1/chat/completions` (API key + rate
   limit; analytical timing).
-- AIPerf calibration adapter (`python -m forgesim.benchmarks.aiperf_adapter`).
+- AIPerf calibration adapter (`python -m zyvor_janus.benchmarks.aiperf_adapter`).
 - Twin store API (`GET /api/twins`) and what-if / benchmark REST endpoints.
 - CI workflow `.github/workflows/benchmark.yml` +
   `benchmarks/ci/run_golden.sh`.
@@ -46,9 +57,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Kubernetes manifests under `deploy/kubernetes/` (API + web + ingress).
 
 ### Fixed
-- `forge-sim run --output` / `replay --output` no longer fail with "No such
+- `zyvor-janus run --output` / `replay --output` no longer fail with "No such
   file or directory" when the target directory does not already exist.
-- `forgesim-py` failed to compile after `mig_reconfigs` was added to
+- `zyvor-janus-py` failed to compile after `mig_reconfigs` was added to
   `SimulationMetrics` (M4); the Python `SimResult` binding now exposes it too.
 - A stale `JobComplete` event scheduled before a job was preempted could,
   if that job was later resumed, fire after the resumed run had already
@@ -78,7 +89,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   (previously a no-op stub) — orders the waiting queue by highest
   `priority` first, ties broken by earliest arrival. Select it with
   `scheduler.type: priority` in internal YAML configs or `--scheduler
-  priority` on `forge-sim run --forge-bundle` / `forge-sim replay`. Does
+  priority` on `zyvor-janus run --forge-bundle` / `zyvor-janus replay`. Does
   not preempt already-running jobs.
 - M6 (preemption slice): new `PreemptivePriorityScheduler`
   (`scheduler.type: preemptive` / `--scheduler preemptive`) — a waiting

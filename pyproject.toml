@@ -3,7 +3,7 @@ requires = ["maturin>=1.7,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "forgesim"
+name = "zyvor_janus"
 version = "0.2.0"
 description = "Discrete-event GPU cluster scheduler simulator inspired by Zyvor Forge"
 readme = "README.md"
@@ -27,13 +27,13 @@ dashboard = ["rich>=13.0"]
 server = ["fastapi>=0.115", "uvicorn[standard]>=0.32", "websockets>=13.0", "rich>=13.0", "pydantic>=2.0"]
 
 [project.scripts]
-forge-sim-py = "forgesim.cli:main"
-forge-sim-dashboard = "forgesim.dashboard.__main__:main"
+zyvor-janus-py = "zyvor_janus.cli:main"
+zyvor-janus-dashboard = "zyvor_janus.dashboard.__main__:main"
 
 [tool.maturin]
-manifest-path = "crates/forgesim-py/Cargo.toml"
+manifest-path = "crates/zyvor-janus-py/Cargo.toml"
 python-source = "python"
-module-name = "forgesim._forgesim"
+module-name = "zyvor_janus._zyvor_janus"
 
 [tool.pytest.ini_options]
 testpaths = ["python/tests"]

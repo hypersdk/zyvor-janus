@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start FastAPI backend + Next.js frontend for the ForgeSim web dashboard.
+# Start FastAPI backend + Next.js frontend for the Zyvor Janus web dashboard.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -8,11 +8,11 @@ source "$ROOT/scripts/common.sh"
 
 API_PORT="${API_PORT:-8080}"
 UI_PORT="${UI_PORT:-3000}"
-export FORGESIM_API_URL="http://127.0.0.1:${API_PORT}"
+export ZYVOR_JANUS_API_URL="http://127.0.0.1:${API_PORT}"
 # Next's dev/start server can't proxy WebSocket upgrades through rewrites (see
 # web/src/lib/api.ts's runWebSocketUrl for details), so point the browser at the
 # API directly for the live run view.
-export NEXT_PUBLIC_FORGESIM_WS_URL="${NEXT_PUBLIC_FORGESIM_WS_URL:-ws://127.0.0.1:${API_PORT}}"
+export NEXT_PUBLIC_ZYVOR_JANUS_WS_URL="${NEXT_PUBLIC_ZYVOR_JANUS_WS_URL:-ws://127.0.0.1:${API_PORT}}"
 
 fix_homebrew_pyexpat
 require_venv "$ROOT"
@@ -24,13 +24,13 @@ ensure_web_deps "$ROOT/web"
 
 export PYTHONPATH="$ROOT/python${PYTHONPATH:+:$PYTHONPATH}"
 
-# Dashboard login — force local defaults unless FORGESIM_AUTH_CUSTOM=1 is set.
-if [[ -z "${FORGESIM_AUTH_CUSTOM:-}" ]]; then
-  export FORGESIM_DASHBOARD_USER="Admin"
-  export FORGESIM_DASHBOARD_PASSWORD="Admin@321"
+# Dashboard login — force local defaults unless ZYVOR_JANUS_AUTH_CUSTOM=1 is set.
+if [[ -z "${ZYVOR_JANUS_AUTH_CUSTOM:-}" ]]; then
+  export ZYVOR_JANUS_DASHBOARD_USER="Admin"
+  export ZYVOR_JANUS_DASHBOARD_PASSWORD="Admin@321"
 else
-  export FORGESIM_DASHBOARD_USER="${FORGESIM_DASHBOARD_USER:-Admin}"
-  export FORGESIM_DASHBOARD_PASSWORD="${FORGESIM_DASHBOARD_PASSWORD:-Admin@321}"
+  export ZYVOR_JANUS_DASHBOARD_USER="${ZYVOR_JANUS_DASHBOARD_USER:-Admin}"
+  export ZYVOR_JANUS_DASHBOARD_PASSWORD="${ZYVOR_JANUS_DASHBOARD_PASSWORD:-Admin@321}"
 fi
 
 cleanup() {
@@ -41,15 +41,15 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-echo "Starting ForgeSim web dashboard..."
+echo "Starting Zyvor Janus web dashboard..."
 echo "  API: http://127.0.0.1:${API_PORT}"
 echo "  UI:  http://127.0.0.1:${UI_PORT}"
-echo "  Login: ${FORGESIM_DASHBOARD_USER} / ${FORGESIM_DASHBOARD_PASSWORD}"
+echo "  Login: ${ZYVOR_JANUS_DASHBOARD_USER} / ${ZYVOR_JANUS_DASHBOARD_PASSWORD}"
 echo
 echo "Press Ctrl+C to stop both servers."
 echo
 
-"$PY" -m uvicorn forgesim.server.app:app --reload --host 127.0.0.1 --port "$API_PORT" &
+"$PY" -m uvicorn zyvor_janus.server.app:app --reload --host 127.0.0.1 --port "$API_PORT" &
 API_PID=$!
 
 # Give the API a moment to bind.

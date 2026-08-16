@@ -33,7 +33,7 @@ export function Sidebar({
         </div>
         {!collapsed ? (
           <div>
-            <div className="brand-copy-title">ForgeSim</div>
+            <div className="brand-copy-title">Zyvor Janus</div>
             <div className="brand-copy-sub">Console</div>
           </div>
         ) : null}
@@ -127,7 +127,7 @@ export function AppShell({
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("forgesim-sidebar-collapsed");
+      const stored = localStorage.getItem("zyvor-janus-sidebar-collapsed");
       if (stored === "0") setCollapsed(false);
       else setCollapsed(true);
     } catch {
@@ -139,7 +139,7 @@ export function AppShell({
     setCollapsed((c) => {
       const next = !c;
       try {
-        localStorage.setItem("forgesim-sidebar-collapsed", next ? "1" : "0");
+        localStorage.setItem("zyvor-janus-sidebar-collapsed", next ? "1" : "0");
       } catch {
         /* ignore */
       }

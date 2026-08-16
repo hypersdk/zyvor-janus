@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared helpers for ForgeSim shell scripts.
+# Shared helpers for Zyvor Janus shell scripts.
 fix_homebrew_pyexpat() {
   if [[ -d /opt/homebrew/opt/expat/lib ]]; then
     export DYLD_LIBRARY_PATH="/opt/homebrew/opt/expat/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
@@ -16,9 +16,9 @@ venv_python_wrapper_broken() {
   local py313="$venv/bin/python3.13"
   local target="$venv/bin/python3.13.bin"
   [[ -f "$py313" && ! -L "$py313" ]] || return 1
-  grep -q "ForgeSim: Homebrew pyexpat wrapper" "$py313" 2>/dev/null || return 1
+  grep -q "Zyvor Janus: Homebrew pyexpat wrapper" "$py313" 2>/dev/null || return 1
   [[ -e "$target" ]] || return 0
-  if [[ -f "$target" && ! -L "$target" ]] && grep -q "ForgeSim: Homebrew pyexpat wrapper" "$target" 2>/dev/null; then
+  if [[ -f "$target" && ! -L "$target" ]] && grep -q "Zyvor Janus: Homebrew pyexpat wrapper" "$target" 2>/dev/null; then
     return 0
   fi
   return 1
@@ -57,7 +57,7 @@ wrap_venv_python_for_pyexpat() {
     repair_venv_python_wrapper "$venv" || return 1
   fi
 
-  if [[ -f "$py313" && ! -L "$py313" ]] && grep -q "ForgeSim: Homebrew pyexpat wrapper" "$py313" 2>/dev/null; then
+  if [[ -f "$py313" && ! -L "$py313" ]] && grep -q "Zyvor Janus: Homebrew pyexpat wrapper" "$py313" 2>/dev/null; then
     [[ -e "$target" ]] || repair_venv_python_wrapper "$venv"
     return 0
   fi
@@ -77,7 +77,7 @@ wrap_venv_python_for_pyexpat() {
   rm -f "$py313" "${py313}.real"
   cat >"$py313" <<'EOF'
 #!/usr/bin/env bash
-# ForgeSim: Homebrew pyexpat wrapper
+# Zyvor Janus: Homebrew pyexpat wrapper
 if [[ -d /opt/homebrew/opt/expat/lib ]]; then
   export DYLD_LIBRARY_PATH="/opt/homebrew/opt/expat/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
 elif [[ -d /usr/local/opt/expat/lib ]]; then
@@ -104,7 +104,7 @@ EOF
   ln -sf pip "$venv/bin/pip3"
 }
 
-forgesim_root() {
+zyvor_janus_root() {
   cd "$(dirname "${BASH_SOURCE[1]}")/.." && pwd
 }
 
@@ -136,8 +136,8 @@ ensure_server_deps() {
 ensure_forge_extension() {
   local py="$1"
   export PYTHONPATH="${2}/python${PYTHONPATH:+:$PYTHONPATH}"
-  if ! "$py" -c "import forgesim._forgesim" >/dev/null 2>&1; then
-    echo "ForgeSim Rust extension not built. Run ./scripts/setup_dev.sh" >&2
+  if ! "$py" -c "import zyvor_janus._zyvor_janus" >/dev/null 2>&1; then
+    echo "Zyvor Janus Rust extension not built. Run ./scripts/setup_dev.sh" >&2
     exit 1
   fi
 }

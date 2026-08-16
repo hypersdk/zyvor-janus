@@ -1,4 +1,4 @@
-"""Tests for ForgeSim RL session and Gym env."""
+"""Tests for Zyvor Janus RL session and Gym env."""
 
 from __future__ import annotations
 
@@ -13,9 +13,9 @@ RL_CONFIG = ROOT / "configs/clusters/rl_small.yaml"
 class TestSimSession(unittest.TestCase):
     def test_fifo_rollout_completes(self) -> None:
         try:
-            from forgesim._forgesim import SimSession
+            from zyvor_janus._zyvor_janus import SimSession
         except ImportError:
-            self.skipTest("forgesim extension not built")
+            self.skipTest("zyvor_janus extension not built")
 
         session = SimSession(str(RL_CONFIG))
         session.reset()
@@ -32,14 +32,14 @@ class TestSimSession(unittest.TestCase):
 
 
 @unittest.skipUnless(RL_CONFIG.exists(), "rl config fixture missing")
-class TestForgeSimEnv(unittest.TestCase):
+class TestZyvorJanusEnv(unittest.TestCase):
     def test_gym_api(self) -> None:
         try:
-            from forgesim.envs.forge_gym import ForgeSimEnv
+            from zyvor_janus.envs.zyvor_janus_gym import ZyvorJanusEnv
         except ImportError as exc:
             self.skipTest(str(exc))
 
-        env = ForgeSimEnv(str(RL_CONFIG))
+        env = ZyvorJanusEnv(str(RL_CONFIG))
         obs, info = env.reset(seed=0)
         self.assertEqual(obs.shape[0], env.obs_size)
         self.assertEqual(env.obs_size, 5 + env.top_k * 7)

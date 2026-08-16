@@ -43,7 +43,7 @@ export function LoginForm() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("forgesim-login-user");
+      const saved = localStorage.getItem("zyvor-janus-login-user");
       if (saved) setUsername(saved);
     } catch {
       /* ignore */
@@ -67,8 +67,8 @@ export function LoginForm() {
         return;
       }
       try {
-        if (remember) localStorage.setItem("forgesim-login-user", username.trim());
-        else localStorage.removeItem("forgesim-login-user");
+        if (remember) localStorage.setItem("zyvor-janus-login-user", username.trim());
+        else localStorage.removeItem("zyvor-janus-login-user");
       } catch {
         /* ignore */
       }
@@ -126,7 +126,7 @@ export function LoginForm() {
 
         <div style={{ position: "relative", zIndex: 1 }}>
           <div className="login-fade-in" style={{ marginBottom: 32 }}>
-            <div className="brand-name">ForgeSim</div>
+            <div className="brand-name">Zyvor Janus</div>
             <div className="brand-sub">ZYVOR AI LABS</div>
           </div>
           <h2 className="hero-headline login-fade-in d1">
@@ -176,7 +176,7 @@ export function LoginForm() {
         <div className="login-panel-glow" aria-hidden="true" />
         <div className="panel-inner">
           <div className="mobile-brand">
-            <h1 className="panel-title">ForgeSim</h1>
+            <h1 className="panel-title">Zyvor Janus</h1>
             <p className="panel-sub" style={{ marginBottom: 0 }}>
               Mission Control
             </p>

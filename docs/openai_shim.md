@@ -1,8 +1,8 @@
 # OpenAI-Compatible Virtual Endpoint (P6)
 
-ForgeSim exposes a **virtual** OpenAI-compatible HTTP API for testing clients, workload generators, and AIPerf — **without running a real LLM**.
+Zyvor Janus exposes a **virtual** OpenAI-compatible HTTP API for testing clients, workload generators, and AIPerf — **without running a real LLM**.
 
-Mounted on the FastAPI server (`python/forgesim/server/`) at `/v1`. See the platform overview: [benchmark_platform.md](benchmark_platform.md).
+Mounted on the FastAPI server (`python/zyvor_janus/server/`) at `/v1`. See the platform overview: [benchmark_platform.md](benchmark_platform.md).
 
 ## Status
 
@@ -11,8 +11,8 @@ Mounted on the FastAPI server (`python/forgesim/server/`) at `/v1`. See the plat
 | Capability | Status |
 |------------|--------|
 | `POST /v1/chat/completions` | Done |
-| Bearer API key auth | Done (`FORGESIM_API_KEY`, default `dev-forgesim-key`) |
-| Per-key rate limiting | Done (`FORGESIM_SHIM_RATE_LIMIT`, default 120/min) |
+| Bearer API key auth | Done (`ZYVOR_JANUS_API_KEY`, default `dev-zyvor-janus-key`) |
+| Per-key rate limiting | Done (`ZYVOR_JANUS_SHIM_RATE_LIMIT`, default 120/min) |
 | SSE streaming (`stream: true`) | Done |
 | Analytical TTFT from profiles | Done |
 | Inject into live DES queue | **Not implemented** (planned follow-up) |
@@ -30,7 +30,7 @@ Example (API running on port 8080):
 
 ```bash
 curl -s http://127.0.0.1:8080/v1/chat/completions \
-  -H "Authorization: Bearer dev-forgesim-key" \
+  -H "Authorization: Bearer dev-zyvor-janus-key" \
   -H "Content-Type: application/json" \
   -d '{"model":"llama-70b","messages":[{"role":"user","content":"hello"}],"max_tokens":64,"stream":false}'
 ```
@@ -62,22 +62,22 @@ HTTP request → inject JobArrival into simulation queue
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
-| `FORGESIM_API_KEY` | `dev-forgesim-key` | Bearer token required by the shim |
-| `FORGESIM_SHIM_RATE_LIMIT` | `120` | Requests per minute per client key |
-| `FORGESIM_PROFILES_DIR` | `configs/profiles` | Profile registry for timing |
+| `ZYVOR_JANUS_API_KEY` | `dev-zyvor-janus-key` | Bearer token required by the shim |
+| `ZYVOR_JANUS_SHIM_RATE_LIMIT` | `120` | Requests per minute per client key |
+| `ZYVOR_JANUS_PROFILES_DIR` | `configs/profiles` | Profile registry for timing |
 
 ## AIPerf integration (P7)
 
 AIPerf can target the shim as an OpenAI-compatible endpoint for **deterministic** benchmark runs:
 
 ```text
-AIPerf → ForgeSim OpenAI shim → simulated TTFT/TPS
+AIPerf → Zyvor Janus OpenAI shim → simulated TTFT/TPS
 ```
 
-Live AIPerf against real vLLM remains a separate **calibration** path (offline JSON import via `python -m forgesim.benchmarks.aiperf_adapter`).
+Live AIPerf against real vLLM remains a separate **calibration** path (offline JSON import via `python -m zyvor_janus.benchmarks.aiperf_adapter`).
 
 ## Security notes
 
-- Change `FORGESIM_API_KEY` outside local demos.
+- Change `ZYVOR_JANUS_API_KEY` outside local demos.
 - Prefer binding the API to `127.0.0.1` when exposing the shim on a shared host (`HOST=127.0.0.1 ./scripts/run_web_api.sh`).
 - Do not log prompt bodies in production deployments.

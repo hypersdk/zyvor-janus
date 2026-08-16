@@ -1,4 +1,4 @@
-"""Integration tests: invoke forge-sim CLI and verify end-to-end outputs."""
+"""Integration tests: invoke zyvor-janus CLI and verify end-to-end outputs."""
 
 from __future__ import annotations
 
@@ -16,9 +16,9 @@ def _cargo_available() -> bool:
     return shutil.which("cargo") is not None
 
 
-def _forge_sim(*args: str) -> subprocess.CompletedProcess[str]:
+def _zyvor_janus(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["cargo", "run", "-q", "-p", "forgesim-cli", "--", *args],
+        ["cargo", "run", "-q", "-p", "zyvor-janus-cli", "--", *args],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -27,14 +27,14 @@ def _forge_sim(*args: str) -> subprocess.CompletedProcess[str]:
 
 
 @unittest.skipUnless(_cargo_available(), "cargo not available")
-class TestForgeSimCliIntegration(unittest.TestCase):
+class TestZyvorJanusCliIntegration(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         OUTPUTS.mkdir(exist_ok=True)
 
     def test_run_synthetic_config(self) -> None:
         out = OUTPUTS / "integration_metrics.json"
-        result = _forge_sim(
+        result = _zyvor_janus(
             "run",
             "--config",
             "configs/clusters/small_h100.yaml",
@@ -52,7 +52,7 @@ class TestForgeSimCliIntegration(unittest.TestCase):
         self.assertGreater(metrics["makespan"], 0)
 
     def test_run_forge_bundle(self) -> None:
-        result = _forge_sim(
+        result = _zyvor_janus(
             "run",
             "--forge-bundle",
             "tests/fixtures/forge",
@@ -64,7 +64,7 @@ class TestForgeSimCliIntegration(unittest.TestCase):
 
     def test_replay_trace_zero_diffs(self) -> None:
         out = OUTPUTS / "integration_trace_diff.json"
-        result = _forge_sim(
+        result = _zyvor_janus(
             "replay",
             "--trace",
             "tests/fixtures/traces/fifo_match.jsonl",
@@ -79,12 +79,12 @@ class TestForgeSimCliIntegration(unittest.TestCase):
         self.assertEqual(report["matching_placements"], 2)
 
     def test_run_mig_workload(self) -> None:
-        result = _forge_sim("run", "--config", "configs/clusters/mig_single.yaml")
+        result = _zyvor_janus("run", "--config", "configs/clusters/mig_single.yaml")
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("mig reconfigs:", result.stdout)
 
     def test_run_without_input_fails(self) -> None:
-        result = _forge_sim("run")
+        result = _zyvor_janus("run")
         self.assertNotEqual(result.returncode, 0)
 
 

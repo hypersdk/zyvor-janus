@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start the ForgeSim FastAPI backend (port 8080 by default).
+# Start the Zyvor Janus FastAPI backend (port 8080 by default).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -18,9 +18,9 @@ ensure_server_deps "$PY"
 
 export PYTHONPATH="$ROOT/python${PYTHONPATH:+:$PYTHONPATH}"
 
-echo "ForgeSim API → http://127.0.0.1:${PORT}"
+echo "Zyvor Janus API → http://127.0.0.1:${PORT}"
 echo "  health:  http://127.0.0.1:${PORT}/api/health"
 echo "  configs: http://127.0.0.1:${PORT}/api/configs"
 echo
 
-exec "$PY" -m uvicorn forgesim.server.app:app --reload --host "$HOST" --port "$PORT"
+exec "$PY" -m uvicorn zyvor_janus.server.app:app --reload --host "$HOST" --port "$PORT"

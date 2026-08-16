@@ -1,6 +1,6 @@
-# ForgeSim Web Dashboard
+# Zyvor Janus Web Dashboard
 
-Next.js frontend for monitoring ForgeSim simulations and benchmark scenarios.
+Next.js frontend for monitoring Zyvor Janus simulations and benchmark scenarios.
 
 **Full documentation:** [../docs/ui_dashboard.md](../docs/ui_dashboard.md)
 
@@ -58,7 +58,7 @@ The web UI matches the [Zyvor](https://zyvor.dev) / HyperSDK dark palette:
 - CSS variables: [`src/styles/zyvor-tokens.css`](src/styles/zyvor-tokens.css)
 - Tailwind mapping: [`tailwind.config.ts`](tailwind.config.ts)
 - Chart/topology constants: [`src/lib/theme.ts`](src/lib/theme.ts)
-- Shared Python palette (CLI + matplotlib): [`../python/forgesim/theme.py`](../python/forgesim/theme.py)
+- Shared Python palette (CLI + matplotlib): [`../python/zyvor_janus/theme.py`](../python/zyvor_janus/theme.py)
 
 Fonts: **Inter** (UI), **JetBrains Mono** (metrics). Header uses the Zyvor logo from `public/zyvor-logo.png`.
 
@@ -68,13 +68,13 @@ Default credentials (override via env for production):
 
 | Field | Default |
 |-------|---------|
-| Username | `Admin` (`FORGESIM_DASHBOARD_USER`) |
-| Password | `Admin@321` (`FORGESIM_DASHBOARD_PASSWORD`) |
+| Username | `Admin` (`ZYVOR_JANUS_DASHBOARD_USER`) |
+| Password | `Admin@321` (`ZYVOR_JANUS_DASHBOARD_PASSWORD`) |
 
 ```bash
 ./scripts/run_web_dashboard.sh
 # or override:
-FORGESIM_DASHBOARD_USER=Admin FORGESIM_DASHBOARD_PASSWORD='your-secret' ./scripts/run_web_dashboard.sh
+ZYVOR_JANUS_DASHBOARD_USER=Admin ZYVOR_JANUS_DASHBOARD_PASSWORD='your-secret' ./scripts/run_web_dashboard.sh
 ```
 
 Sessions use an httpOnly cookie (7-day expiry). Unauthenticated users are redirected to `/login`.

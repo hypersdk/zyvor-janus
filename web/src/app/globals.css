@@ -6,7 +6,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ForgeSim app shell — QA topbar-only (no sidebar) */
+/* Zyvor Janus app shell — QA topbar-only (no sidebar) */
 .app-shell {
   position: relative;
   z-index: 1;

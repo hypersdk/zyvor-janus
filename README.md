@@ -1,10 +1,10 @@
-# ZyForgeSim (ForgeSim)
+# Zyvor Janus
 
-ForgeSim is a discrete-event simulator for Kubernetes-native GPU scheduling inspired by Zyvor Forge ( https://zyvor.dev/forge ). It models clusters, MIG, topology, tenants, quotas, gang scheduling, and AI workloads, enabling scheduler development, RL research, and performance evaluation without requiring physical NVIDIA GPUs.
+Zyvor Janus is a discrete-event simulator for Kubernetes-native GPU scheduling inspired by Zyvor Forge ( https://zyvor.dev/forge ). It models clusters, MIG, topology, tenants, quotas, gang scheduling, and AI workloads, enabling scheduler development, RL research, and performance evaluation without requiring physical NVIDIA GPUs.
 
-[![Watch the Forge + ZyForgeSim demo](https://img.youtube.com/vi/p0GQVaZ_X1A/maxresdefault.jpg)](https://youtu.be/p0GQVaZ_X1A "Watch the Forge + ZyForgeSim demo on YouTube")
+[![Watch the Forge + Zyvor Janus demo](https://img.youtube.com/vi/p0GQVaZ_X1A/maxresdefault.jpg)](https://youtu.be/p0GQVaZ_X1A "Watch the Forge + Zyvor Janus demo on YouTube")
 
-**▶ [Watch the demo](https://youtu.be/p0GQVaZ_X1A)** — Forge (production GPU/Kubernetes control plane) and ZyForgeSim (its simulator) running side by side, ~3 min.
+**▶ [Watch the demo](https://youtu.be/p0GQVaZ_X1A)** — Forge (production GPU/Kubernetes control plane) and Zyvor Janus (its simulator) running side by side, ~3 min.
 
 ## Architecture
 
@@ -19,22 +19,22 @@ ForgeSim is a discrete-event simulator for Kubernetes-native GPU scheduling insp
 Pre-built images are published to GitHub Container Registry on every release:
 
 ```bash
-docker pull ghcr.io/hypersdk/forgesim-api:latest
-docker pull ghcr.io/hypersdk/forgesim-web:latest
+docker pull ghcr.io/hypersdk/zyvor-janus-api:latest
+docker pull ghcr.io/hypersdk/zyvor-janus-web:latest
 
 # Run the API + web dashboard locally:
-docker network create forgesim 2>/dev/null || true
-docker run -d --name forgesim-api --network forgesim -p 8080:8080 \
-  ghcr.io/hypersdk/forgesim-api:latest
-docker run -d --name forgesim-web --network forgesim -p 3000:3000 \
-  -e FORGESIM_API_URL=http://forgesim-api:8080 \
-  ghcr.io/hypersdk/forgesim-web:latest
+docker network create zyvor-janus 2>/dev/null || true
+docker run -d --name zyvor-janus-api --network zyvor-janus -p 8080:8080 \
+  ghcr.io/hypersdk/zyvor-janus-api:latest
+docker run -d --name zyvor-janus-web --network zyvor-janus -p 3000:3000 \
+  -e ZYVOR_JANUS_API_URL=http://zyvor-janus-api:8080 \
+  ghcr.io/hypersdk/zyvor-janus-web:latest
 ```
 
 Then open http://localhost:3000 (default login `Admin` / `Admin@321` — override via
-`FORGESIM_DASHBOARD_USER` / `FORGESIM_DASHBOARD_PASSWORD` env vars on the web container).
+`ZYVOR_JANUS_DASHBOARD_USER` / `ZYVOR_JANUS_DASHBOARD_PASSWORD` env vars on the web container).
 
-Pin a specific release instead of `latest` with `ghcr.io/hypersdk/forgesim-api:vX.Y.Z`.
+Pin a specific release instead of `latest` with `ghcr.io/hypersdk/zyvor-janus-api:vX.Y.Z`.
 
 ### Kubernetes
 
@@ -54,7 +54,7 @@ See [`deploy/kubernetes/README.md`](deploy/kubernetes/README.md) for the full gu
 ```bash
 git clone https://github.com/hypersdk/ZyForgeSim.git
 cd ZyForgeSim
-cargo build --release -p forgesim-cli
+cargo build --release -p zyvor-janus-cli
 
 # Optional: Python bindings + web API (builds the PyO3 extension)
 ./scripts/setup_dev.sh
@@ -70,7 +70,7 @@ optional `viz`, `rl`, and `dashboard` extras.
 ### Internal workload (M1)
 
 ```bash
-cargo run -p forgesim-cli -- run --config configs/clusters/small_h100.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/small_h100.yaml
 ```
 
 ### Forge export bundle (M2 — test Forge without GPUs)
@@ -89,7 +89,7 @@ kubectl get fabricquotas -A -o yaml > forge-export/quotas/all.yaml
 3. Run simulation:
 
 ```bash
-cargo run -p forgesim-cli -- run \
+cargo run -p zyvor-janus-cli -- run \
   --forge-bundle forge-export \
   --profiles-dir configs/profiles
 ```
@@ -97,7 +97,7 @@ cargo run -p forgesim-cli -- run \
 Or use the included fixture:
 
 ```bash
-cargo run -p forgesim-cli -- run \
+cargo run -p zyvor-janus-cli -- run \
   --forge-bundle tests/fixtures/forge \
   --profiles-dir configs/profiles
 ```
@@ -106,13 +106,13 @@ cargo run -p forgesim-cli -- run \
 
 ```bash
 # Priority: highest priority first, no preemption
-cargo run -p forgesim-cli -- run --config configs/clusters/priority_scheduler.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/priority_scheduler.yaml
 
 # Preemptive: evict lower-priority running jobs for higher-priority arrivals
-cargo run -p forgesim-cli -- run --config configs/clusters/preemption_preemptive.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/preemption_preemptive.yaml
 
 # Forge bundle with scheduler flag (fifo | priority | preemptive | forge | bestfit)
-cargo run -p forgesim-cli -- run \
+cargo run -p zyvor-janus-cli -- run \
   --forge-bundle tests/fixtures/forge \
   --scheduler forge
 ```
@@ -120,7 +120,7 @@ cargo run -p forgesim-cli -- run \
 ### Scheduler trace replay (M3 — compare vs production Forge)
 
 ```bash
-cargo run -p forgesim-cli -- replay \
+cargo run -p zyvor-janus-cli -- replay \
   --trace tests/fixtures/traces/fifo_match.jsonl \
   --config configs/clusters/single_gpu.yaml
 ```
@@ -130,7 +130,7 @@ Writes `outputs/trace_diff.json` with oracle vs FIFO placement diffs.
 ### MIG simulation (M4)
 
 ```bash
-cargo run -p forgesim-cli -- run --config configs/clusters/mig_single.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/mig_single.yaml
 ```
 
 MIG jobs use `mig_profile` and `mig_count` (Forge `spec.mig`) to allocate fractional GPU slices with a simulated reconfiguration delay.
@@ -139,19 +139,19 @@ MIG jobs use `mig_profile` and `mig_count` (Forge `spec.mig`) to allocate fracti
 
 ```bash
 # NVLink-domain-aware placement; cross-domain jobs inflate runtime
-cargo run -p forgesim-cli -- run --config configs/clusters/topology_penalty.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/topology_penalty.yaml
 
 # Gang jobs require GPUs spread across gang_size_nodes distinct nodes
-cargo run -p forgesim-cli -- run --config configs/clusters/gang_m6.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/gang_m6.yaml
 
 # Gang timeout fails jobs that cannot be placed in time (jobs_failed metric)
-cargo run -p forgesim-cli -- run --config configs/clusters/gang_timeout_m6.yaml
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/gang_timeout_m6.yaml
 ```
 
 ### Inference + LLM serving metrics (P1)
 
 ```bash
-cargo run -p forgesim-cli -- run \
+cargo run -p zyvor-janus-cli -- run \
   --config configs/clusters/inference_llama.yaml \
   --output outputs/inference_metrics.json
 ```
@@ -161,7 +161,7 @@ Uses profile v2 fields (`prefill_ms_per_token`, `decode_tps`) to estimate TTFT/T
 ### Visualization (M8)
 
 ```bash
-cargo run -p forgesim-cli -- run \
+cargo run -p zyvor-janus-cli -- run \
   --config configs/clusters/small_h100.yaml \
   --jobs-output outputs/jobs.json
 
@@ -214,7 +214,7 @@ python python/baselines/ppo_cleanrl.py --config configs/clusters/rl_small.yaml
 ### AIPerf calibration (P7)
 
 ```bash
-PYTHONPATH=python python -m forgesim.benchmarks.aiperf_adapter \
+PYTHONPATH=python python -m zyvor_janus.benchmarks.aiperf_adapter \
   import tests/fixtures/aiperf/sample_result.json --profile llama-70b
 ```
 
@@ -224,7 +224,7 @@ With the web API running (`./scripts/run_web_api.sh`):
 
 ```bash
 curl -s http://127.0.0.1:8080/v1/chat/completions \
-  -H "Authorization: Bearer dev-forgesim-key" \
+  -H "Authorization: Bearer dev-zyvor-janus-key" \
   -H "Content-Type: application/json" \
   -d '{"model":"llama-70b","messages":[{"role":"user","content":"hi"}],"stream":false}'
 ```
@@ -236,16 +236,16 @@ See [docs/openai_shim.md](docs/openai_shim.md).
 | Layer | Location | What it covers |
 |-------|----------|----------------|
 | Rust unit | `crates/*/src/` (`#[test]` modules) | Models, MIG, resource manager, FIFO, trace parsing |
-| Rust integration | `crates/forgesim-config/tests/integration.rs` | Full sim pipelines (YAML, Forge bundle, trace, MIG, RL, topology) |
-| CLI integration | `crates/forgesim-cli/tests/cli_integration.rs` | `forge-sim run` / `replay` binary |
+| Rust integration | `crates/zyvor-janus-config/tests/integration.rs` | Full sim pipelines (YAML, Forge bundle, trace, MIG, RL, topology) |
+| CLI integration | `crates/zyvor-janus-cli/tests/cli_integration.rs` | `zyvor-janus run` / `replay` binary |
 | Python unit | `python/tests/test_unit_adapters.py` | CRD mapping, profiles, bundle, trace adapters |
-| Python integration | `python/tests/test_integration_cli.py` | CLI via `cargo run -p forgesim-cli` |
+| Python integration | `python/tests/test_integration_cli.py` | CLI via `cargo run -p zyvor-janus-cli` |
 | Benchmark / UI | `python/tests/test_*benchmark*`, `test_server_*`, `test_openai_*` | API, shim, AIPerf, score |
 
 ```bash
-cargo test --workspace --exclude forgesim-py
-cargo test -p forgesim-config --test integration
-cargo test -p forgesim-cli --test cli_integration
+cargo test --workspace --exclude zyvor-janus-py
+cargo test -p zyvor-janus-config --test integration
+cargo test -p zyvor-janus-cli --test cli_integration
 PYTHONPATH=python python3 -m unittest discover -s python/tests -v
 bash benchmarks/ci/run_golden.sh
 ```
@@ -254,7 +254,7 @@ bash benchmarks/ci/run_golden.sh
 
 ```
 crates/              Rust workspace (core, scheduler, config, metrics, cli, py)
-python/forgesim/     Adapters, envs, viz, dashboard, server, benchmarks, workloads
+python/zyvor_janus/     Adapters, envs, viz, dashboard, server, benchmarks, workloads
 web/                 Next.js web dashboard (/ , /benchmark, /what-if)
 scripts/             setup_dev.sh, run_*_dashboard.sh, clean.sh
 deploy/              Docker images + Kubernetes manifests
@@ -280,11 +280,11 @@ Schedulers: `fifo`, `priority`, `preemptive`, `forge` (alias for preemptive), `b
 Preemptive scheduler moves a low-priority job across **machines** after preemption:
 
 ```bash
-cargo run -p forgesim-cli -- run --config configs/clusters/dual_node_preempt.yaml
-# Dashboard + wow reel (writes ~/Desktop/forgesim-client-dual-node-migrate-wow-reel.mp4)
+cargo run -p zyvor-janus-cli -- run --config configs/clusters/dual_node_preempt.yaml
+# Dashboard + wow reel (writes ~/Desktop/zyvor-janus-client-dual-node-migrate-wow-reel.mp4)
 ./scripts/run_web_dashboard.sh   # separate terminal
-FORGESIM_DEMO_CONFIG=dual_node_preempt.yaml \
-  node scripts/demo-videos/record-forgesim-2gpu-migrate-wow-reel.mjs
+ZYVOR_JANUS_DEMO_CONFIG=dual_node_preempt.yaml \
+  node scripts/demo-videos/record-zyvor-janus-2gpu-migrate-wow-reel.mjs
 ```
 
 This is a **digital-twin placement migrate**. Forge’s production live migrate is KubeVirt VMs (Path A); pod checkpoint/restore is experimental Path B — see Forge [`docs/product/POD_VS_VM_MIGRATION.md`](https://github.com/ssahani/forge/blob/main/docs/product/POD_VS_VM_MIGRATION.md).

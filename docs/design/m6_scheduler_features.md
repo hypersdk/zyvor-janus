@@ -3,7 +3,7 @@
 Status: quotas, priority, preemption, and node-aware gang placement done.
 Gang is scoped to atomic multi-node spread (`gang_size_nodes` distinct nodes)
 rather than full ForgeGang plugin parity — see
-[`resource.rs`](../../crates/forgesim-core/src/resource.rs).
+[`resource.rs`](../../crates/zyvor-janus-core/src/resource.rs).
 
 M6 bundles four mostly-independent features from `docs/milestones.md`:
 quotas, priority, gang plugin parity, preemption. They don't need to land
@@ -24,27 +24,27 @@ together — recommend separate PRs in the order below.
   rejects and keeps trying the rest of the queue, so no engine change was
   needed. Covered by unit tests in `resource.rs`/`cluster.rs` and
   `integration_forge_bundle_quota_delays_second_job`
-  (`crates/forgesim-config/tests/integration.rs`), which proves two
+  (`crates/zyvor-janus-config/tests/integration.rs`), which proves two
   same-tenant jobs that *could* run concurrently on the raw GPU count
   instead serialize under a tight quota. Live-cluster testing later found
   that real Forge's own quota enforcement doesn't actually match this
   model — see `docs/forge_input.md`'s "Known divergence from real Forge"
   note under "Tenant GPU quotas" for what was found (async, best-effort,
   doesn't block placement).
-- **Priority — done.** `PriorityScheduler` (`crates/forgesim-scheduler/src/priority.rs`)
+- **Priority — done.** `PriorityScheduler` (`crates/zyvor-janus-scheduler/src/priority.rs`)
   sorts the waiting queue by `(priority desc, arrival_time asc)` via
   `Cluster::sort_waiting_by_priority`, then places jobs through the same
   `place_in_order` helper `FifoScheduler` now also shares
-  (`crates/forgesim-scheduler/src/common.rs` — factored out since the two
+  (`crates/zyvor-janus-scheduler/src/common.rs` — factored out since the two
   schedulers differed only in sort order). It does *not* preempt: a job
   already running when a higher-priority one arrives keeps running: the
   new job only wins the *next* scheduling decision, which is exactly the
   gap preemption (below) is meant to close. Selectable via
   `scheduler.type: priority` in internal YAML configs and
-  `--scheduler priority` on `forge-sim run --forge-bundle` /
-  `forge-sim replay`. Covered by unit tests in `priority.rs`/`cluster.rs`
+  `--scheduler priority` on `zyvor-janus run --forge-bundle` /
+  `zyvor-janus replay`. Covered by unit tests in `priority.rs`/`cluster.rs`
   and `integration_priority_scheduler_prefers_high_priority_job`
-  (`crates/forgesim-config/tests/integration.rs`), which runs the same
+  (`crates/zyvor-janus-config/tests/integration.rs`), which runs the same
   workload under both policies and shows priority achieves a lower mean
   wait time for identical total makespan.
 - **Gang scheduling — done (scoped).** `gang_enabled` / `gang_size_nodes`
@@ -61,7 +61,7 @@ together — recommend separate PRs in the order below.
   by `engine::tests::gang_timeout_fails_job_that_never_fits` and
   `integration_gang_job_fails_when_gang_timeout_expires`.
 - **Preemption — done.** `PreemptivePriorityScheduler`
-  (`crates/forgesim-scheduler/src/preemptive.rs`) extends priority ordering:
+  (`crates/zyvor-janus-scheduler/src/preemptive.rs`) extends priority ordering:
   a waiting job that can't currently fit may evict lower-priority running
   jobs (lowest priority first) via the new `Cluster::evict_job` /
   `resume_evicted_job` pair, trying eviction candidates one at a time via
@@ -118,7 +118,7 @@ together — recommend separate PRs in the order below.
   cleanly when eviction wouldn't free enough capacity), an engine-level
   regression test for the stale-event bug above, and
   `integration_preemptive_scheduler_evicts_for_higher_priority_arrival`
-  (`crates/forgesim-config/tests/integration.rs`), which demonstrates the
+  (`crates/zyvor-janus-config/tests/integration.rs`), which demonstrates the
   concrete case non-preemptive priority ordering can't handle: a
   low-priority job already *running* when a much higher-priority one
   arrives.

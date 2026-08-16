@@ -26,7 +26,7 @@ export function AuthenticatedChrome({ children }: { children: React.ReactNode })
         <div className="topbar">
           <Link href="/" className="topbar-brand">
             <span className="topbar-dot" aria-hidden="true" />
-            Zyvor ForgeSim · Mission Control
+            Zyvor Janus · Mission Control
           </Link>
           <nav className="topbar-nav" aria-label="Primary">
             {NAV.map((item) => (

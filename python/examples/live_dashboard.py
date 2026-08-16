@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the ForgeSim Rich live dashboard."""
+"""Run the Zyvor Janus Rich live dashboard."""
 
 from __future__ import annotations
 
@@ -28,10 +28,10 @@ def _check_prerequisites() -> None:
         ) from exc
 
     try:
-        from forgesim import _forgesim  # noqa: F401
+        from zyvor_janus import _zyvor_janus  # noqa: F401
     except ImportError as exc:
         raise SystemExit(
-            "ForgeSim Rust extension is not built.\n"
+            "Zyvor Janus Rust extension is not built.\n"
             "Run from repo root:\n"
             "  ./scripts/setup_dev.sh\n"
             "  source .venv/bin/activate\n"
@@ -44,7 +44,7 @@ def _check_prerequisites() -> None:
 def main() -> None:
     _bootstrap_python_path()
     _check_prerequisites()
-    from forgesim.dashboard.__main__ import main as run_dashboard
+    from zyvor_janus.dashboard.__main__ import main as run_dashboard
 
     run_dashboard()
 

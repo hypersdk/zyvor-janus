@@ -1,4 +1,4 @@
-# ForgeSim Benchmark Platform — Manual Test Document
+# Zyvor Janus Benchmark Platform — Manual Test Document
 
 **Version:** P0–P10 MVP (implemented in `main`)  
 **Audience:** QA / developers validating simulation, benchmark, and analytics layers  
@@ -12,7 +12,7 @@ See also: [benchmark_platform.md](benchmark_platform.md) · [ui_dashboard.md](ui
 
 | Requirement | Notes |
 |-------------|--------|
-| Rust toolchain | `cargo build -p forgesim-cli` |
+| Rust toolchain | `cargo build -p zyvor-janus-cli` |
 | Python ≥ 3.10 + venv | `./scripts/setup_dev.sh` (builds PyO3 extension) |
 | Node.js ≥ 18 | For web UI (`cd web && npm install`) |
 | Optional: `fastapi`, `uvicorn` | For API + OpenAI shim tests |
@@ -23,7 +23,7 @@ See also: [benchmark_platform.md](benchmark_platform.md) · [ui_dashboard.md](ui
 ./scripts/setup_dev.sh
 source .venv/bin/activate
 cd web && npm install && cd ..
-cargo build -p forgesim-cli
+cargo build -p zyvor-janus-cli
 ```
 
 ### Start services (web tests)
@@ -34,9 +34,9 @@ cargo build -p forgesim-cli
 # API: http://localhost:8080/api/health
 ```
 
-**Login (web):** `Admin` / `Admin@321` (override via `FORGESIM_DASHBOARD_USER` / `FORGESIM_DASHBOARD_PASSWORD`).
+**Login (web):** `Admin` / `Admin@321` (override via `ZYVOR_JANUS_DASHBOARD_USER` / `ZYVOR_JANUS_DASHBOARD_PASSWORD`).
 
-**OpenAI shim API key:** `dev-forgesim-key` (override via `FORGESIM_API_KEY`).
+**OpenAI shim API key:** `dev-zyvor-janus-key` (override via `ZYVOR_JANUS_API_KEY`).
 
 ---
 
@@ -160,7 +160,7 @@ ls outputs/runs/$RUN_ID/
 **Steps:**
 
 ```bash
-cargo run -p forgesim-cli -- run \
+cargo run -p zyvor-janus-cli -- run \
   --config configs/clusters/inference_llama.yaml \
   --output /tmp/inference_metrics.json
 cat /tmp/inference_metrics.json | jq '.inference_jobs, .ttft_p50, .tps_mean, .goodput'
@@ -208,7 +208,7 @@ cat /tmp/inference_metrics.json | jq '.inference_jobs, .ttft_p50, .tps_mean, .go
 
 ```bash
 PYTHONPATH=python python3 -c "
-from forgesim.adapters.profiles import ProfileRegistry
+from zyvor_janus.adapters.profiles import ProfileRegistry
 from pathlib import Path
 r = ProfileRegistry(Path('configs/profiles'))
 print(r.lookup_v2('llama-70b', 'H100'))
@@ -226,7 +226,7 @@ print(r.lookup_v2('llama-70b', 'H100'))
 **Steps:**
 
 ```bash
-PYTHONPATH=python python3 python/forgesim/workloads/generate_synthetic.py \
+PYTHONPATH=python python3 python/zyvor_janus/workloads/generate_synthetic.py \
   --preset peak_chat --seed 42 --preview | jq '.job_count'
 
 # Repeat — job_count and first arrivals must match
@@ -241,7 +241,7 @@ PYTHONPATH=python python3 python/forgesim/workloads/generate_synthetic.py \
 **Steps:**
 
 ```bash
-PYTHONPATH=python python3 python/forgesim/workloads/generate_synthetic.py \
+PYTHONPATH=python python3 python/zyvor_janus/workloads/generate_synthetic.py \
   --preset peak_chat --seed 42 \
   --output tests/fixtures/workloads/synthetic_llm_peak.yaml \
   --trace-output /tmp/serving_peak.json
@@ -265,13 +265,13 @@ head -20 tests/fixtures/workloads/synthetic_llm_peak.yaml
 **Steps:**
 
 ```bash
-cargo test -p forgesim-config integration_serving_trace_import_roundtrip -- --nocapture
-cargo test -p forgesim-config serving_trace::tests -- --nocapture
+cargo test -p zyvor-janus-config integration_serving_trace_import_roundtrip -- --nocapture
+cargo test -p zyvor-janus-config serving_trace::tests -- --nocapture
 ```
 
 **Expected:** Jobs loaded with `model_id`, token counts, tenant preserved.
 
-**Important:** Do not mix with M3 scheduler traces (`crates/forgesim-config/src/trace.rs` fixtures).
+**Important:** Do not mix with M3 scheduler traces (`crates/zyvor-janus-config/src/trace.rs` fixtures).
 
 ---
 
@@ -305,7 +305,7 @@ PYTHONPATH=python python3 -m unittest python.tests.test_benchmark_platform.Servi
 
 ```python
 from pathlib import Path
-from forgesim.adapters.serving_trace import load_serving_trace, to_aiperf_requests
+from zyvor_janus.adapters.serving_trace import load_serving_trace, to_aiperf_requests
 trace = load_serving_trace(Path("tests/fixtures/traces/serving_llama.jsonl"))
 rows = to_aiperf_requests(trace)
 assert rows[0]["input_sequence_length"] == 512
@@ -313,7 +313,7 @@ assert rows[0]["input_sequence_length"] == 512
 
 **Expected:** Field mapping round-trips without using M3 trace format.
 
-**Note:** CLI flags `--serving-trace` / `--export-serving-trace` on `forge-sim run` are not in `forgesim-cli` yet — use API/Python/Rust library paths above.
+**Note:** CLI flags `--serving-trace` / `--export-serving-trace` on `zyvor-janus run` are not in `zyvor-janus-cli` yet — use API/Python/Rust library paths above.
 
 ---
 
@@ -396,7 +396,7 @@ curl -s http://localhost:8080/api/benchmark/reports | jq 'length'
 
 ## 9. P6 — OpenAI-compatible shim
 
-**Prerequisite:** API running (`forgesim.server.app` mounts shim at `/v1`).
+**Prerequisite:** API running (`zyvor_janus.server.app` mounts shim at `/v1`).
 
 ### MT-P6-01: Auth required
 
@@ -409,7 +409,7 @@ curl -s -o /dev/null -w "%{http_code}\n" \
 
 # Should 200
 curl -s -X POST http://localhost:8080/v1/chat/completions \
-  -H "Authorization: Bearer dev-forgesim-key" \
+  -H "Authorization: Bearer dev-zyvor-janus-key" \
   -H "Content-Type: application/json" \
   -d '{"model":"llama-70b","messages":[{"role":"user","content":"hello world"}]}' | jq '.choices[0].message.content'
 ```
@@ -420,7 +420,7 @@ curl -s -X POST http://localhost:8080/v1/chat/completions \
 
 ```bash
 curl -N -X POST http://localhost:8080/v1/chat/completions \
-  -H "Authorization: Bearer dev-forgesim-key" \
+  -H "Authorization: Bearer dev-zyvor-janus-key" \
   -H "Content-Type: application/json" \
   -d '{"model":"llama-70b","stream":true,"messages":[{"role":"user","content":"one two three"}]}'
 ```
@@ -431,7 +431,7 @@ curl -N -X POST http://localhost:8080/v1/chat/completions \
 
 ### MT-P6-03: Rate limit
 
-**Steps:** Send >120 requests/min from same client IP (default `FORGESIM_SHIM_RATE_LIMIT=120`).
+**Steps:** Send >120 requests/min from same client IP (default `ZYVOR_JANUS_SHIM_RATE_LIMIT=120`).
 
 **Expected:** HTTP 429 with `"rate limit exceeded"`.
 
@@ -446,7 +446,7 @@ curl -N -X POST http://localhost:8080/v1/chat/completions \
 **Steps:**
 
 ```bash
-PYTHONPATH=python python3 -m forgesim.benchmarks.aiperf_adapter import \
+PYTHONPATH=python python3 -m zyvor_janus.benchmarks.aiperf_adapter import \
   tests/fixtures/aiperf/sample_result.json \
   --profile llama-70b --gpu-type H100 \
   --profiles-dir /tmp/profiles_test
@@ -464,7 +464,7 @@ cat /tmp/profiles_test/llama-70b.yaml
 ### MT-P7-02: Export workload to AIPerf config
 
 ```bash
-PYTHONPATH=python python3 -m forgesim.benchmarks.aiperf_adapter export \
+PYTHONPATH=python python3 -m zyvor_janus.benchmarks.aiperf_adapter export \
   configs/workloads/inference_llama.yaml \
   --output /tmp/aiperf_config.json
 
@@ -507,7 +507,7 @@ curl -s -X POST http://localhost:8080/api/what-if \
 
 ```python
 from pathlib import Path
-from forgesim.benchmarks.twin_store import TwinStore, TwinEntry
+from zyvor_janus.benchmarks.twin_store import TwinStore, TwinEntry
 
 store = TwinStore(Path("outputs/twins"))
 v1 = store.upsert(TwinEntry("H100", "llama-70b", 50.0, 95.0, 10.0, TwinStore.now_iso(), "run-1"))
@@ -550,7 +550,7 @@ bash benchmarks/ci/run_golden.sh
 ### MT-P10-02: Full regression suite (pre-PR)
 
 ```bash
-cargo test --workspace --exclude forgesim-py
+cargo test --workspace --exclude zyvor-janus-py
 PYTHONPATH=python python3 -m unittest discover -s python/tests -v
 ```
 
@@ -587,7 +587,7 @@ End-to-end “Simulated vs calibrated” demo (plan milestone: P1 + P7 + P5):
 | Plan item | Status |
 |-----------|--------|
 | Run detail UI `/runs/:id` | **Missing page** — home may link here; use `outputs/runs/{id}/` artifacts |
-| CLI `--serving-trace` flags | Not in `forge-sim` CLI — use Rust lib / Python adapter / API export |
+| CLI `--serving-trace` flags | Not in `zyvor-janus` CLI — use Rust lib / Python adapter / API export |
 | Serving-trace API tokens | Export may stub `input_tokens` / `output_tokens` (e.g. 128/64) |
 | OpenAI shim → live DES queue | Analytical timing only ([openai_shim.md](openai_shim.md)) |
 | Benchmark AIPerf upload UI | Use Python `aiperf_adapter` CLI |

@@ -1,4 +1,4 @@
-"""CleanRL-inspired PPO baseline for ForgeSimEnv."""
+"""CleanRL-inspired PPO baseline for ZyvorJanusEnv."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise ImportError("PPO baseline requires torch; install with pip install -e '.[rl]'") from exc
 
-from forgesim.envs.forge_gym import ForgeSimEnv
+from zyvor_janus.envs.zyvor_janus_gym import ZyvorJanusEnv
 
 
 @dataclass
@@ -45,7 +45,7 @@ class Agent(nn.Module):
         return self.policy(hidden), self.value(hidden)
 
 
-def rollout_policy(env: ForgeSimEnv, agent: Agent, *, steps: int, seed: int) -> Rollout:
+def rollout_policy(env: ZyvorJanusEnv, agent: Agent, *, steps: int, seed: int) -> Rollout:
     rng = random.Random(seed)
     obs_buf: list[np.ndarray] = []
     actions: list[int] = []
@@ -75,7 +75,7 @@ def rollout_policy(env: ForgeSimEnv, agent: Agent, *, steps: int, seed: int) -> 
 
 
 def train(args: argparse.Namespace) -> None:
-    env = ForgeSimEnv(args.config)
+    env = ZyvorJanusEnv(args.config)
     agent = Agent(env.obs_size, env.action_space_n)
     optimizer = torch.optim.Adam(agent.parameters(), lr=args.lr)
 

@@ -1,4 +1,4 @@
-# Inference workload schema (ForgeSim benchmark platform)
+# Inference workload schema (Zyvor Janus benchmark platform)
 #
 # Required for inference jobs:
 #   model_id, input_tokens, output_tokens
@@ -6,7 +6,7 @@
 # Optional:
 #   batch_size (default 1), concurrency (default 1), request_id, tenant
 #
-# runtime is ignored when model_id + tokens are set; ForgeSim derives runtime
+# runtime is ignored when model_id + tokens are set; Zyvor Janus derives runtime
 # from calibrated profiles in configs/profiles/.
 
 jobs:

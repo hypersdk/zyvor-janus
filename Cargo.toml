@@ -1,12 +1,12 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/forgesim-core",
-    "crates/forgesim-scheduler",
-    "crates/forgesim-config",
-    "crates/forgesim-metrics",
-    "crates/forgesim-cli",
-    "crates/forgesim-py",
+    "crates/zyvor-janus-core",
+    "crates/zyvor-janus-scheduler",
+    "crates/zyvor-janus-config",
+    "crates/zyvor-janus-metrics",
+    "crates/zyvor-janus-cli",
+    "crates/zyvor-janus-py",
 ]
 
 [workspace.package]

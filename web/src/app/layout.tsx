@@ -15,7 +15,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ForgeSim · Mission Control",
+  title: "Zyvor Janus · Mission Control",
   description: "Monitor, replay, and compare GPU scheduler simulations",
 };
 

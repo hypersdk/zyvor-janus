@@ -1,8 +1,8 @@
 import unittest
 
-from forgesim.adapters.profiles import ProfileRegistry
-from forgesim.adapters.serving_trace import SERVING_TRACE_VERSION, from_aiperf_rows, load_serving_trace
-from forgesim.workloads.generate_synthetic import generate_jobs, validate_jobs
+from zyvor_janus.adapters.profiles import ProfileRegistry
+from zyvor_janus.adapters.serving_trace import SERVING_TRACE_VERSION, from_aiperf_rows, load_serving_trace
+from zyvor_janus.workloads.generate_synthetic import generate_jobs, validate_jobs
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]

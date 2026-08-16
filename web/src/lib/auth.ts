@@ -1,16 +1,16 @@
-/** Session cookie auth for the ForgeSim dashboard. */
+/** Session cookie auth for the Zyvor Janus dashboard. */
 
-export const COOKIE_NAME = "forgesim_session";
+export const COOKIE_NAME = "zyvor_janus_session";
 export const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // seconds
 export const DEFAULT_USERNAME = "Admin";
 export const DEFAULT_PASSWORD = "Admin@321";
 
 export function getDashboardUsername(): string {
-  return process.env.FORGESIM_DASHBOARD_USER?.trim() || DEFAULT_USERNAME;
+  return process.env.ZYVOR_JANUS_DASHBOARD_USER?.trim() || DEFAULT_USERNAME;
 }
 
 export function getDashboardPassword(): string {
-  return process.env.FORGESIM_DASHBOARD_PASSWORD?.trim() || DEFAULT_PASSWORD;
+  return process.env.ZYVOR_JANUS_DASHBOARD_PASSWORD?.trim() || DEFAULT_PASSWORD;
 }
 
 export function isAuthEnabled(): boolean {
@@ -19,7 +19,7 @@ export function isAuthEnabled(): boolean {
 
 export function getAuthSecret(): string {
   return (
-    process.env.FORGESIM_AUTH_SECRET?.trim() ||
+    process.env.ZYVOR_JANUS_AUTH_SECRET?.trim() ||
     getDashboardPassword() ||
     DEFAULT_PASSWORD
   );
@@ -65,7 +65,7 @@ function matchesPassword(input: string, expected: string): boolean {
 
 export async function createSessionToken(): Promise<string> {
   const exp = Date.now() + SESSION_MAX_AGE * 1000;
-  const payload = `forgesim:${exp}`;
+  const payload = `zyvor-janus:`;
   const sig = await hmacSign(payload, getAuthSecret());
   return `${payload}.${sig}`;
 }

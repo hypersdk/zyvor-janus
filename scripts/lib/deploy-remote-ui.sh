@@ -26,21 +26,21 @@ else
   _FUI_WHITE=''
 fi
 
-FORGESIM_DEPLOY_START=${SECONDS:-0}
-_FORGESIM_UI_STEP=0
-_FORGESIM_UI_TOTAL=7
+ZYVOR_JANUS_DEPLOY_START=${SECONDS:-0}
+_ZYVOR_JANUS_UI_STEP=0
+_ZYVOR_JANUS_UI_TOTAL=7
 
-forgesim_ui_set_total() {
-  _FORGESIM_UI_TOTAL="${1:-7}"
+zyvor_janus_ui_set_total() {
+  _ZYVOR_JANUS_UI_TOTAL="${1:-7}"
 }
 
-forgesim_ui_elapsed() {
-  local s=$((SECONDS - FORGESIM_DEPLOY_START))
+zyvor_janus_ui_elapsed() {
+  local s=$((SECONDS - ZYVOR_JANUS_DEPLOY_START))
   printf '%02d:%02d' $((s / 60)) $((s % 60))
 }
 
-forgesim_ui_banner() {
-  local title="${1:-ForgeSim Remote Deploy}"
+zyvor_janus_ui_banner() {
+  local title="${1:-Zyvor Janus Remote Deploy}"
   local subtitle="${2:-}"
   echo ""
   echo "${_FUI_MAGENTA}${_FUI_BOLD}  ╔══════════════════════════════════════════════════════════════════╗${_FUI_RESET}"
@@ -52,12 +52,12 @@ forgesim_ui_banner() {
   echo ""
 }
 
-forgesim_ui_kv() {
+zyvor_janus_ui_kv() {
   local key="$1" val="$2"
   printf "  ${_FUI_DIM}%-12s${_FUI_RESET} %s\n" "${key}:" "${val}"
 }
 
-forgesim_ui_progress() {
+zyvor_janus_ui_progress() {
   local current="$1" total="$2"
   local width=28
   local filled=$((current * width / total))
@@ -66,39 +66,39 @@ forgesim_ui_progress() {
   printf "  ${_FUI_BLUE}["
   printf '%*s' "$filled" '' | tr ' ' '█'
   printf '%*s' "$empty" '' | tr ' ' '░'
-  printf "]${_FUI_RESET} ${_FUI_DIM}%3d%%${_FUI_RESET}  ${_FUI_DIM}elapsed %s${_FUI_RESET}\n" "$pct" "$(forgesim_ui_elapsed)"
+  printf "]${_FUI_RESET} ${_FUI_DIM}%3d%%${_FUI_RESET}  ${_FUI_DIM}elapsed %s${_FUI_RESET}\n" "$pct" "$(zyvor_janus_ui_elapsed)"
 }
 
-forgesim_ui_step() {
-  _FORGESIM_UI_STEP="$1"
-  local total="${2:-$_FORGESIM_UI_TOTAL}"
+zyvor_janus_ui_step() {
+  _ZYVOR_JANUS_UI_STEP="$1"
+  local total="${2:-$_ZYVOR_JANUS_UI_TOTAL}"
   local label="${3:-}"
   echo ""
-  forgesim_ui_progress "$_FORGESIM_UI_STEP" "$total"
-  echo "${_FUI_CYAN}${_FUI_BOLD}  ▶ Step ${_FORGESIM_UI_STEP}/${total}${_FUI_RESET}  ${label}"
+  zyvor_janus_ui_progress "$_ZYVOR_JANUS_UI_STEP" "$total"
+  echo "${_FUI_CYAN}${_FUI_BOLD}  ▶ Step ${_ZYVOR_JANUS_UI_STEP}/${total}${_FUI_RESET}  ${label}"
   echo "${_FUI_DIM}  ────────────────────────────────────────────────────────────────${_FUI_RESET}"
 }
 
 info()  { echo "${_FUI_GREEN}  ✓${_FUI_RESET} $*"; }
 warn()  { echo "${_FUI_YELLOW}  ⚠${_FUI_RESET}  $*"; }
 error() { echo "${_FUI_RED}  ✗${_FUI_RESET} $*"; exit 1; }
-step()  { forgesim_ui_step "$@"; }
+step()  { zyvor_janus_ui_step "$@"; }
 
-forgesim_ui_divider() {
+zyvor_janus_ui_divider() {
   echo "${_FUI_DIM}  ────────────────────────────────────────────────────────────────${_FUI_RESET}"
 }
 
-forgesim_ui_success() {
+zyvor_janus_ui_success() {
   local host="$1" user="$2"
   echo ""
   echo "${_FUI_GREEN}${_FUI_BOLD}  ╔══════════════════════════════════════════════════════════════════╗${_FUI_RESET}"
   echo "${_FUI_GREEN}${_FUI_BOLD}  ║${_FUI_RESET}  ${_FUI_WHITE}${_FUI_BOLD}🎉  Deployment complete${_FUI_RESET}  ${_FUI_DIM}${user}@${host}${_FUI_RESET}$(printf '%*s' $((35 - ${#user} - ${#host})) '')${_FUI_GREEN}${_FUI_BOLD}║${_FUI_RESET}"
-  echo "${_FUI_GREEN}${_FUI_BOLD}  ║${_FUI_RESET}  ${_FUI_DIM}Total time: $(forgesim_ui_elapsed)${_FUI_RESET}$(printf '%*s' 44 '')${_FUI_GREEN}${_FUI_BOLD}║${_FUI_RESET}"
+  echo "${_FUI_GREEN}${_FUI_BOLD}  ║${_FUI_RESET}  ${_FUI_DIM}Total time: $(zyvor_janus_ui_elapsed)${_FUI_RESET}$(printf '%*s' 44 '')${_FUI_GREEN}${_FUI_BOLD}║${_FUI_RESET}"
   echo "${_FUI_GREEN}${_FUI_BOLD}  ╚══════════════════════════════════════════════════════════════════╝${_FUI_RESET}"
   echo ""
 }
 
-forgesim_ui_panel() {
+zyvor_janus_ui_panel() {
   local title="$1"
   shift
   echo ""

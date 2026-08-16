@@ -14,10 +14,10 @@ GET_PIP="$ROOT/scripts/get-pip.py"
 patch_activate() {
   local activate="$VENV/bin/activate"
   [[ -f "$activate" ]] || return 0
-  if ! grep -q "FORGESIM_DYLD_EXPAT" "$activate" 2>/dev/null; then
+  if ! grep -q "ZYVOR_JANUS_DYLD_EXPAT" "$activate" 2>/dev/null; then
     cat >>"$activate" <<'EOF'
 
-# ForgeSim: Homebrew python@3.13 pyexpat fix
+# Zyvor Janus: Homebrew python@3.13 pyexpat fix
 if [[ -d /opt/homebrew/opt/expat/lib ]]; then
   export DYLD_LIBRARY_PATH="/opt/homebrew/opt/expat/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
 elif [[ -d /usr/local/opt/expat/lib ]]; then
@@ -186,7 +186,7 @@ install_rust_extension() {
     exit 1
   }
 
-  echo "Building ForgeSim PyO3 extension with $maturin_bin ..."
+  echo "Building Zyvor Janus PyO3 extension with $maturin_bin ..."
   export VIRTUAL_ENV="$VENV"
   export PATH="$VENV/bin:$PATH"
   fix_homebrew_pyexpat
@@ -198,7 +198,7 @@ install_rust_extension() {
 
   echo "maturin develop failed; retrying with --skip-install + wheel install..." >&2
   "$maturin_bin" develop --skip-install
-  WHEEL="$(ls -t "$ROOT"/target/wheels/forgesim-*.whl 2>/dev/null | head -1 || true)"
+  WHEEL="$(ls -t "$ROOT"/target/wheels/zyvor_janus-*.whl 2>/dev/null | head -1 || true)"
   if [[ -z "$WHEEL" ]]; then
     echo "No wheel produced under target/wheels/" >&2
     exit 1
@@ -213,7 +213,7 @@ install_rust_extension() {
 verify_install() {
   fix_homebrew_pyexpat
   export PYTHONPATH="$ROOT/python${PYTHONPATH:+:$PYTHONPATH}"
-  "$PY" -c "import forgesim._forgesim; import rich; print('OK: forgesim extension + rich')"
+  "$PY" -c "import zyvor_janus._zyvor_janus; import rich; print('OK: zyvor_janus extension + rich')"
 }
 
 ensure_venv

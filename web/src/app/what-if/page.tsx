@@ -48,7 +48,7 @@ function downloadCsv(rows: Row[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `forgesim-whatif-${Date.now()}.csv`;
+  a.download = `zyvor-janus-whatif-${Date.now()}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }

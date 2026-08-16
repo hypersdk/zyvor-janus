@@ -1,7 +1,8 @@
-"""Unit tests for ForgeSim Python adapters (isolated, no CLI/Rust extension)."""
+"""Unit tests for Zyvor Janus Python adapters (isolated, no CLI/Rust extension)."""
 
 from __future__ import annotations
 
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -12,12 +13,12 @@ PROFILES = ROOT / "configs" / "profiles"
 
 class TestGpuCountFromSpec(unittest.TestCase):
     def test_non_distributed_uses_spec_gpus(self) -> None:
-        from forgesim.adapters.crd import gpu_count_from_spec
+        from zyvor_janus.adapters.crd import gpu_count_from_spec
 
         self.assertEqual(gpu_count_from_spec({"gpus": 4}), 4)
 
     def test_distributed_uses_nodes_times_gpus_per_node(self) -> None:
-        from forgesim.adapters.crd import gpu_count_from_spec
+        from zyvor_janus.adapters.crd import gpu_count_from_spec
 
         spec = {
             "gpus": 8,
@@ -26,7 +27,7 @@ class TestGpuCountFromSpec(unittest.TestCase):
         self.assertEqual(gpu_count_from_spec(spec), 32)
 
     def test_mig_uses_count_not_spec_gpus(self) -> None:
-        from forgesim.adapters.crd import gpu_count_from_spec
+        from zyvor_janus.adapters.crd import gpu_count_from_spec
 
         spec = {"gpus": 8, "mig": {"profile": "1g.10gb", "count": 2}}
         self.assertEqual(gpu_count_from_spec(spec), 2)
@@ -34,7 +35,7 @@ class TestGpuCountFromSpec(unittest.TestCase):
 
 class TestResolveTenant(unittest.TestCase):
     def test_matches_namespace_list(self) -> None:
-        from forgesim.adapters.crd import resolve_tenant
+        from zyvor_janus.adapters.crd import resolve_tenant
 
         quotas = [{"spec": {"team": "team-a", "namespaces": ["ns-a", "ns-b"]}}]
         self.assertEqual(resolve_tenant("ns-b", quotas), "team-a")
@@ -43,7 +44,7 @@ class TestResolveTenant(unittest.TestCase):
 
 class TestFabricAIJobMapping(unittest.TestCase):
     def test_mig_fields_mapped(self) -> None:
-        from forgesim.adapters.crd import fabric_ai_job_to_job
+        from zyvor_janus.adapters.crd import fabric_ai_job_to_job
 
         manifest = {
             "metadata": {"name": "mig-inference", "namespace": "ml-infra"},
@@ -61,7 +62,7 @@ class TestFabricAIJobMapping(unittest.TestCase):
         self.assertEqual(job["mig_count"], 2)
 
     def test_network_rdma_hint(self) -> None:
-        from forgesim.adapters.crd import fabric_ai_job_to_job
+        from zyvor_janus.adapters.crd import fabric_ai_job_to_job
 
         manifest = {
             "metadata": {"name": "j", "namespace": "default"},
@@ -71,7 +72,7 @@ class TestFabricAIJobMapping(unittest.TestCase):
         self.assertEqual(job["network_bw_gbps"], 400.0)
 
     def test_no_runtime_when_not_provided(self) -> None:
-        from forgesim.adapters.crd import fabric_ai_job_to_job
+        from zyvor_janus.adapters.crd import fabric_ai_job_to_job
 
         manifest = {
             "metadata": {"name": "j", "namespace": "default"},
@@ -80,10 +81,34 @@ class TestFabricAIJobMapping(unittest.TestCase):
         job = fabric_ai_job_to_job(manifest)
         self.assertNotIn("runtime", job)
 
+    def test_site_label_carried_onto_the_job(self) -> None:
+        from zyvor_janus.adapters.crd import fabric_ai_job_to_job
+
+        manifest = {
+            "metadata": {
+                "name": "j",
+                "namespace": "default",
+                "labels": {"forge.ai/federated-training-site": "site-a"},
+            },
+            "spec": {"gpus": 1},
+        }
+        job = fabric_ai_job_to_job(manifest)
+        self.assertEqual(job["site"], "site-a")
+
+    def test_no_site_label_means_no_site(self) -> None:
+        from zyvor_janus.adapters.crd import fabric_ai_job_to_job
+
+        manifest = {
+            "metadata": {"name": "j", "namespace": "default"},
+            "spec": {"gpus": 1},
+        }
+        job = fabric_ai_job_to_job(manifest)
+        self.assertIsNone(job["site"])
+
 
 class TestProfileRegistry(unittest.TestCase):
     def test_lookup_known_model(self) -> None:
-        from forgesim.adapters.profiles import ProfileRegistry
+        from zyvor_janus.adapters.profiles import ProfileRegistry
 
         registry = ProfileRegistry(PROFILES)
         runtime, memory = registry.lookup("gpt-13b", "H100")
@@ -93,7 +118,7 @@ class TestProfileRegistry(unittest.TestCase):
 
 class TestSimpleYaml(unittest.TestCase):
     def test_loads_profile_fixture(self) -> None:
-        from forgesim.adapters.simple_yaml import safe_load
+        from zyvor_janus.adapters.simple_yaml import safe_load
 
         data = safe_load((PROFILES / "gpt-13b.yaml").read_text())
         assert data is not None
@@ -103,7 +128,7 @@ class TestSimpleYaml(unittest.TestCase):
 
 class TestForgeBundleAdapterUnit(unittest.TestCase):
     def test_rejects_empty_jobs_dir(self) -> None:
-        from forgesim.adapters.bundle import ForgeBundleAdapter
+        from zyvor_janus.adapters.bundle import ForgeBundleAdapter
 
         adapter = ForgeBundleAdapter(PROFILES)
         empty = ROOT / "tests" / "fixtures" / "traces"
@@ -111,12 +136,63 @@ class TestForgeBundleAdapterUnit(unittest.TestCase):
             adapter.from_directory(empty)
 
     def test_mig_job_in_fixture(self) -> None:
-        from forgesim.adapters.bundle import ForgeBundleAdapter
+        from zyvor_janus.adapters.bundle import ForgeBundleAdapter
 
         adapter = ForgeBundleAdapter(PROFILES)
         bundle = adapter.from_directory(FIXTURES)
         mig = next(j for j in bundle.jobs if j["name"] == "mig-inference")
         self.assertEqual(mig["gpu_count"], 2)
+
+    def test_node_sites_and_federation_run_are_recognized(self) -> None:
+        from zyvor_janus.adapters.bundle import ForgeBundleAdapter
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "jobs").mkdir()
+            (root / "cluster").mkdir()
+            (root / "federation").mkdir()
+
+            (root / "jobs" / "job.yaml").write_text(
+                "apiVersion: forge.ai/v1\n"
+                "kind: FabricAIJob\n"
+                "metadata:\n"
+                "  name: j\n"
+                "  namespace: default\n"
+                "  labels:\n"
+                "    forge.ai/federated-training-site: site-a\n"
+                "spec:\n"
+                "  gpus: 1\n"
+            )
+            (root / "cluster" / "nodes.yaml").write_text(
+                "apiVersion: forge.ai/v1\n"
+                "kind: FabricGpuNode\n"
+                "metadata:\n"
+                "  name: n0\n"
+                "  labels:\n"
+                "    forge.ai/federated-training-site: site-a\n"
+                "spec:\n"
+                "  nodeName: n0\n"
+                "  gpuType: any\n"
+                "  gpuCount: 1\n"
+            )
+            (root / "federation" / "run.yaml").write_text(
+                "apiVersion: forge.ai/v1\n"
+                "kind: FabricFederatedTrainingRun\n"
+                "metadata:\n"
+                "  name: run-a\n"
+                "spec:\n"
+                "  targetClusters: [site-a, site-b]\n"
+                "  secureAggregation: true\n"
+                "  dropoutRecovery: true\n"
+            )
+
+            adapter = ForgeBundleAdapter()
+            bundle = adapter.from_directory(root)
+
+            self.assertEqual(bundle.jobs[0]["site"], "site-a")
+            self.assertEqual(bundle.node_sites, {"n0": "site-a"})
+            self.assertEqual(len(bundle.federation), 1)
+            self.assertEqual(bundle.federation[0]["metadata"]["name"], "run-a")
 
 
 if __name__ == "__main__":

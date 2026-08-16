@@ -3,12 +3,12 @@
 Status: **done** (domain grouping + runtime inflation). Domain-level NVLink
 grouping with scatter fallback, `topology_penalties`, and
 `topology_runtime_inflation` when jobs span domains. See
-[`topology.rs`](../../crates/forgesim-core/src/topology.rs) and
-[`resource.rs`](../../crates/forgesim-core/src/resource.rs).
+[`topology.rs`](../../crates/zyvor-janus-core/src/topology.rs) and
+[`resource.rs`](../../crates/zyvor-janus-core/src/resource.rs).
 
 ## What exists today
 
-Implemented in `forgesim-core`:
+Implemented in `zyvor-janus-core`:
 
 - `Gpu.nvlink_group: Option<u32>` — set from cluster `topology_template`
   (`nvlink_pairs`, `full_mesh`, `pcie_only`) or explicit GPU spec; Forge
@@ -25,7 +25,7 @@ Implemented in `forgesim-core`:
 
 Model NVLink/PCIe (intra-node) and RDMA/network (inter-node) topology as a
 graph derived from `FabricGpuNode`, and make placement locality-aware so
-ForgeSim can answer: *does this scheduler colocate gang/distributed jobs on
+Zyvor Janus can answer: *does this scheduler colocate gang/distributed jobs on
 well-connected GPUs, and does that matter for runtime?*
 
 ## Resolved decisions
@@ -36,7 +36,7 @@ well-connected GPUs, and does that matter for runtime?*
    adjacency is a future refinement.
 3. **Scoring vs. hard constraint**: prefer same domain, fall back with
    `topology_penalties` and `runtime_multiplier` inflation (implemented).
-4. **Location**: `TopologyGraph` in `forgesim-core`, placement in
+4. **Location**: `TopologyGraph` in `zyvor-janus-core`, placement in
    `ResourceManager`, gang spread uses NVLink-aware per-node GPU pick.
 
 ## Future refinements
@@ -59,6 +59,6 @@ Future work is under **Future refinements** above.
 
 - Real NVLink/PCIe topology *export* from a live Forge cluster (depends on
   what Forge's CRDs actually expose — a prerequisite question, not part of
-  ForgeSim itself).
+  Zyvor Janus itself).
 - Multi-rack / multi-datacenter network modeling — single-cluster only, per
   the existing `Cluster` model.

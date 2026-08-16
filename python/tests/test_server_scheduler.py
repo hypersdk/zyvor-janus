@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 try:
-    from forgesim.server import app as server_app
+    from zyvor_janus.server import app as server_app
 
     HAS_SERVER = True
 except ImportError:
@@ -15,7 +15,7 @@ except ImportError:
 
 @unittest.skipUnless(HAS_SERVER, "fastapi server deps not installed")
 class TestServerScheduler(unittest.TestCase):
-    @patch("forgesim._forgesim.run_report_from_config")
+    @patch("zyvor_janus._zyvor_janus.run_report_from_config")
     def test_run_simulation_passes_scheduler_override(self, mock_run) -> None:
         mock_metrics = MagicMock()
         mock_metrics.to_json.return_value = "{}"
