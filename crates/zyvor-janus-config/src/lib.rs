@@ -59,6 +59,14 @@ pub struct SimulationReport {
     /// `FabricFederatedTrainingRun` was present (Forge-bundle path only).
     #[serde(default)]
     pub federation: Option<forge_bundle::FederationRunMeta>,
+    /// Per-job serving trace derived from the finished `Cluster`, captured
+    /// here because `Cluster` does not otherwise survive past this function.
+    #[serde(default = "default_serving_trace")]
+    pub serving_trace: ServingTraceFile,
+}
+
+fn default_serving_trace() -> ServingTraceFile {
+    ServingTraceFile::new(Vec::new())
 }
 
 #[derive(Debug, Error)]
@@ -490,6 +498,8 @@ pub fn run_simulation_report_with_scheduler(
         &cost,
     ));
 
+    let serving_trace = export_serving_trace_from_cluster(&cluster);
+
     Ok(SimulationReport {
         metrics,
         timeline: JobsTimeline::from_cluster(&cluster),
@@ -499,6 +509,7 @@ pub fn run_simulation_report_with_scheduler(
         config_hash,
         benchmark,
         federation: None,
+        serving_trace,
     })
 }
 

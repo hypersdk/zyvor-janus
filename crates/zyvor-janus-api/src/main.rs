@@ -4,6 +4,7 @@ mod presets;
 mod routes;
 mod run_registry;
 mod state;
+mod twin_store;
 
 use axum::routing::get;
 use axum::{middleware, Router};
@@ -52,6 +53,11 @@ async fn main() {
             axum::routing::post(routes::batch::benchmark_run),
         )
         .route("/api/what-if", axum::routing::post(routes::batch::what_if))
+        .route(
+            "/api/runs/:id/serving-trace",
+            get(routes::serving_trace::get_serving_trace),
+        )
+        .route("/api/twins", get(routes::twins::get_twins))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             auth::require_bearer_token,
