@@ -17,10 +17,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: forgesim-api
+          - image: zyvor-janus-api
             context: .
             dockerfile: deploy/docker/Dockerfile.api
-          - image: forgesim-web
+          - image: zyvor-janus-web
             context: web
             dockerfile: web/Dockerfile
     steps:
