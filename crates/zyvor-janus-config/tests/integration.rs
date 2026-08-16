@@ -3,9 +3,10 @@
 use std::path::PathBuf;
 
 use zyvor_janus_config::{
-    load_forge_bundle, run_forge_bundle, run_simulation, run_trace_file, trace_diff_to_json,
-    TraceDiffReport,
+    build_shadow_run, load_forge_bundle, run_forge_bundle, run_simulation, run_trace_file,
+    trace_diff_to_json, TraceDiffReport,
 };
+use zyvor_janus_simulator::ShadowSide;
 use zyvor_janus_model::cluster::Cluster;
 use zyvor_janus_model::models::{Gpu, Job, JobState, Node};
 use zyvor_janus_scheduler::resource::ResourceManager;
@@ -50,6 +51,36 @@ fn integration_priority_scheduler_prefers_high_priority_job() {
     assert_eq!(priority_metrics.jobs_completed, priority_metrics.jobs_total);
     assert_eq!(fifo_metrics.makespan, priority_metrics.makespan);
     assert!(priority_metrics.mean_wait_time < fifo_metrics.mean_wait_time);
+}
+
+#[test]
+fn integration_shadow_run_steps_both_schedulers_to_completion() {
+    let config = repo_root().join("configs/clusters/small_h100.yaml");
+    if !config.exists() {
+        return;
+    }
+    let handle =
+        build_shadow_run(&config, Some("fifo"), "priority").expect("build shadow run");
+    assert_eq!(handle.primary_scheduler, "fifo");
+    assert_eq!(handle.shadow_scheduler, "priority");
+    let jobs_total = handle.jobs_total;
+
+    let mut run = handle.run;
+    let steps = run.run_to_completion();
+
+    assert!(!steps.is_empty());
+    assert!(run.is_done());
+    assert!(steps.iter().any(|s| s.side == ShadowSide::Primary));
+    assert!(steps.iter().any(|s| s.side == ShadowSide::Shadow));
+
+    let primary_cluster = run.primary_cluster();
+    let shadow_cluster = run.shadow_cluster();
+    assert_eq!(primary_cluster.finished_jobs.len(), jobs_total);
+    assert_eq!(shadow_cluster.finished_jobs.len(), jobs_total);
+
+    let (primary_metrics, shadow_metrics) = run.metrics();
+    assert_eq!(primary_metrics.jobs_completed, jobs_total);
+    assert_eq!(shadow_metrics.jobs_completed, jobs_total);
 }
 
 #[test]

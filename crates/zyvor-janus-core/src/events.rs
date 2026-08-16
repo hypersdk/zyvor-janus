@@ -1,7 +1,10 @@
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum EventKind {
     JobArrival,
     JobComplete,
@@ -65,6 +68,10 @@ impl EventQueue {
 
     pub fn pop(&mut self) -> Option<Event> {
         self.heap.pop()
+    }
+
+    pub fn peek(&self) -> Option<&Event> {
+        self.heap.peek()
     }
 
     pub fn is_empty(&self) -> bool {

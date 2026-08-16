@@ -480,7 +480,7 @@ pub fn run_simulation_report_with_scheduler(
 
     let resource_manager = build_resource_manager(mig_registry, &config.scheduler.r#type);
 
-    let (cluster, metrics, snapshots) = run_to_completion_with_policy_snapshots(
+    let (cluster, _metrics, snapshots) = run_to_completion_with_policy_snapshots(
         cluster,
         &config.scheduler.r#type,
         resource_manager,
@@ -490,19 +490,157 @@ pub fn run_simulation_report_with_scheduler(
 
     let cost_path = resolve_path(base, "../analytics/cost.yaml");
     let cost = load_cost_model(&cost_path).unwrap_or_default();
+
+    Ok(shadow_side_report(
+        &cluster,
+        snapshots,
+        scheduler_name,
+        config_hash,
+        jobs_total,
+        &cost,
+    ))
+}
+
+/// Loads `config_path` once and builds a [`zyvor_janus_simulator::ShadowRun`]
+/// stepping a `primary_scheduler_override` (or the config's own scheduler)
+/// engine alongside a `shadow_scheduler` engine over the same cluster and
+/// job arrivals -- the config-loading counterpart to
+/// [`run_simulation_report_with_scheduler`], but returning an un-run driver
+/// instead of a completed report so a caller can step and stream it live.
+pub fn build_shadow_run(
+    config_path: &Path,
+    primary_scheduler_override: Option<&str>,
+    shadow_scheduler: &str,
+) -> ConfigResult<ShadowRunHandle> {
+    let mut config = load_simulation_config(config_path)?;
+    if let Some(sched) = primary_scheduler_override {
+        config.scheduler.r#type = sched.to_string();
+    }
+    let primary_scheduler = config.scheduler.r#type.clone();
+    let config_hash = hash_config_file(config_path, primary_scheduler_override);
+
+    let base = config_path.parent().unwrap_or_else(|| Path::new("."));
+
+    let hw_dir = resolve_path(base, &config.hardware_profiles_dir);
+    let profiles = load_hardware_profiles(&hw_dir)?;
+
+    let cluster = build_cluster(&config.cluster, &profiles)?;
+    let hardware_names: Vec<String> = config
+        .cluster
+        .nodes
+        .iter()
+        .flat_map(|n| n.gpus.iter().map(|g| g.profile.clone()))
+        .collect();
+
+    let profiles_dir = resolve_path(base, &config.profiles_dir);
+    let model_profiles = load_model_profiles(&profiles_dir)?;
+
+    let workload_path = resolve_path(base, &config.workload.path);
+    let jobs = load_workload_with_profiles(&workload_path, &model_profiles, &hardware_names)?;
+    let jobs_total = jobs.len();
+    let any_mig_capable = cluster.all_gpus().any(|g| g.mig_capable);
+    let any_mig_job = jobs.iter().any(|j| j.is_mig_job());
+    let mig_dir = resolve_path(base, &config.mig_profiles_dir);
+    let mig_registry = if any_mig_job || any_mig_capable {
+        resolve_mig_registry_for_cluster(&mig_dir, &hardware_names, any_mig_capable)?
+    } else {
+        None
+    };
+    if any_mig_job && mig_registry.is_none() {
+        return Err(ConfigError::Invalid(
+            "workload contains MIG jobs but no MIG profile registry is configured".into(),
+        ));
+    }
+
+    let primary_rm = build_resource_manager(mig_registry.clone(), &primary_scheduler);
+    let shadow_rm = build_resource_manager(mig_registry, shadow_scheduler);
+
+    let primary_engine =
+        build_steppable_engine(cluster.clone(), &primary_scheduler, primary_rm, jobs.clone())?;
+    let shadow_engine = build_steppable_engine(cluster, shadow_scheduler, shadow_rm, jobs)?;
+
+    let cost_path = resolve_path(base, "../analytics/cost.yaml");
+    let cost = load_cost_model(&cost_path).unwrap_or_default();
+
+    Ok(ShadowRunHandle {
+        run: zyvor_janus_simulator::ShadowRun::new(primary_engine, shadow_engine, jobs_total),
+        primary_scheduler,
+        shadow_scheduler: shadow_scheduler.to_string(),
+        config_hash,
+        jobs_total,
+        cost,
+    })
+}
+
+/// Everything [`build_shadow_run`] hands back: the driver itself plus the
+/// metadata needed to turn each side's finished [`Cluster`] into a full
+/// [`SimulationReport`] via [`shadow_side_report`].
+pub struct ShadowRunHandle {
+    pub run: zyvor_janus_simulator::ShadowRun,
+    pub primary_scheduler: String,
+    pub shadow_scheduler: String,
+    pub config_hash: String,
+    pub jobs_total: usize,
+    pub cost: CostModel,
+}
+
+fn build_steppable_engine(
+    cluster: Cluster,
+    scheduler: &str,
+    resource_manager: ResourceManager,
+    jobs: Vec<Job>,
+) -> ConfigResult<Box<dyn zyvor_janus_simulator::SteppableSimulation>> {
+    fn seed<S: Scheduler + 'static>(
+        cluster: Cluster,
+        scheduler: S,
+        resource_manager: ResourceManager,
+        jobs: Vec<Job>,
+    ) -> Box<dyn zyvor_janus_simulator::SteppableSimulation> {
+        let mut engine =
+            SimulationEngine::with_resource_manager(cluster, scheduler, resource_manager)
+                .with_replay_capture();
+        engine.submit_jobs(jobs);
+        Box::new(engine)
+    }
+    Ok(match scheduler {
+        "fifo" => seed(cluster, FifoScheduler, resource_manager, jobs),
+        "priority" => seed(cluster, PriorityScheduler, resource_manager, jobs),
+        "preemptive" | "forge" => {
+            seed(cluster, ForgeScheduler::default(), resource_manager, jobs)
+        }
+        "bestfit" => seed(cluster, BestFitScheduler, resource_manager, jobs),
+        other => {
+            return Err(ConfigError::Invalid(format!(
+                "unsupported scheduler type '{other}'"
+            )));
+        }
+    })
+}
+
+/// Builds a full [`SimulationReport`] for one side of a (possibly
+/// in-progress) [`zyvor_janus_simulator::ShadowRun`], reusing the same
+/// metrics/timeline/decisions/benchmark/serving-trace construction as
+/// [`run_simulation_report_with_scheduler`].
+pub fn shadow_side_report(
+    cluster: &Cluster,
+    snapshots: Vec<ClusterSnapshot>,
+    scheduler_name: String,
+    config_hash: String,
+    jobs_total: usize,
+    cost: &CostModel,
+) -> SimulationReport {
+    let metrics = SimulationMetrics::from_cluster(cluster, jobs_total);
     let benchmark = Some(SchedulerBenchmarkReport::from_simulation(
         &scheduler_name,
         &config_hash,
-        &cluster,
+        cluster,
         metrics.clone(),
-        &cost,
+        cost,
     ));
-
-    let serving_trace = export_serving_trace_from_cluster(&cluster);
-
-    Ok(SimulationReport {
+    let serving_trace = export_serving_trace_from_cluster(cluster);
+    SimulationReport {
         metrics,
-        timeline: JobsTimeline::from_cluster(&cluster),
+        timeline: JobsTimeline::from_cluster(cluster),
         decisions: cluster.decision_log.clone(),
         snapshots,
         scheduler: scheduler_name,
@@ -510,7 +648,7 @@ pub fn run_simulation_report_with_scheduler(
         benchmark,
         federation: None,
         serving_trace,
-    })
+    }
 }
 
 fn hash_config_file(config_path: &Path, scheduler_override: Option<&str>) -> String {

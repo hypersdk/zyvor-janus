@@ -5,7 +5,7 @@ use axum::response::IntoResponse;
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use zyvor_janus_config::run_simulation_report_with_scheduler;
+use zyvor_janus_config::{build_shadow_run, run_simulation_report_with_scheduler, shadow_side_report};
 
 use crate::error::ApiError;
 use crate::run_registry::{RunRecord, RunStatus};
@@ -16,6 +16,10 @@ use crate::ws_ticket::mint_ticket;
 pub struct StartRunRequest {
     config: String,
     scheduler: Option<String>,
+    /// If set, this run steps a shadow scheduler alongside `scheduler` over
+    /// the same job arrivals and streams both sides' decisions live over
+    /// `/ws/runs/{id}` instead of running a single scheduler to completion.
+    shadow_scheduler: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -28,6 +32,7 @@ struct RunSummary {
     id: Uuid,
     config: String,
     scheduler: Option<String>,
+    shadow_scheduler: Option<String>,
     status: RunStatus,
     created_at: chrono::DateTime<chrono::Utc>,
     finished_at: Option<chrono::DateTime<chrono::Utc>>,
@@ -39,6 +44,7 @@ impl RunSummary {
             id: run.id,
             config: run.config.clone(),
             scheduler: run.display_scheduler(),
+            shadow_scheduler: run.requested_shadow_scheduler.clone(),
             status: run.status,
             created_at: run.created_at,
             finished_at: run.finished_at,
@@ -71,10 +77,28 @@ pub async fn start_run(
     }
 
     let id = Uuid::new_v4();
-    let record = RunRecord::new(id, body.config.clone(), body.scheduler.clone());
+    let record = RunRecord::new(
+        id,
+        body.config.clone(),
+        body.scheduler.clone(),
+        body.shadow_scheduler.clone(),
+    );
     state.inner.runs.write().await.insert(id, record);
 
-    tokio::spawn(execute_run(state, id, config_path, body.scheduler));
+    match body.shadow_scheduler {
+        Some(shadow_scheduler) => {
+            tokio::spawn(execute_shadow_run(
+                state,
+                id,
+                config_path,
+                body.scheduler,
+                shadow_scheduler,
+            ));
+        }
+        None => {
+            tokio::spawn(execute_run(state, id, config_path, body.scheduler));
+        }
+    }
 
     Ok(Json(StartRunResponse { id }))
 }
@@ -131,6 +155,90 @@ pub(crate) async fn execute_run(
     }
 }
 
+/// Shadow-run counterpart to [`execute_run`]: builds a
+/// [`build_shadow_run`] driver and steps it to completion on a blocking
+/// task, broadcasting each `ShadowStep` over `state.inner.shadow_streams`
+/// as it happens so `/ws/runs/{id}` can relay them live, then stores both
+/// sides' final reports on the `RunRecord` exactly like a normal run.
+pub(crate) async fn execute_shadow_run(
+    state: AppState,
+    id: Uuid,
+    config_path: PathBuf,
+    scheduler_override: Option<String>,
+    shadow_scheduler: String,
+) {
+    {
+        let mut registry = state.inner.runs.write().await;
+        if let Some(run) = registry.get_mut(&id) {
+            run.status = RunStatus::Running;
+        }
+    }
+
+    let (tx, _rx) = tokio::sync::broadcast::channel(256);
+    state
+        .inner
+        .shadow_streams
+        .write()
+        .await
+        .insert(id, tx.clone());
+
+    let result = tokio::task::spawn_blocking(move || {
+        let handle =
+            build_shadow_run(&config_path, scheduler_override.as_deref(), &shadow_scheduler)?;
+        let mut run = handle.run;
+        while let Some(step) = run.step() {
+            let msg = serde_json::json!({"type": "step", "data": step}).to_string();
+            let _ = tx.send(msg);
+        }
+        let (primary_snapshots, shadow_snapshots) = run.take_replay_snapshots();
+        let primary_report = shadow_side_report(
+            run.primary_cluster(),
+            primary_snapshots,
+            handle.primary_scheduler,
+            handle.config_hash.clone(),
+            handle.jobs_total,
+            &handle.cost,
+        );
+        let shadow_report = shadow_side_report(
+            run.shadow_cluster(),
+            shadow_snapshots,
+            handle.shadow_scheduler,
+            handle.config_hash,
+            handle.jobs_total,
+            &handle.cost,
+        );
+        Ok::<_, zyvor_janus_config::ConfigError>((primary_report, shadow_report))
+    })
+    .await;
+
+    state.inner.shadow_streams.write().await.remove(&id);
+
+    let mut registry = state.inner.runs.write().await;
+    let Some(run) = registry.get_mut(&id) else {
+        return;
+    };
+
+    match result {
+        Ok(Ok((primary_report, shadow_report))) => {
+            run.report = Some(primary_report);
+            run.shadow_report = Some(shadow_report);
+            run.status = RunStatus::Completed;
+            run.finished_at = Some(chrono::Utc::now());
+            persist_run(&state.inner.runs_dir, run);
+        }
+        Ok(Err(config_err)) => {
+            run.status = RunStatus::Failed;
+            run.error = Some(config_err.to_string());
+            run.finished_at = Some(chrono::Utc::now());
+        }
+        Err(join_err) => {
+            run.status = RunStatus::Failed;
+            run.error = Some(join_err.to_string());
+            run.finished_at = Some(chrono::Utc::now());
+        }
+    }
+}
+
 fn persist_run(runs_dir: &std::path::Path, run: &RunRecord) {
     let Some(report) = &run.report else { return };
     let dir = runs_dir.join(run.id.to_string());
@@ -148,12 +256,23 @@ fn persist_run(runs_dir: &std::path::Path, run: &RunRecord) {
     write_json(&dir, "snapshots.json", &report.snapshots);
     write_json(&dir, "benchmark.json", &report.benchmark);
 
+    if let Some(shadow_report) = &run.shadow_report {
+        write_json(&dir, "shadow_metrics.json", &shadow_report.metrics);
+        write_json(&dir, "shadow_timeline.json", &shadow_report.timeline);
+        write_json(&dir, "shadow_decisions.json", &shadow_report.decisions);
+        write_json(&dir, "shadow_snapshots.json", &shadow_report.snapshots);
+        write_json(&dir, "shadow_benchmark.json", &shadow_report.benchmark);
+    }
+
     let metadata = serde_json::json!({
         "config": run.config,
         "scheduler": run.requested_scheduler,
         "resolved_scheduler": report.scheduler,
         "config_hash": report.config_hash,
         "benchmark": report.benchmark,
+        "shadow_scheduler": run.requested_shadow_scheduler,
+        "shadow_resolved_scheduler": run.shadow_report.as_ref().map(|r| &r.scheduler),
+        "shadow_benchmark": run.shadow_report.as_ref().map(|r| &r.benchmark),
     });
     if let Ok(text) = serde_json::to_string_pretty(&metadata) {
         let _ = std::fs::write(dir.join("metadata.json"), text);
@@ -183,6 +302,13 @@ pub async fn get_run(
         "decision_count": run.report.as_ref().map(|r| r.decisions.len()).unwrap_or(0),
         "config_hash": run.report.as_ref().map(|r| &r.config_hash),
         "benchmark": run.report.as_ref().and_then(|r| r.benchmark.as_ref()),
+        "shadow_scheduler": run
+            .requested_shadow_scheduler
+            .clone()
+            .or_else(|| run.shadow_report.as_ref().map(|r| r.scheduler.clone())),
+        "shadow_metrics": run.shadow_report.as_ref().map(|r| &r.metrics),
+        "shadow_decision_count": run.shadow_report.as_ref().map(|r| r.decisions.len()).unwrap_or(0),
+        "shadow_benchmark": run.shadow_report.as_ref().and_then(|r| r.benchmark.as_ref()),
     })))
 }
 
