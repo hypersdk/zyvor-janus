@@ -1,4 +1,8 @@
-"""OpenAI-compatible virtual endpoint backed by Zyvor Janus inference model."""
+"""OpenAI-compatible virtual endpoint backed by Zyvor Janus inference model.
+
+Superseded by crates/zyvor-janus-api/src/routes/openai_shim.rs -- see the
+note at the top of server/app.py.
+"""
 
 from __future__ import annotations
 
