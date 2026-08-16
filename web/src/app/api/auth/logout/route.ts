@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { COOKIE_NAME } from "@/lib/auth";
 
 function cookieSecure(request: NextRequest): boolean {
-  if (process.env.FORGESIM_COOKIE_SECURE === "0") return false;
-  if (process.env.FORGESIM_COOKIE_SECURE === "1") return true;
+  if (process.env.ZYVOR_JANUS_COOKIE_SECURE === "0") return false;
+  if (process.env.ZYVOR_JANUS_COOKIE_SECURE === "1") return true;
   const forwarded = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
   const proto = forwarded || request.nextUrl.protocol.replace(":", "");
   return proto === "https";

@@ -34,9 +34,9 @@ cargo build -p forgesim-cli
 # API: http://localhost:8080/api/health
 ```
 
-**Login (web):** `Admin` / `Admin@321` (override via `FORGESIM_DASHBOARD_USER` / `FORGESIM_DASHBOARD_PASSWORD`).
+**Login (web):** `Admin` / `Admin@321` (override via `ZYVOR_JANUS_DASHBOARD_USER` / `ZYVOR_JANUS_DASHBOARD_PASSWORD`).
 
-**OpenAI shim API key:** `dev-forgesim-key` (override via `FORGESIM_API_KEY`).
+**OpenAI shim API key:** `dev-forgesim-key` (override via `ZYVOR_JANUS_API_KEY`).
 
 ---
 
@@ -431,7 +431,7 @@ curl -N -X POST http://localhost:8080/v1/chat/completions \
 
 ### MT-P6-03: Rate limit
 
-**Steps:** Send >120 requests/min from same client IP (default `FORGESIM_SHIM_RATE_LIMIT=120`).
+**Steps:** Send >120 requests/min from same client IP (default `ZYVOR_JANUS_SHIM_RATE_LIMIT=120`).
 
 **Expected:** HTTP 429 with `"rate limit exceeded"`.
 
