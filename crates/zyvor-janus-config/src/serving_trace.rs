@@ -4,9 +4,9 @@ use std::fs;
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 
-use zyvor_janus_core::models::{Job, JobState};
-use zyvor_janus_core::cluster::Cluster;
 use serde::{Deserialize, Serialize};
+use zyvor_janus_core::cluster::Cluster;
+use zyvor_janus_core::models::{Job, JobState};
 
 use crate::{ConfigError, ConfigResult};
 
@@ -44,10 +44,7 @@ impl ServingTraceFile {
 }
 
 pub fn load_serving_trace(path: &Path) -> ConfigResult<ServingTraceFile> {
-    let ext = path
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("");
+    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
     if ext == "json" {
         let content = fs::read_to_string(path)?;
         let file: ServingTraceFile = serde_json::from_str(&content)?;
@@ -96,10 +93,7 @@ pub fn validate_serving_trace(file: &ServingTraceFile) -> ConfigResult<()> {
     Ok(())
 }
 
-pub fn jobs_from_serving_trace(
-    trace: &ServingTraceFile,
-    id_prefix: &str,
-) -> Vec<Job> {
+pub fn jobs_from_serving_trace(trace: &ServingTraceFile, id_prefix: &str) -> Vec<Job> {
     trace
         .records
         .iter()
@@ -109,13 +103,7 @@ pub fn jobs_from_serving_trace(
                 .request_id
                 .clone()
                 .unwrap_or_else(|| format!("{id_prefix}-{idx}"));
-            let mut job = Job::new(
-                id,
-                rec.model.clone(),
-                rec.time,
-                1.0,
-                1,
-            );
+            let mut job = Job::new(id, rec.model.clone(), rec.time, 1.0, 1);
             job.model_id = Some(rec.model.clone());
             job.input_tokens = Some(rec.input_tokens);
             job.output_tokens = Some(rec.output_tokens);

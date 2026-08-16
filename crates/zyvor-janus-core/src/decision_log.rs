@@ -12,11 +12,7 @@ pub struct SchedulerDecision {
 }
 
 impl SchedulerDecision {
-    pub fn new(
-        time: f64,
-        kind: impl Into<String>,
-        message: impl Into<String>,
-    ) -> Self {
+    pub fn new(time: f64, kind: impl Into<String>, message: impl Into<String>) -> Self {
         Self {
             time,
             kind: kind.into(),

@@ -65,8 +65,11 @@ impl<S: Scheduler> SimulationEngine<S> {
             .iter()
             .map(|job| self.resource_manager.can_place(&self.cluster, job))
             .collect();
-        self.replay_snapshots
-            .push(ClusterSnapshot::from_cluster(&self.cluster, DEFAULT_OBS_TOP_K, &mask));
+        self.replay_snapshots.push(ClusterSnapshot::from_cluster(
+            &self.cluster,
+            DEFAULT_OBS_TOP_K,
+            &mask,
+        ));
     }
 
     pub fn with_preemption_restart_penalty(mut self, secs: f64) -> Self {
@@ -131,9 +134,7 @@ impl<S: Scheduler> SimulationEngine<S> {
             self.cluster.clock = event.time;
             match event.kind {
                 EventKind::JobArrival => self.handle_arrival(&event.job_id),
-                EventKind::JobComplete => {
-                    self.handle_complete(&event.job_id, event.run_generation)
-                }
+                EventKind::JobComplete => self.handle_complete(&event.job_id, event.run_generation),
                 EventKind::GangTimeout => {
                     self.handle_gang_timeout(&event.job_id, event.run_generation)
                 }
@@ -402,11 +403,7 @@ mod tests {
     struct NoopScheduler;
 
     impl Scheduler for NoopScheduler {
-        fn schedule(
-            &mut self,
-            _cluster: &mut Cluster,
-            _rm: &ResourceManager,
-        ) -> Vec<Placement> {
+        fn schedule(&mut self, _cluster: &mut Cluster, _rm: &ResourceManager) -> Vec<Placement> {
             Vec::new()
         }
     }

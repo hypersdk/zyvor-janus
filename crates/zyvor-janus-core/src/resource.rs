@@ -3,6 +3,7 @@ use crate::error::{SimError, SimResult};
 use crate::mig::reconfigure_gpu;
 use crate::mig::MigProfileRegistry;
 use crate::models::{Job, Placement};
+use zyvor_janus_topology::GpuTopologyKey;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum GpuSelectionPolicy {
@@ -111,10 +112,18 @@ impl ResourceManager {
             cluster.topology_penalties += 1;
         }
 
+        let gpu_topology: Vec<GpuTopologyKey> = selected
+            .iter()
+            .filter_map(|id| cluster.gpu(id))
+            .map(|g| GpuTopologyKey {
+                nvlink_group: g.nvlink_group,
+                node_id: g.node_id.clone(),
+            })
+            .collect();
         let runtime_multiplier = cluster.topology.runtime_multiplier(
-            cluster,
-            job,
-            &selected,
+            &gpu_topology,
+            job.gang_enabled,
+            job.network_bw_gbps,
             used_penalty,
         );
 
@@ -365,7 +374,11 @@ fn select_nvlink_coherent(
                 .take(per_node as usize)
                 .map(|g| g.id.clone())
                 .collect();
-            if best.as_ref().map(|(b, _)| ids.len() < b.len()).unwrap_or(true) {
+            if best
+                .as_ref()
+                .map(|(b, _)| ids.len() < b.len())
+                .unwrap_or(true)
+            {
                 best = Some((ids, false));
             }
         }

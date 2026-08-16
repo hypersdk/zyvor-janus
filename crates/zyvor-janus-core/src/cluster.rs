@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 
 use crate::models::{Gpu, Job, JobState, MigSlice, Node};
-use crate::topology::TopologyGraph;
+use zyvor_janus_topology::TopologyGraph;
 
 #[derive(Debug, Clone)]
 pub struct Cluster {
@@ -136,10 +136,7 @@ impl Cluster {
 
     /// Remove a waiting gang job that exceeded its scheduling timeout.
     pub fn fail_waiting_job(&mut self, job_id: &str, at_time: f64) -> Option<Job> {
-        let idx = self
-            .waiting_queue
-            .iter()
-            .position(|j| j.id == job_id)?;
+        let idx = self.waiting_queue.iter().position(|j| j.id == job_id)?;
         let mut job = self.waiting_queue.remove(idx);
         if let Some(since) = job.waiting_since.take() {
             job.cumulative_wait_secs += (at_time - since).max(0.0);

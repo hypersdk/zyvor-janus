@@ -9,6 +9,7 @@ description = "Zyvor Janus discrete-event simulation core"
 [dependencies]
 serde = { workspace = true }
 thiserror = { workspace = true }
+zyvor-janus-topology = { path = "../zyvor-janus-topology" }
 
 [dev-dependencies]
 serde_json = { workspace = true }
