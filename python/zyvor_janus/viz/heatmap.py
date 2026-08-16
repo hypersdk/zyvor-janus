@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
 
-from forgesim.theme import heatmap_cmap, matplotlib_rcparams
+from zyvor_janus.theme import heatmap_cmap, matplotlib_rcparams
 
 
 def _busy_matrix(timeline: dict[str, Any], *, bucket_size: float = 1.0) -> tuple[np.ndarray, list[str]]:

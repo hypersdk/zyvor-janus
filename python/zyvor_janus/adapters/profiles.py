@@ -8,7 +8,7 @@ from typing import Any
 try:
     import yaml
 except ImportError:  # pragma: no cover
-    from forgesim.adapters import simple_yaml as yaml
+    from zyvor_janus.adapters import simple_yaml as yaml
 
 
 class ProfileLookupError(Exception):

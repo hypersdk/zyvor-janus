@@ -1,4 +1,4 @@
-"""Load ForgeSim jobs timeline JSON."""
+"""Load Zyvor Janus jobs timeline JSON."""
 
 from __future__ import annotations
 

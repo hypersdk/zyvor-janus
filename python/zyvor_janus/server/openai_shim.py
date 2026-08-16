@@ -1,4 +1,4 @@
-"""OpenAI-compatible virtual endpoint backed by ForgeSim inference model."""
+"""OpenAI-compatible virtual endpoint backed by Zyvor Janus inference model."""
 
 from __future__ import annotations
 
@@ -14,13 +14,13 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from forgesim.adapters.profiles import ProfileRegistry
+from zyvor_janus.adapters.profiles import ProfileRegistry
 
 router = APIRouter(prefix="/v1", tags=["openai-shim"])
 
-DEFAULT_API_KEY = os.environ.get("FORGESIM_API_KEY", "dev-forgesim-key")
-RATE_LIMIT_PER_MIN = int(os.environ.get("FORGESIM_SHIM_RATE_LIMIT", "120"))
-PROFILES_DIR = os.environ.get("FORGESIM_PROFILES_DIR", "configs/profiles")
+DEFAULT_API_KEY = os.environ.get("ZYVOR_JANUS_API_KEY", "dev-zyvor-janus-key")
+RATE_LIMIT_PER_MIN = int(os.environ.get("ZYVOR_JANUS_SHIM_RATE_LIMIT", "120"))
+PROFILES_DIR = os.environ.get("ZYVOR_JANUS_PROFILES_DIR", "configs/profiles")
 
 _rate_buckets: dict[str, list[float]] = defaultdict(list)
 _profile_registry = ProfileRegistry(__import__("pathlib").Path(PROFILES_DIR))
@@ -104,7 +104,7 @@ async def chat_completions(
     input_tokens, default_output = _estimate_tokens(body.messages)
     output_tokens = body.max_tokens or default_output
     ttft_ms = _estimate_ttft_ms(body.model, input_tokens, output_tokens)
-    reply = " ".join(m.content for m in body.messages if m.role == "assistant") or "ForgeSim virtual completion."
+    reply = " ".join(m.content for m in body.messages if m.role == "assistant") or "Zyvor Janus virtual completion."
     if body.stream:
         return StreamingResponse(_stream_tokens(reply, ttft_ms), media_type="text/event-stream")
     await asyncio.sleep(ttft_ms / 1000.0)

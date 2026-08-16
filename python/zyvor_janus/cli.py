@@ -5,11 +5,11 @@ import sys
 
 def main() -> None:
     print(
-        "Use the Rust CLI: cargo run -p forgesim-cli -- run --config <path>",
+        "Use the Rust CLI: cargo run -p zyvor-janus-cli -- run --config <path>",
         file=sys.stderr,
     )
     print(
-        "Or from Python: import forgesim; forgesim.run_from_config('<path>')",
+        "Or from Python: import zyvor_janus; zyvor_janus.run_from_config('<path>')",
         file=sys.stderr,
     )
     sys.exit(1)

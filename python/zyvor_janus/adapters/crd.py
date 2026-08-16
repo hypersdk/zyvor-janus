@@ -7,7 +7,7 @@ from typing import Any
 # Real label the ai-operator's federated-training-run controller sets on
 # every per-site FabricAIJob it creates (fabricfederatedtrainingrun_controller.go).
 # Reused here on FabricGpuNode fixtures too, to tag which federation site a
-# node belongs to. Mirrors forgesim-config/src/forge_bundle.rs.
+# node belongs to. Mirrors zyvor-janus-config/src/forge_bundle.rs.
 FEDERATION_SITE_LABEL = "forge.ai/federated-training-site"
 
 
