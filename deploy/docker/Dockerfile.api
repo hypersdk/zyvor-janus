@@ -1,10 +1,10 @@
-# ForgeSim API — FastAPI + Rust PyO3 extension
+# Zyvor Janus API — FastAPI + Rust PyO3 extension
 #
 # Build:
-#   docker build -f deploy/docker/Dockerfile.api -t forgesim-api:0.1.0 .
+#   docker build -f deploy/docker/Dockerfile.api -t zyvor-janus-api:0.1.0 .
 #
 # Run:
-#   docker run --rm -p 8080:8080 forgesim-api:0.1.0
+#   docker run --rm -p 8080:8080 zyvor-janus-api:0.1.0
 
 FROM rust:1-bookworm AS builder
 
@@ -31,29 +31,29 @@ WORKDIR /app
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates \
   && rm -rf /var/lib/apt/lists/* \
-  && useradd --create-home --shell /usr/sbin/nologin forgesim
+  && useradd --create-home --shell /usr/sbin/nologin zyvor-janus
 
 # Configs only — Python package comes from the maturin wheel (do not put
 # source tree on PYTHONPATH or a host-built macOS .so will shadow Linux).
 COPY configs configs
 COPY --from=builder /wheels /wheels
 
-RUN WHEEL="$(ls /wheels/forgesim-*.whl)" \
+RUN WHEEL="$(ls /wheels/zyvor_janus-*.whl)" \
   && pip install --no-cache-dir "${WHEEL}[server]" \
   && rm -rf /wheels \
   && mkdir -p outputs/runs \
-  && chown -R forgesim:forgesim /app
+  && chown -R zyvor-janus:zyvor-janus /app
 
 ENV PYTHONUNBUFFERED=1
-ENV FORGESIM_ROOT=/app
-ENV FORGESIM_CONFIG_DIR=/app/configs/clusters
-ENV FORGESIM_RUNS_DIR=/app/outputs/runs
-ENV FORGESIM_PROFILES_DIR=/app/configs/profiles
+ENV ZYVOR_JANUS_ROOT=/app
+ENV ZYVOR_JANUS_CONFIG_DIR=/app/configs/clusters
+ENV ZYVOR_JANUS_RUNS_DIR=/app/outputs/runs
+ENV ZYVOR_JANUS_PROFILES_DIR=/app/configs/profiles
 
-USER forgesim
+USER zyvor-janus
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/health')"
 
-CMD ["uvicorn", "forgesim.server.app:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "zyvor_janus.server.app:app", "--host", "0.0.0.0", "--port", "8080"]
