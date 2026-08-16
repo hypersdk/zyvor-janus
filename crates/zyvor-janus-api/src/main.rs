@@ -1,5 +1,6 @@
 mod auth;
 mod error;
+mod presets;
 mod routes;
 mod run_registry;
 mod state;
@@ -37,6 +38,20 @@ async fn main() {
         .route("/api/runs/:id/snapshots", get(routes::runs::get_snapshots))
         .route("/api/runs/:id/timeline", get(routes::runs::get_timeline))
         .route("/api/runs/:id/events", get(routes::runs::get_events))
+        .route("/api/compare", axum::routing::post(routes::batch::compare))
+        .route(
+            "/api/benchmark/presets",
+            get(routes::batch::benchmark_presets),
+        )
+        .route(
+            "/api/benchmark/reports",
+            get(routes::batch::benchmark_reports),
+        )
+        .route(
+            "/api/benchmark/run",
+            axum::routing::post(routes::batch::benchmark_run),
+        )
+        .route("/api/what-if", axum::routing::post(routes::batch::what_if))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             auth::require_bearer_token,

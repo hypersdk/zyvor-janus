@@ -82,7 +82,12 @@ pub async fn start_run(
 /// persists JSON artifacts under `outputs/runs/{id}/`, matching Python's
 /// `_execute_run` (including its "write-only, no rehydration on restart"
 /// behavior -- an intentional parity choice, not a gap to fix here).
-async fn execute_run(
+///
+/// `start_run` above calls this via `tokio::spawn` (fire-and-forget).
+/// `routes::batch` calls it directly with `.await` for the "blocks until
+/// done" endpoints (`/api/compare`, `/api/benchmark/run`, `/api/what-if`),
+/// matching Python's `await _execute_run(...)` in those handlers.
+pub(crate) async fn execute_run(
     state: AppState,
     id: Uuid,
     config_path: PathBuf,
