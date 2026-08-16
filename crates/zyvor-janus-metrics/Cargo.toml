@@ -1,0 +1,12 @@
+[package]
+name = "zyvor-janus-metrics"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Zyvor Janus simulation metrics"
+
+[dependencies]
+zyvor-janus-core = { path = "../zyvor-janus-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }

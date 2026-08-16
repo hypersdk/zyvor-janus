@@ -117,63 +117,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
-name = "forgesim-cli"
-version = "0.2.0"
-dependencies = [
- "clap",
- "forgesim-config",
- "forgesim-metrics",
-]
-
-[[package]]
-name = "forgesim-config"
-version = "0.2.0"
-dependencies = [
- "forgesim-core",
- "forgesim-metrics",
- "forgesim-scheduler",
- "serde",
- "serde_json",
- "serde_yaml",
- "thiserror",
-]
-
-[[package]]
-name = "forgesim-core"
-version = "0.2.0"
-dependencies = [
- "serde",
- "serde_json",
- "thiserror",
-]
-
-[[package]]
-name = "forgesim-metrics"
-version = "0.2.0"
-dependencies = [
- "forgesim-core",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "forgesim-py"
-version = "0.2.0"
-dependencies = [
- "forgesim-config",
- "forgesim-core",
- "forgesim-metrics",
- "pyo3",
-]
-
-[[package]]
-name = "forgesim-scheduler"
-version = "0.2.0"
-dependencies = [
- "forgesim-core",
-]
-
-[[package]]
 name = "hashbrown"
 version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -502,3 +445,60 @@ name = "zmij"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
+
+[[package]]
+name = "zyvor-janus-cli"
+version = "0.2.0"
+dependencies = [
+ "clap",
+ "zyvor-janus-config",
+ "zyvor-janus-metrics",
+]
+
+[[package]]
+name = "zyvor-janus-config"
+version = "0.2.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "thiserror",
+ "zyvor-janus-core",
+ "zyvor-janus-metrics",
+ "zyvor-janus-scheduler",
+]
+
+[[package]]
+name = "zyvor-janus-core"
+version = "0.2.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "zyvor-janus-metrics"
+version = "0.2.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "zyvor-janus-core",
+]
+
+[[package]]
+name = "zyvor-janus-py"
+version = "0.2.0"
+dependencies = [
+ "pyo3",
+ "zyvor-janus-config",
+ "zyvor-janus-core",
+ "zyvor-janus-metrics",
+]
+
+[[package]]
+name = "zyvor-janus-scheduler"
+version = "0.2.0"
+dependencies = [
+ "zyvor-janus-core",
+]
