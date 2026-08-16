@@ -78,14 +78,14 @@ export async function fetchSnapshots(id: string): Promise<ClusterSnapshot[]> {
  *
  * Next's rewrite cannot proxy WebSocket upgrade requests (next dev / next start both
  * throw internally on an upgrade to a rewritten route — confirmed via manual testing),
- * so NEXT_PUBLIC_FORGESIM_WS_URL lets local dev / non-Ingress deployments point the
+ * so NEXT_PUBLIC_ZYVOR_JANUS_WS_URL lets local dev / non-Ingress deployments point the
  * browser straight at the API instead. Unset by default: behind an Ingress (see
  * deploy/kubernetes/ingress.yaml), /ws/* is already routed directly to the API
  * service, bypassing the Next.js layer entirely, so the default same-origin path
  * works correctly there without this override.
  */
 export function runWebSocketUrl(id: string): string {
-  const override = process.env.NEXT_PUBLIC_FORGESIM_WS_URL;
+  const override = process.env.NEXT_PUBLIC_ZYVOR_JANUS_WS_URL;
   if (override) return `${override.replace(/\/+$/, "")}/ws/runs/${id}`;
   const proto = typeof window !== "undefined" && window.location.protocol === "https:" ? "wss" : "ws";
   const host = typeof window !== "undefined" ? window.location.host : "";

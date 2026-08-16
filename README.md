@@ -27,12 +27,12 @@ docker network create forgesim 2>/dev/null || true
 docker run -d --name forgesim-api --network forgesim -p 8080:8080 \
   ghcr.io/hypersdk/forgesim-api:latest
 docker run -d --name forgesim-web --network forgesim -p 3000:3000 \
-  -e FORGESIM_API_URL=http://forgesim-api:8080 \
+  -e ZYVOR_JANUS_API_URL=http://forgesim-api:8080 \
   ghcr.io/hypersdk/forgesim-web:latest
 ```
 
 Then open http://localhost:3000 (default login `Admin` / `Admin@321` — override via
-`FORGESIM_DASHBOARD_USER` / `FORGESIM_DASHBOARD_PASSWORD` env vars on the web container).
+`ZYVOR_JANUS_DASHBOARD_USER` / `ZYVOR_JANUS_DASHBOARD_PASSWORD` env vars on the web container).
 
 Pin a specific release instead of `latest` with `ghcr.io/hypersdk/forgesim-api:vX.Y.Z`.
 
@@ -283,7 +283,7 @@ Preemptive scheduler moves a low-priority job across **machines** after preempti
 cargo run -p forgesim-cli -- run --config configs/clusters/dual_node_preempt.yaml
 # Dashboard + wow reel (writes ~/Desktop/forgesim-client-dual-node-migrate-wow-reel.mp4)
 ./scripts/run_web_dashboard.sh   # separate terminal
-FORGESIM_DEMO_CONFIG=dual_node_preempt.yaml \
+ZYVOR_JANUS_DEMO_CONFIG=dual_node_preempt.yaml \
   node scripts/demo-videos/record-forgesim-2gpu-migrate-wow-reel.mjs
 ```
 

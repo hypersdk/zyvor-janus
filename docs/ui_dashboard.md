@@ -163,9 +163,9 @@ Terminal 2 — UI:
 |----------|---------|---------|
 | `API_PORT` | `8080` | `run_web_api.sh`, `run_web_dashboard.sh` |
 | `UI_PORT` | `3000` | `run_web_ui.sh`, `run_web_dashboard.sh` |
-| `FORGESIM_DASHBOARD_USER` | `Admin` | Dashboard login username |
-| `FORGESIM_DASHBOARD_PASSWORD` | `Admin@321` | Dashboard login password |
-| `FORGESIM_AUTH_SECRET` | unset | Optional HMAC secret for session cookies (defaults to password) |
+| `ZYVOR_JANUS_DASHBOARD_USER` | `Admin` | Dashboard login username |
+| `ZYVOR_JANUS_DASHBOARD_PASSWORD` | `Admin@321` | Dashboard login password |
+| `ZYVOR_JANUS_AUTH_SECRET` | unset | Optional HMAC secret for session cookies (defaults to password) |
 | `HOST` | `0.0.0.0` | `run_web_api.sh` only |
 | `USE_UV` | unset | `setup_dev.sh` — set to `1` to force uv-managed Python |
 
@@ -177,7 +177,7 @@ API_PORT=9000 UI_PORT=3001 ./scripts/run_web_dashboard.sh
 
 ### Login
 
-Default credentials: **Admin** / **Admin@321**. Override with `FORGESIM_DASHBOARD_USER` and `FORGESIM_DASHBOARD_PASSWORD`. Sessions are stored in an httpOnly cookie (7-day expiry).
+Default credentials: **Admin** / **Admin@321**. Override with `ZYVOR_JANUS_DASHBOARD_USER` and `ZYVOR_JANUS_DASHBOARD_PASSWORD`. Sessions are stored in an httpOnly cookie (7-day expiry).
 
 ---
 

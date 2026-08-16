@@ -68,13 +68,13 @@ Default credentials (override via env for production):
 
 | Field | Default |
 |-------|---------|
-| Username | `Admin` (`FORGESIM_DASHBOARD_USER`) |
-| Password | `Admin@321` (`FORGESIM_DASHBOARD_PASSWORD`) |
+| Username | `Admin` (`ZYVOR_JANUS_DASHBOARD_USER`) |
+| Password | `Admin@321` (`ZYVOR_JANUS_DASHBOARD_PASSWORD`) |
 
 ```bash
 ./scripts/run_web_dashboard.sh
 # or override:
-FORGESIM_DASHBOARD_USER=Admin FORGESIM_DASHBOARD_PASSWORD='your-secret' ./scripts/run_web_dashboard.sh
+ZYVOR_JANUS_DASHBOARD_USER=Admin ZYVOR_JANUS_DASHBOARD_PASSWORD='your-secret' ./scripts/run_web_dashboard.sh
 ```
 
 Sessions use an httpOnly cookie (7-day expiry). Unauthenticated users are redirected to `/login`.

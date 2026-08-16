@@ -10,7 +10,7 @@
  *
  * Usage:
  *   node scripts/demo-videos/record-forgesim-2gpu-migrate-wow-reel.mjs
- *   FORGESIM_DEMO_CONFIG=dual_gpu_preempt.yaml node …   # one-node 2×GPU variant
+ *   ZYVOR_JANUS_DEMO_CONFIG=dual_gpu_preempt.yaml node …   # one-node 2×GPU variant
  *
  * Desktop outputs (dual-node default):
  *   forgesim-client-dual-node-migrate-wow-reel.mp4
@@ -44,13 +44,13 @@ if (!pwPkg) {
 const require = createRequire(pwPkg);
 const { chromium } = require('playwright');
 
-const BASE = (process.argv.find((a) => a.startsWith('http')) || process.env.FORGESIM_URL || 'http://localhost:3000').replace(
+const BASE = (process.argv.find((a) => a.startsWith('http')) || process.env.ZYVOR_JANUS_URL || 'http://localhost:3000').replace(
   /\/$/,
   '',
 );
-const USER = process.env.FORGESIM_USER || process.env.FORGESIM_DASHBOARD_USER || 'Admin';
-const PASS = process.env.FORGESIM_PASS || process.env.FORGESIM_DASHBOARD_PASSWORD || 'Admin@321';
-const CONFIG = process.env.FORGESIM_DEMO_CONFIG || 'dual_node_preempt.yaml';
+const USER = process.env.ZYVOR_JANUS_USER || process.env.ZYVOR_JANUS_DASHBOARD_USER || 'Admin';
+const PASS = process.env.ZYVOR_JANUS_PASS || process.env.ZYVOR_JANUS_DASHBOARD_PASSWORD || 'Admin@321';
+const CONFIG = process.env.ZYVOR_JANUS_DEMO_CONFIG || 'dual_node_preempt.yaml';
 const DUAL_NODE = CONFIG.includes('dual_node');
 
 const WORK = join(DESKTOP, 'forgesim-wow-work');
