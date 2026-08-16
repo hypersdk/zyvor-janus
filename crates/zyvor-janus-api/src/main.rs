@@ -1,6 +1,7 @@
 mod auth;
 mod error;
 mod presets;
+mod profile_registry;
 mod routes;
 mod run_registry;
 mod state;
@@ -73,9 +74,23 @@ async fn main() {
     // per-connection instead.
     let ws_routes = Router::new().route("/ws/runs/:id", get(routes::ws::ws_run));
 
+    // The OpenAI shim gets its own bearer-check middleware (see
+    // routes::openai_shim::require_shim_api_key), kept independent of the
+    // blanket `/api/*` layer above -- not merged into `authenticated_routes`.
+    let shim_routes = Router::new()
+        .route(
+            "/v1/chat/completions",
+            axum::routing::post(routes::openai_shim::chat_completions),
+        )
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            routes::openai_shim::require_shim_api_key,
+        ));
+
     let app = public_routes
         .merge(authenticated_routes)
         .merge(ws_routes)
+        .merge(shim_routes)
         .layer(TraceLayer::new_for_http())
         .layer(CorsLayer::permissive())
         .with_state(state);
@@ -86,10 +101,13 @@ async fn main() {
         .await
         .expect("bind 0.0.0.0:8080");
 
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
-        .await
-        .expect("server error");
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await
+    .expect("server error");
 }
 
 async fn shutdown_signal() {

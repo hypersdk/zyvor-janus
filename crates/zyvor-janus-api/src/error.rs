@@ -13,9 +13,6 @@ pub struct ApiError {
 }
 
 impl ApiError {
-    // Reserved for routes landing in Phase 2+ (e.g. GET /api/runs/{id} ->
-    // 404, POST /api/compare's distinct-configs check -> 400).
-    #[allow(dead_code)]
     pub fn not_found(detail: impl Into<String>) -> Self {
         Self {
             status: StatusCode::NOT_FOUND,
@@ -23,7 +20,6 @@ impl ApiError {
         }
     }
 
-    #[allow(dead_code)]
     pub fn bad_request(detail: impl Into<String>) -> Self {
         Self {
             status: StatusCode::BAD_REQUEST,
@@ -34,6 +30,13 @@ impl ApiError {
     pub fn unauthorized(detail: impl Into<String>) -> Self {
         Self {
             status: StatusCode::UNAUTHORIZED,
+            detail: detail.into(),
+        }
+    }
+
+    pub fn too_many_requests(detail: impl Into<String>) -> Self {
+        Self {
+            status: StatusCode::TOO_MANY_REQUESTS,
             detail: detail.into(),
         }
     }
