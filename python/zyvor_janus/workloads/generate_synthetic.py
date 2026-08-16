@@ -12,7 +12,7 @@ from typing import Any
 try:
     import yaml
 except ImportError:  # pragma: no cover
-    from forgesim.adapters import simple_yaml as yaml
+    from zyvor_janus.adapters import simple_yaml as yaml
 
 
 PRESETS: dict[str, dict[str, Any]] = {
@@ -172,7 +172,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Generate synthetic LLM workloads")
     parser.add_argument("--preset", default="peak_chat", choices=sorted(PRESETS))
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--output", type=Path, help="Write ForgeSim workload YAML")
+    parser.add_argument("--output", type=Path, help="Write Zyvor Janus workload YAML")
     parser.add_argument("--trace-output", type=Path, help="Write serving.trace.v1 JSON")
     parser.add_argument("--preview", action="store_true", help="Print JSON preview to stdout")
     args = parser.parse_args()

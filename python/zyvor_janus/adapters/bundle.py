@@ -11,10 +11,10 @@ from typing import Any
 try:
     import yaml
 except ImportError:  # pragma: no cover - fallback when PyYAML is unavailable
-    from forgesim.adapters import simple_yaml as yaml
+    from zyvor_janus.adapters import simple_yaml as yaml
 
-from forgesim.adapters.crd import fabric_ai_job_to_job, site_of
-from forgesim.adapters.profiles import ProfileLookupError, ProfileRegistry
+from zyvor_janus.adapters.crd import fabric_ai_job_to_job, site_of
+from zyvor_janus.adapters.profiles import ProfileLookupError, ProfileRegistry
 
 FORGE_API_VERSION = "forge.ai/v1"
 
@@ -46,10 +46,10 @@ class ForgeBundle:
     quotas: list[dict[str, Any]] = field(default_factory=list)
     gpu_nodes: list[dict[str, Any]] = field(default_factory=list)
     # Federation site tag per node name (from FEDERATION_SITE_LABEL), mirrors
-    # forgesim-config's Cluster.node_sites. Nodes with no entry are unpartitioned.
+    # zyvor-janus-config's Cluster.node_sites. Nodes with no entry are unpartitioned.
     node_sites: dict[str, str] = field(default_factory=dict)
     # FabricFederatedTrainingRun docs found under federation/, if any —
-    # informational only (mirrors forgesim-config's ForgeBundle.federation),
+    # informational only (mirrors zyvor-janus-config's ForgeBundle.federation),
     # recognized rather than silently dropped like any other unknown kind.
     federation: list[dict[str, Any]] = field(default_factory=list)
 

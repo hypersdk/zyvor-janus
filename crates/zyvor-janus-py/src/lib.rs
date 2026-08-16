@@ -296,7 +296,7 @@ fn run_report_from_config(
 }
 
 #[pymodule]
-fn _forgesim(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _zyvor_janus(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<SimResult>()?;
     m.add_class::<SimSession>()?;
     m.add_function(wrap_pyfunction!(run_from_config, m)?)?;

@@ -6,7 +6,7 @@ import argparse
 import time
 from pathlib import Path
 
-from forgesim.dashboard.state import (
+from zyvor_janus.dashboard.state import (
     render_dashboard_rich,
     render_dashboard_text,
     snapshot_to_dashboard_state,
@@ -20,7 +20,7 @@ def run_live_dashboard(
     use_rich: bool = True,
     max_steps: int = 100_000,
 ) -> None:
-    from forgesim import SimSession
+    from zyvor_janus import SimSession
 
     session = SimSession(str(config_path))
     snapshot = session.reset()
@@ -55,7 +55,7 @@ def run_live_dashboard(
 
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="ForgeSim Rich live dashboard")
+    parser = argparse.ArgumentParser(description="Zyvor Janus Rich live dashboard")
     parser.add_argument(
         "--config",
         default="configs/clusters/small_h100.yaml",

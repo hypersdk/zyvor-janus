@@ -1,4 +1,4 @@
-"""Gymnasium wrapper for ForgeSim stepped scheduling."""
+"""Gymnasium wrapper for Zyvor Janus stepped scheduling."""
 
 from __future__ import annotations
 
@@ -10,12 +10,12 @@ try:
     import gymnasium as gym
     from gymnasium import spaces
 except ImportError as exc:  # pragma: no cover - optional dependency
-    raise ImportError("ForgeSimEnv requires gymnasium; install with pip install -e '.[rl]'") from exc
+    raise ImportError("ZyvorJanusEnv requires gymnasium; install with pip install -e '.[rl]'") from exc
 
-from forgesim._forgesim import SimSession
+from zyvor_janus._zyvor_janus import SimSession
 
 
-class ForgeSimEnv(gym.Env):
+class ZyvorJanusEnv(gym.Env):
     """Discrete scheduling env: pick a waiting job index or noop."""
 
     metadata = {"render_modes": []}

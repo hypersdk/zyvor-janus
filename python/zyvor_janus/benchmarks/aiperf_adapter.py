@@ -1,4 +1,4 @@
-"""AIPerf calibration import/export for ForgeSim profiles."""
+"""AIPerf calibration import/export for Zyvor Janus profiles."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from typing import Any
 try:
     import yaml
 except ImportError:  # pragma: no cover
-    from forgesim.adapters import simple_yaml as yaml
+    from zyvor_janus.adapters import simple_yaml as yaml
 
 
 def parse_aiperf_results(path: Path) -> dict[str, Any]:

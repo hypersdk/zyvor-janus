@@ -1,16 +1,16 @@
-"""Plot Gantt and GPU heatmap from a ForgeSim jobs timeline JSON."""
+"""Plot Gantt and GPU heatmap from a Zyvor Janus jobs timeline JSON."""
 
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
 
-from forgesim.viz import save_run_figures
+from zyvor_janus.viz import save_run_figures
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("timeline", type=Path, help="jobs timeline JSON from forge-sim run")
+    parser.add_argument("timeline", type=Path, help="jobs timeline JSON from zyvor-janus run")
     parser.add_argument(
         "--output-dir",
         type=Path,

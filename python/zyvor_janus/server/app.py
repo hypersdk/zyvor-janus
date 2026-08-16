@@ -1,4 +1,4 @@
-"""FastAPI backend for ForgeSim web dashboard (Phase 2)."""
+"""FastAPI backend for Zyvor Janus web dashboard (Phase 2)."""
 
 from __future__ import annotations
 
@@ -16,15 +16,15 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-# Source checkout: python/forgesim/server/app.py → parents[3] = repo root.
-# Installed wheel: prefer FORGESIM_ROOT (Docker sets this to /app).
+# Source checkout: python/zyvor_janus/server/app.py → parents[3] = repo root.
+# Installed wheel: prefer ZYVOR_JANUS_ROOT (Docker sets this to /app).
 # All three are resolved so `path.relative_to(REPO_ROOT)` below can't fail from a
 # symlink mismatch (e.g. macOS /tmp -> /private/tmp) between an unresolved
 # CONFIG_DIR/RUNS_DIR and the resolved REPO_ROOT.
 _DEFAULT_ROOT = Path(__file__).resolve().parents[3]
-REPO_ROOT = Path(os.environ.get("FORGESIM_ROOT", str(_DEFAULT_ROOT))).resolve()
-CONFIG_DIR = Path(os.environ.get("FORGESIM_CONFIG_DIR", str(REPO_ROOT / "configs" / "clusters"))).resolve()
-RUNS_DIR = Path(os.environ.get("FORGESIM_RUNS_DIR", str(REPO_ROOT / "outputs" / "runs"))).resolve()
+REPO_ROOT = Path(os.environ.get("ZYVOR_JANUS_ROOT", str(_DEFAULT_ROOT))).resolve()
+CONFIG_DIR = Path(os.environ.get("ZYVOR_JANUS_CONFIG_DIR", str(REPO_ROOT / "configs" / "clusters"))).resolve()
+RUNS_DIR = Path(os.environ.get("ZYVOR_JANUS_RUNS_DIR", str(REPO_ROOT / "outputs" / "runs"))).resolve()
 
 
 class RunStatus(str, Enum):
@@ -70,13 +70,13 @@ def _list_configs() -> list[dict[str, str]]:
 
 
 def _run_simulation_sync(config_name: str, scheduler: str | None = None) -> dict[str, Any]:
-    from forgesim import _forgesim
+    from zyvor_janus import _zyvor_janus
 
     config_path = CONFIG_DIR / config_name
     if not config_path.exists():
         raise FileNotFoundError(f"config not found: {config_name}")
 
-    report = _forgesim.run_report_from_config(str(config_path), scheduler)
+    report = _zyvor_janus.run_report_from_config(str(config_path), scheduler)
     metrics = json.loads(report["metrics"].to_json())
     timeline = json.loads(report["timeline"])
     decisions = list(report["decisions"])
@@ -96,7 +96,7 @@ def _run_simulation_sync(config_name: str, scheduler: str | None = None) -> dict
     }
 
 
-app = FastAPI(title="ForgeSim API", version="0.1.0")
+app = FastAPI(title="Zyvor Janus API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -268,7 +268,7 @@ class WhatIfRequest(BaseModel):
 
 @app.get("/api/benchmark/presets")
 def benchmark_presets() -> dict[str, Any]:
-    from forgesim.workloads.generate_synthetic import PRESETS
+    from zyvor_janus.workloads.generate_synthetic import PRESETS
 
     return {
         "configs": _list_configs(),
@@ -341,7 +341,7 @@ def export_serving_trace(run_id: str) -> dict[str, Any]:
     run = RUNS.get(run_id)
     if run is None or run.timeline is None:
         raise HTTPException(status_code=404, detail="run not found")
-    from forgesim.adapters.serving_trace import SERVING_TRACE_VERSION
+    from zyvor_janus.adapters.serving_trace import SERVING_TRACE_VERSION
 
     records = []
     for job in run.timeline.get("jobs", []):
@@ -362,7 +362,7 @@ def export_serving_trace(run_id: str) -> dict[str, Any]:
 
 @app.get("/api/twins")
 def list_twins() -> list[dict[str, Any]]:
-    from forgesim.benchmarks.twin_store import TwinStore
+    from zyvor_janus.benchmarks.twin_store import TwinStore
 
     store = TwinStore(REPO_ROOT / "outputs" / "twins")
     export_path = REPO_ROOT / "outputs" / "twins" / "export.json"
@@ -370,7 +370,7 @@ def list_twins() -> list[dict[str, Any]]:
     return json.loads(export_path.read_text()) if export_path.exists() else []
 
 
-from forgesim.server.openai_shim import router as openai_router
+from zyvor_janus.server.openai_shim import router as openai_router
 
 app.include_router(openai_router)
 

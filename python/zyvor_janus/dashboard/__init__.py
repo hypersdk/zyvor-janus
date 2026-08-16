@@ -1,6 +1,6 @@
-"""ForgeSim terminal dashboard."""
+"""Zyvor Janus terminal dashboard."""
 
-from forgesim.dashboard.state import (
+from zyvor_janus.dashboard.state import (
     DashboardState,
     GpuState,
     format_sim_time,

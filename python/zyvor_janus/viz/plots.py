@@ -1,12 +1,12 @@
-"""Convenience helpers to save standard ForgeSim figures."""
+"""Convenience helpers to save standard Zyvor Janus figures."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from forgesim.viz.gantt import plot_gantt
-from forgesim.viz.heatmap import plot_gpu_heatmap
-from forgesim.viz.timeline import load_timeline
+from zyvor_janus.viz.gantt import plot_gantt
+from zyvor_janus.viz.heatmap import plot_gpu_heatmap
+from zyvor_janus.viz.timeline import load_timeline
 
 
 def save_run_figures(

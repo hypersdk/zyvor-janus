@@ -1,4 +1,4 @@
-"""Tests for ForgeSim Python bindings, adapters, and Forge bundle ingest."""
+"""Tests for Zyvor Janus Python bindings, adapters, and Forge bundle ingest."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ PROFILES = ROOT / "configs" / "profiles"
 
 class TestForgeCRDAdapter(unittest.TestCase):
     def test_gang_gpu_count_is_32(self) -> None:
-        from forgesim.adapters.crd import fabric_ai_job_to_job, gpu_count_from_spec
+        from zyvor_janus.adapters.crd import fabric_ai_job_to_job, gpu_count_from_spec
 
         spec = {
             "gpus": 8,
@@ -60,7 +60,7 @@ class TestForgeCRDAdapter(unittest.TestCase):
         self.assertEqual(job["gang_size_nodes"], 4)
 
     def test_gang_timeout_parsed_from_annotation(self) -> None:
-        from forgesim.adapters.crd import fabric_ai_job_to_job
+        from zyvor_janus.adapters.crd import fabric_ai_job_to_job
 
         manifest = {
             "metadata": {
@@ -80,7 +80,7 @@ class TestForgeCRDAdapter(unittest.TestCase):
         self.assertEqual(job["gang_timeout_secs"], 600.0)
 
     def test_tenant_from_fabric_quota_not_job_spec(self) -> None:
-        from forgesim.adapters.crd import fabric_ai_job_to_job, resolve_tenant
+        from zyvor_janus.adapters.crd import fabric_ai_job_to_job, resolve_tenant
 
         quotas = [
             {"spec": {"team": "ml-infra", "namespaces": ["ml-infra"]}},
@@ -100,7 +100,7 @@ class TestForgeCRDAdapter(unittest.TestCase):
 
 class TestProfileRegistry(unittest.TestCase):
     def test_fail_on_missing_model(self) -> None:
-        from forgesim.adapters.profiles import ProfileLookupError, ProfileRegistry
+        from zyvor_janus.adapters.profiles import ProfileLookupError, ProfileRegistry
 
         registry = ProfileRegistry(PROFILES)
         with self.assertRaises(ProfileLookupError):
@@ -109,7 +109,7 @@ class TestProfileRegistry(unittest.TestCase):
 
 class TestForgeBundleAdapter(unittest.TestCase):
     def test_load_fixture_bundle(self) -> None:
-        from forgesim.adapters.bundle import ForgeBundleAdapter
+        from zyvor_janus.adapters.bundle import ForgeBundleAdapter
 
         adapter = ForgeBundleAdapter(PROFILES)
         bundle = adapter.from_directory(FIXTURES)
@@ -119,8 +119,8 @@ class TestForgeBundleAdapter(unittest.TestCase):
         self.assertEqual(gang["tenant"], "ml-training")
 
     def test_missing_profile_raises(self) -> None:
-        from forgesim.adapters.bundle import ForgeBundleAdapter
-        from forgesim.adapters.profiles import ProfileLookupError
+        from zyvor_janus.adapters.bundle import ForgeBundleAdapter
+        from zyvor_janus.adapters.profiles import ProfileLookupError
 
         adapter = ForgeBundleAdapter(Path("/nonexistent/profiles"))
         with self.assertRaises(ProfileLookupError):
@@ -129,14 +129,14 @@ class TestForgeBundleAdapter(unittest.TestCase):
 
 class TestTraceAdapter(unittest.TestCase):
     def test_load_fixture_trace(self) -> None:
-        from forgesim.adapters.trace import TraceAdapter
+        from zyvor_janus.adapters.trace import TraceAdapter
 
         adapter = TraceAdapter()
         record = adapter.from_file(TRACE_FIXTURES / "fifo_match.jsonl")
         self.assertEqual(len(record.events), 4)
 
     def test_jobs_and_oracle_from_trace(self) -> None:
-        from forgesim.adapters.trace import TraceAdapter
+        from zyvor_janus.adapters.trace import TraceAdapter
 
         adapter = TraceAdapter()
         record = adapter.from_file(TRACE_FIXTURES / "fifo_match.jsonl")
@@ -147,7 +147,7 @@ class TestTraceAdapter(unittest.TestCase):
         self.assertEqual(oracle[0]["gpu_ids"], ["gpu-0"])
 
     def test_normalizes_indexed_gpus(self) -> None:
-        from forgesim.adapters.trace import TraceAdapter
+        from zyvor_janus.adapters.trace import TraceAdapter
 
         adapter = TraceAdapter()
         record = adapter.from_file(TRACE_FIXTURES / "indexed_gpus.jsonl")
@@ -158,7 +158,7 @@ class TestTraceAdapter(unittest.TestCase):
         )
 
     def test_diff_detects_mismatch(self) -> None:
-        from forgesim.adapters.trace import TraceAdapter
+        from zyvor_janus.adapters.trace import TraceAdapter
 
         adapter = TraceAdapter()
         oracle = [{"job_id": "j1", "timestamp": 0.0, "gpu_ids": ["gpu-1"]}]
@@ -171,13 +171,13 @@ class TestTraceAdapter(unittest.TestCase):
 class TestRunFromConfig(unittest.TestCase):
     def test_run_from_config(self) -> None:
         try:
-            import forgesim._forgesim  # noqa: F401
+            import zyvor_janus._zyvor_janus  # noqa: F401
         except ImportError:
-            self.skipTest("forgesim Rust extension not built (maturin develop)")
+            self.skipTest("zyvor_janus Rust extension not built (maturin develop)")
 
-        import forgesim
+        import zyvor_janus
 
-        result = forgesim.run_from_config(str(CONFIG))
+        result = zyvor_janus.run_from_config(str(CONFIG))
         self.assertEqual(result.jobs_completed, result.jobs_total)
         self.assertGreater(result.makespan, 0)
 

@@ -1,6 +1,6 @@
 import unittest
 
-from forgesim.dashboard.state import (
+from zyvor_janus.dashboard.state import (
     format_sim_time,
     render_dashboard_text,
     snapshot_to_dashboard_state,

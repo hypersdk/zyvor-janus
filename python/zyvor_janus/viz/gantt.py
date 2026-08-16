@@ -7,10 +7,10 @@ from typing import Any
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
-from forgesim.theme import ACCENT_ORANGE, TEAL, TEXT_MUTED, matplotlib_rcparams
+from zyvor_janus.theme import ACCENT_ORANGE, TEAL, TEXT_MUTED, matplotlib_rcparams
 
 
-def plot_gantt(timeline: dict[str, Any], *, title: str = "ForgeSim job schedule") -> Figure:
+def plot_gantt(timeline: dict[str, Any], *, title: str = "Zyvor Janus job schedule") -> Figure:
     plt.rcParams.update(matplotlib_rcparams())
     jobs = timeline.get("jobs", [])
     fig, ax = plt.subplots(figsize=(10, max(3, len(jobs) * 0.35)))

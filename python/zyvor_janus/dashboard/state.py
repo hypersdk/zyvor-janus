@@ -1,4 +1,4 @@
-"""ForgeSim live terminal dashboard (Phase 1)."""
+"""Zyvor Janus live terminal dashboard (Phase 1)."""
 
 from __future__ import annotations
 
@@ -68,7 +68,7 @@ def render_util_bar(utilization: float, width: int = 10) -> str:
 
 
 def render_util_bar_rich(utilization: float, width: int = 10) -> Any:
-    from forgesim.theme import ACCENT, TEXT_DIM
+    from zyvor_janus.theme import ACCENT, TEXT_DIM
     from rich.text import Text
 
     util = max(0.0, min(1.0, utilization))
@@ -108,7 +108,7 @@ def render_dashboard_rich(state: DashboardState) -> Any:
     from rich.panel import Panel
     from rich.table import Table
 
-    from forgesim.theme import rich_styles
+    from zyvor_janus.theme import rich_styles
 
     styles = rich_styles()
     summary = Table.grid(padding=(0, 2))
@@ -139,7 +139,7 @@ def render_dashboard_rich(state: DashboardState) -> Any:
             queue_table.add_row(f"{idx}. {name}")
 
     return Group(
-        Panel(summary, title="ForgeSim · Zyvor AI Labs", border_style=styles["summary"]),
+        Panel(summary, title="Zyvor Janus · Zyvor AI Labs", border_style=styles["summary"]),
         Panel(gpu_table, border_style=styles["gpu"]),
         Panel(queue_table, title="Waiting", border_style=styles["queue"]),
     )
