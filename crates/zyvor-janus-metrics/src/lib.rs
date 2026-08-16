@@ -4,7 +4,8 @@ use zyvor_janus_model::cluster::Cluster;
 use zyvor_janus_model::models::{JobRunSegment, JobState};
 
 pub mod benchmark;
-pub use benchmark::{CostModel, SchedulerBenchmarkReport};
+pub use benchmark::SchedulerBenchmarkReport;
+pub use zyvor_janus_cost::CostModel;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JobTimelineRecord {
