@@ -5,8 +5,8 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
-use zyvor_janus_core::cluster::Cluster;
-use zyvor_janus_core::models::{Job, JobState};
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::{Job, JobState};
 
 use crate::{ConfigError, ConfigResult};
 

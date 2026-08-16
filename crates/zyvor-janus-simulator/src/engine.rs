@@ -1,16 +1,9 @@
-use crate::cluster::Cluster;
-use crate::events::{Event, EventKind, EventQueue};
-use crate::models::{Job, JobState, Placement};
-use crate::resource::ResourceManager;
 use crate::snapshot::{ClusterSnapshot, DEFAULT_OBS_TOP_K};
-
-pub trait Scheduler {
-    fn schedule(
-        &mut self,
-        cluster: &mut Cluster,
-        resource_manager: &ResourceManager,
-    ) -> Vec<Placement>;
-}
+use zyvor_janus_core::events::{Event, EventKind, EventQueue};
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::{Job, JobState};
+use zyvor_janus_scheduler::resource::ResourceManager;
+use zyvor_janus_scheduler::Scheduler;
 
 pub struct SimulationEngine<S: Scheduler> {
     pub cluster: Cluster,
@@ -158,7 +151,7 @@ impl<S: Scheduler> SimulationEngine<S> {
             }
         }
         self.cluster.record_decision(
-            crate::decision_log::SchedulerDecision::new(
+            zyvor_janus_core::decision_log::SchedulerDecision::new(
                 self.cluster.clock,
                 "job_arrival",
                 format!("Job '{}' arrived", job.name),
@@ -179,7 +172,7 @@ impl<S: Scheduler> SimulationEngine<S> {
         if still_waiting {
             if let Some(job) = self.cluster.fail_waiting_job(job_id, self.cluster.clock) {
                 self.cluster.record_decision(
-                    crate::decision_log::SchedulerDecision::new(
+                    zyvor_janus_core::decision_log::SchedulerDecision::new(
                         self.cluster.clock,
                         "gang_timeout",
                         format!("Gang job '{}' failed (timeout)", job.name),
@@ -202,7 +195,7 @@ impl<S: Scheduler> SimulationEngine<S> {
         }
         if let Some(job) = self.cluster.finish_job(job_id, self.cluster.clock) {
             self.cluster.record_decision(
-                crate::decision_log::SchedulerDecision::new(
+                zyvor_janus_core::decision_log::SchedulerDecision::new(
                     self.cluster.clock,
                     "job_complete",
                     format!("Job '{}' completed", job.name),
@@ -236,7 +229,7 @@ impl<S: Scheduler> SimulationEngine<S> {
                 self.cluster
                     .start_job(job.clone(), &placement.gpu_ids, placement.start_time);
                 self.cluster.record_decision(
-                    crate::decision_log::SchedulerDecision::new(
+                    zyvor_janus_core::decision_log::SchedulerDecision::new(
                         placement.start_time,
                         "job_scheduled",
                         format!(
@@ -272,7 +265,7 @@ impl<S: Scheduler> SimulationEngine<S> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::{Gpu, Node};
+    use zyvor_janus_model::models::{Gpu, Node, Placement};
 
     struct TestScheduler;
 

@@ -6,11 +6,11 @@ use zyvor_janus_config::{
     load_forge_bundle, run_forge_bundle, run_simulation, run_trace_file, trace_diff_to_json,
     TraceDiffReport,
 };
-use zyvor_janus_core::cluster::Cluster;
-use zyvor_janus_core::engine::SimulationEngine;
-use zyvor_janus_core::models::{Gpu, Job, JobState, Node};
-use zyvor_janus_core::resource::ResourceManager;
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::{Gpu, Job, JobState, Node};
+use zyvor_janus_scheduler::resource::ResourceManager;
 use zyvor_janus_scheduler::ForgeScheduler;
+use zyvor_janus_simulator::SimulationEngine;
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -424,7 +424,7 @@ fn integration_preemption_gpu_utilization_accounts_all_segments() {
 #[test]
 fn integration_preemption_restart_penalty_delays_resumed_job() {
     use zyvor_janus_config::load_simulation_config;
-    use zyvor_janus_core::engine::SimulationEngine;
+    use zyvor_janus_simulator::SimulationEngine;
 
     let config_path = repo_root().join("configs/clusters/preemption_preemptive.yaml");
     if !config_path.exists() {

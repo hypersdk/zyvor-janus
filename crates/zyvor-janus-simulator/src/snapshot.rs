@@ -1,6 +1,6 @@
-use crate::cluster::Cluster;
-use crate::models::{Job, JobState};
 use serde::{Deserialize, Serialize};
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::{Job, JobState};
 
 pub const DEFAULT_OBS_TOP_K: usize = 8;
 
@@ -211,8 +211,8 @@ pub fn obs_size(top_k: usize) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cluster::Cluster;
-    use crate::models::{Gpu, Job, Node};
+    use zyvor_janus_model::cluster::Cluster;
+    use zyvor_janus_model::models::{Gpu, Job, Node};
 
     #[test]
     fn obs_size_matches_feature_vector_length() {

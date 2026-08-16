@@ -8,6 +8,5 @@ description = "Zyvor Janus scheduling policies"
 
 [dependencies]
 zyvor-janus-core = { path = "../zyvor-janus-core" }
-
-[dev-dependencies]
-zyvor-janus-core = { path = "../zyvor-janus-core" }
+zyvor-janus-model = { path = "../zyvor-janus-model" }
+zyvor-janus-topology = { path = "../zyvor-janus-topology" }

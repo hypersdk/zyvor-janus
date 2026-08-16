@@ -1,9 +1,9 @@
 use std::cmp::Ordering;
 
-use zyvor_janus_core::cluster::Cluster;
-use zyvor_janus_core::engine::Scheduler;
-use zyvor_janus_core::models::Placement;
-use zyvor_janus_core::resource::ResourceManager;
+use crate::resource::ResourceManager;
+use crate::Scheduler;
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::models::Placement;
 
 use crate::common::place_in_order;
 
@@ -20,13 +20,11 @@ impl Scheduler for BestFitScheduler {
     ) -> Vec<Placement> {
         let mut waiting = cluster.waiting_queue.to_vec();
         waiting.sort_by(|a, b| {
-            b.gpu_count
-                .cmp(&a.gpu_count)
-                .then_with(|| {
-                    a.arrival_time
-                        .partial_cmp(&b.arrival_time)
-                        .unwrap_or(Ordering::Equal)
-                })
+            b.gpu_count.cmp(&a.gpu_count).then_with(|| {
+                a.arrival_time
+                    .partial_cmp(&b.arrival_time)
+                    .unwrap_or(Ordering::Equal)
+            })
         });
         place_in_order(cluster, resource_manager, waiting)
     }
@@ -35,8 +33,8 @@ impl Scheduler for BestFitScheduler {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use zyvor_janus_core::models::{Gpu, Job, Node};
-    use zyvor_janus_core::resource::GpuSelectionPolicy;
+    use crate::resource::GpuSelectionPolicy;
+    use zyvor_janus_model::models::{Gpu, Job, Node};
 
     #[test]
     fn best_fit_prefers_tighter_node_when_policy_enabled() {

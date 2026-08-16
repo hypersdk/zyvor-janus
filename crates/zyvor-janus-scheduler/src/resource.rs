@@ -1,8 +1,8 @@
-use crate::cluster::Cluster;
-use crate::error::{SimError, SimResult};
-use crate::mig::reconfigure_gpu;
-use crate::mig::MigProfileRegistry;
-use crate::models::{Job, Placement};
+use zyvor_janus_core::error::{SimError, SimResult};
+use zyvor_janus_model::cluster::Cluster;
+use zyvor_janus_model::mig::reconfigure_gpu;
+use zyvor_janus_model::mig::MigProfileRegistry;
+use zyvor_janus_model::models::{Job, Placement};
 use zyvor_janus_topology::GpuTopologyKey;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -254,27 +254,30 @@ impl Default for ResourceManager {
     }
 }
 
-fn gpu_type_matches(gpu: &crate::models::Gpu, job: &Job) -> bool {
+fn gpu_type_matches(gpu: &zyvor_janus_model::models::Gpu, job: &Job) -> bool {
     match job.gpu_type.as_deref() {
         Some(requested) => gpu.profile == requested,
         None => true,
     }
 }
 
-fn memory_eligible(gpu: &crate::models::Gpu, job: &Job) -> bool {
+fn memory_eligible(gpu: &zyvor_janus_model::models::Gpu, job: &Job) -> bool {
     job.gpu_memory_gb <= 0.0 || gpu.memory_gb >= job.gpu_memory_gb
 }
 
 /// A job tagged with a federation site only matches nodes tagged with that
 /// same site; an untagged job matches any node (no partitioning in play).
-fn site_matches(cluster: &Cluster, gpu: &crate::models::Gpu, job: &Job) -> bool {
+fn site_matches(cluster: &Cluster, gpu: &zyvor_janus_model::models::Gpu, job: &Job) -> bool {
     match job.site.as_deref() {
         Some(requested) => cluster.node_site(&gpu.node_id) == Some(requested),
         None => true,
     }
 }
 
-fn eligible_free_gpus<'a>(cluster: &'a Cluster, job: &Job) -> Vec<&'a crate::models::Gpu> {
+fn eligible_free_gpus<'a>(
+    cluster: &'a Cluster,
+    job: &Job,
+) -> Vec<&'a zyvor_janus_model::models::Gpu> {
     cluster
         .all_gpus()
         .filter(|g| {
@@ -358,11 +361,11 @@ fn select_gang_gpus(cluster: &Cluster, job: &Job, nodes: u32) -> Option<(Vec<Str
 }
 
 fn select_nvlink_coherent(
-    free: &[&crate::models::Gpu],
+    free: &[&zyvor_janus_model::models::Gpu],
     per_node: u32,
 ) -> Option<(Vec<String>, bool)> {
     use std::collections::HashMap;
-    let mut by_group: HashMap<Option<u32>, Vec<&crate::models::Gpu>> = HashMap::new();
+    let mut by_group: HashMap<Option<u32>, Vec<&zyvor_janus_model::models::Gpu>> = HashMap::new();
     for gpu in free {
         by_group.entry(gpu.nvlink_group).or_default().push(*gpu);
     }
@@ -416,7 +419,7 @@ fn select_gpus_best_fit(cluster: &Cluster, job: &Job) -> Option<Vec<String>> {
     }
 
     use std::collections::HashMap;
-    let mut by_node: HashMap<String, Vec<&crate::models::Gpu>> = HashMap::new();
+    let mut by_node: HashMap<String, Vec<&zyvor_janus_model::models::Gpu>> = HashMap::new();
     for gpu in free {
         by_node.entry(gpu.node_id.clone()).or_default().push(gpu);
     }
@@ -466,7 +469,7 @@ fn select_gpus_topology_aware(cluster: &Cluster, job: &Job) -> Option<(Vec<Strin
     }
 
     use std::collections::HashMap;
-    let mut by_group: HashMap<Option<u32>, Vec<&crate::models::Gpu>> = HashMap::new();
+    let mut by_group: HashMap<Option<u32>, Vec<&zyvor_janus_model::models::Gpu>> = HashMap::new();
     for gpu in free {
         by_group.entry(gpu.nvlink_group).or_default().push(gpu);
     }
@@ -499,11 +502,11 @@ fn select_gpus_topology_aware(cluster: &Cluster, job: &Job) -> Option<(Vec<Strin
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cluster::Cluster;
-    use crate::mig::{MigHardwareConfig, MigProfileRegistry, MigProfileSpec};
-    use crate::models::{Gpu, Node};
     use crate::resource::GpuSelectionPolicy;
     use std::collections::HashMap;
+    use zyvor_janus_model::cluster::Cluster;
+    use zyvor_janus_model::mig::{MigHardwareConfig, MigProfileRegistry, MigProfileSpec};
+    use zyvor_janus_model::models::{Gpu, Node};
 
     fn mig_registry() -> MigProfileRegistry {
         MigProfileRegistry::from_config(MigHardwareConfig {
