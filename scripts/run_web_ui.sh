@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start the ForgeSim Next.js frontend (port 3000 by default).
+# Start the Zyvor Janus Next.js frontend (port 3000 by default).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -24,7 +24,7 @@ fi
 
 ensure_web_deps "$WEB"
 
-echo "ForgeSim web UI → http://127.0.0.1:${PORT}"
+echo "Zyvor Janus web UI → http://127.0.0.1:${PORT}"
 echo "(proxies /api and /ws to http://127.0.0.1:8080 — start ./scripts/run_web_api.sh first)"
 echo
 

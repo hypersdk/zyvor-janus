@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * ZyForgeSim — client “wow” reel: dual-node (or dual-GPU) preempt / migrate.
+ * Zyvor Janus — client “wow” reel: dual-node (or dual-GPU) preempt / migrate.
  *
  * Default config is two machines × one H100 (placement migrate via preempt).
  * Not live CUDA. Pattern mirrors IronWolf continuous reel.
@@ -9,13 +9,13 @@
  *   ./scripts/run_web_dashboard.sh
  *
  * Usage:
- *   node scripts/demo-videos/record-forgesim-2gpu-migrate-wow-reel.mjs
+ *   node scripts/demo-videos/record-zyvor-janus-2gpu-migrate-wow-reel.mjs
  *   ZYVOR_JANUS_DEMO_CONFIG=dual_gpu_preempt.yaml node …   # one-node 2×GPU variant
  *
  * Desktop outputs (dual-node default):
- *   forgesim-client-dual-node-migrate-wow-reel.mp4
- *   forgesim-client-dual-node-migrate-wow-reel-linkedin-1080p.mp4
- *   (+ legacy forgesim-client-wow-reel.mp4 copies for older links)
+ *   zyvor-janus-client-dual-node-migrate-wow-reel.mp4
+ *   zyvor-janus-client-dual-node-migrate-wow-reel-linkedin-1080p.mp4
+ *   (+ legacy zyvor-janus-client-wow-reel.mp4 copies for older links)
  */
 import { createRequire } from 'node:module';
 import {
@@ -31,7 +31,7 @@ import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 
 const DESKTOP = join(homedir(), 'Desktop');
-const FS_ROOT = join(homedir(), 'tt/ZyForgeSim');
+const FS_ROOT = join(homedir(), 'tt/zyvor-janus');
 const PLAYWRIGHT_CANDIDATES = [
   join(homedir(), 'tt/forge/web-ui/node_modules/playwright/package.json'),
   join(homedir(), 'tt/IronWolf/scripts/demo-videos/node_modules/playwright/package.json'),
@@ -53,18 +53,18 @@ const PASS = process.env.ZYVOR_JANUS_PASS || process.env.ZYVOR_JANUS_DASHBOARD_P
 const CONFIG = process.env.ZYVOR_JANUS_DEMO_CONFIG || 'dual_node_preempt.yaml';
 const DUAL_NODE = CONFIG.includes('dual_node');
 
-const WORK = join(DESKTOP, 'forgesim-wow-work');
+const WORK = join(DESKTOP, 'zyvor-janus-wow-work');
 const RAW = join(WORK, 'raw');
-const SHOTS = join(DESKTOP, DUAL_NODE ? 'forgesim-dual-node-wow-shots' : 'forgesim-wow-shots');
+const SHOTS = join(DESKTOP, DUAL_NODE ? 'zyvor-janus-dual-node-wow-shots' : 'zyvor-janus-wow-shots');
 const FINAL_WEB = join(
   DESKTOP,
-  DUAL_NODE ? 'forgesim-client-dual-node-migrate-wow-reel.mp4' : 'forgesim-client-wow-reel.mp4',
+  DUAL_NODE ? 'zyvor-janus-client-dual-node-migrate-wow-reel.mp4' : 'zyvor-janus-client-wow-reel.mp4',
 );
 const FINAL_LI = join(
   DESKTOP,
   DUAL_NODE
-    ? 'forgesim-client-dual-node-migrate-wow-reel-linkedin-1080p.mp4'
-    : 'forgesim-client-wow-reel-linkedin-1080p.mp4',
+    ? 'zyvor-janus-client-dual-node-migrate-wow-reel-linkedin-1080p.mp4'
+    : 'zyvor-janus-client-wow-reel-linkedin-1080p.mp4',
 );
 
 mkdirSync(RAW, { recursive: true });
@@ -124,7 +124,7 @@ async function caption(page, text, holdMs = 2400) {
       bar = document.createElement('div');
       bar.id = 'fs-demo-caption';
       bar.innerHTML =
-        '<div id="fs-demo-caption-brand">ZyForgeSim · Client Demo</div><div id="fs-demo-caption-text"></div>';
+        '<div id="fs-demo-caption-brand">Zyvor Janus · Client Demo</div><div id="fs-demo-caption-text"></div>';
       document.documentElement.appendChild(bar);
     }
     const body = document.getElementById('fs-demo-caption-text');
@@ -161,7 +161,7 @@ async function login(page) {
   await page.waitForSelector('input[name="username"], #password', { timeout: 30000 });
   await hideMask(page);
   await ensureCaptionCss(page);
-  await caption(page, 'ZyForgeSim — GPU scheduler digital twin for Forge.', 2600);
+  await caption(page, 'Zyvor Janus — GPU scheduler digital twin for Forge.', 2600);
   await page.locator('input[name="username"]').fill(USER);
   await page.locator('input[name="password"]').fill(PASS);
   await caption(page, 'Mission Control — run, replay, and compare without physical GPUs.', 2200);
@@ -368,7 +368,7 @@ async function main() {
 
   await login(page);
   await gotoReady(page, '/', { readyText: 'CONFIGURATION' });
-  await caption(page, 'ZyForgeSim — GPU scheduler digital twin.', 2600);
+  await caption(page, 'Zyvor Janus — GPU scheduler digital twin.', 2600);
   await page.screenshot({ path: join(SHOTS, '01-dashboard.png') });
 
   const runPath = await launchRun(page);
@@ -376,7 +376,7 @@ async function main() {
   await showGantt(page, runPath);
 
   await gotoReady(page, '/', { readyText: 'CONFIGURATION' });
-  await caption(page, 'zyvor.dev  ·  Forge + ZyForgeSim  ·  Schedule without the silicon.', 4000);
+  await caption(page, 'zyvor.dev  ·  Forge + Zyvor Janus  ·  Schedule without the silicon.', 4000);
   await page.screenshot({ path: join(SHOTS, '06-close.png') });
 
   await page.close();
@@ -389,11 +389,11 @@ async function main() {
   console.log(`[wow] encoding ${src}`);
   encode(src, FINAL_WEB, 1440, 900);
   encode(src, FINAL_LI, 1920, 1080);
-  copyFileSync(src, join(DESKTOP, DUAL_NODE ? 'forgesim-client-dual-node-migrate-wow-reel.webm' : 'forgesim-client-wow-reel.webm'));
+  copyFileSync(src, join(DESKTOP, DUAL_NODE ? 'zyvor-janus-client-dual-node-migrate-wow-reel.webm' : 'zyvor-janus-client-wow-reel.webm'));
   if (DUAL_NODE) {
     // Keep legacy filenames pointing at the latest dual-node cut.
-    copyFileSync(FINAL_WEB, join(DESKTOP, 'forgesim-client-wow-reel.mp4'));
-    copyFileSync(FINAL_LI, join(DESKTOP, 'forgesim-client-wow-reel-linkedin-1080p.mp4'));
+    copyFileSync(FINAL_WEB, join(DESKTOP, 'zyvor-janus-client-wow-reel.mp4'));
+    copyFileSync(FINAL_LI, join(DESKTOP, 'zyvor-janus-client-wow-reel-linkedin-1080p.mp4'));
   }
 
   const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
@@ -414,8 +414,8 @@ async function main() {
     join(
       DESKTOP,
       DUAL_NODE
-        ? 'forgesim-client-dual-node-migrate-wow-reel-manifest.json'
-        : 'forgesim-client-wow-reel-manifest.json',
+        ? 'zyvor-janus-client-dual-node-migrate-wow-reel-manifest.json'
+        : 'zyvor-janus-client-wow-reel-manifest.json',
     ),
     JSON.stringify(meta, null, 2),
   );
