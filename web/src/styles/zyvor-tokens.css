@@ -26,7 +26,7 @@
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", "Cascadia Code", Menlo, monospace;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
-  /* Legacy ForgeSim aliases → QA tokens (charts / existing classes) */
+  /* Legacy Zyvor Janus aliases → QA tokens (charts / existing classes) */
   --hs-accent: var(--accent);
   --hs-accent-deep: #2563eb;
   --hs-accent-light: #60a5fa;

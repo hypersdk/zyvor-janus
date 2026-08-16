@@ -13,23 +13,23 @@ PREEMPTIVE_CONFIG = ROOT / "configs/clusters/preemption_preemptive.yaml"
 class TestSchedulingMetrics(unittest.TestCase):
     def test_preemptive_run_reports_segment_metrics(self) -> None:
         try:
-            import forgesim
-            from forgesim import _forgesim
+            import zyvor_janus
+            from zyvor_janus import _zyvor_janus
         except ImportError:
-            self.skipTest("forgesim extension not built")
+            self.skipTest("zyvor_janus extension not built")
 
-        metrics = _forgesim.run_from_config(str(PREEMPTIVE_CONFIG))
+        metrics = _zyvor_janus.run_from_config(str(PREEMPTIVE_CONFIG))
         self.assertEqual(metrics.preemptions, 1)
         self.assertGreater(metrics.gpu_utilization, 0.0)
         self.assertGreaterEqual(metrics.jobs_completed, 1)
 
     def test_sim_result_json_includes_new_fields(self) -> None:
         try:
-            from forgesim import _forgesim
+            from zyvor_janus import _zyvor_janus
         except ImportError:
-            self.skipTest("forgesim extension not built")
+            self.skipTest("zyvor_janus extension not built")
 
-        metrics = _forgesim.run_from_config(str(PREEMPTIVE_CONFIG))
+        metrics = _zyvor_janus.run_from_config(str(PREEMPTIVE_CONFIG))
         payload = metrics.to_json()
         self.assertIn("jobs_unschedulable", payload)
         self.assertIn("queue_max_length", payload)

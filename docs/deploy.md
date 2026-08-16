@@ -1,6 +1,6 @@
-# Deploying ForgeSim
+# Deploying Zyvor Janus
 
-ForgeSim can run locally via scripts or on Kubernetes with container images.
+Zyvor Janus can run locally via scripts or on Kubernetes with container images.
 
 ## Local (dev)
 
@@ -25,8 +25,8 @@ Images:
 
 | Dockerfile | Role |
 |------------|------|
-| `deploy/docker/Dockerfile.api` | FastAPI + Rust sim (`forgesim-api`) |
-| `web/Dockerfile` | Next.js UI (`forgesim-web`) |
+| `deploy/docker/Dockerfile.api` | FastAPI + Rust sim (`zyvor-janus-api`) |
+| `web/Dockerfile` | Next.js UI (`zyvor-janus-web`) |
 
 ## Kubernetes
 

@@ -27,13 +27,13 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Clippy
-        run: cargo clippy --workspace --exclude forgesim-py -- -D warnings
+        run: cargo clippy --workspace --exclude zyvor-janus-py -- -D warnings
 
       - name: Unit tests
-        run: cargo test --workspace --exclude forgesim-py
+        run: cargo test --workspace --exclude zyvor-janus-py
 
       - name: Integration tests (config)
-        run: cargo test -p forgesim-config --test integration
+        run: cargo test -p zyvor-janus-config --test integration
 
       - name: Integration tests (cli)
-        run: cargo test -p forgesim-cli --test cli_integration
+        run: cargo test -p zyvor-janus-cli --test cli_integration

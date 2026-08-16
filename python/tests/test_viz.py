@@ -1,4 +1,4 @@
-"""Tests for ForgeSim visualization helpers."""
+"""Tests for Zyvor Janus visualization helpers."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ def _hex_to_rgb01(hex_color: str) -> tuple[float, float, float]:
 
 class TestViz(unittest.TestCase):
     def test_load_timeline(self) -> None:
-        from forgesim.viz.timeline import load_timeline
+        from zyvor_janus.viz.timeline import load_timeline
 
         data = load_timeline(FIXTURE)
         self.assertEqual(len(data["jobs"]), 2)
@@ -28,9 +28,9 @@ class TestViz(unittest.TestCase):
         except ImportError:
             self.skipTest("matplotlib not installed")
 
-        from forgesim.theme import ACCENT_ORANGE, TEAL
-        from forgesim.viz.gantt import plot_gantt
-        from forgesim.viz.timeline import load_timeline
+        from zyvor_janus.theme import ACCENT_ORANGE, TEAL
+        from zyvor_janus.viz.gantt import plot_gantt
+        from zyvor_janus.viz.timeline import load_timeline
 
         data = load_timeline(FIXTURE)
         fig = plot_gantt(data)
@@ -45,7 +45,7 @@ class TestViz(unittest.TestCase):
         except ImportError:
             self.skipTest("matplotlib not installed")
 
-        from forgesim.viz.plots import save_run_figures
+        from zyvor_janus.viz.plots import save_run_figures
 
         out_dir = ROOT / "outputs/test_viz"
         gantt, heatmap = save_run_figures(FIXTURE, out_dir, prefix="test")

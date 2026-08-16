@@ -1,14 +1,14 @@
-"""Roll out a random or FIFO policy against ForgeSimEnv."""
+"""Roll out a random or FIFO policy against ZyvorJanusEnv."""
 
 from __future__ import annotations
 
 import argparse
 import random
 
-from forgesim.envs.forge_gym import ForgeSimEnv
+from zyvor_janus.envs.zyvor_janus_gym import ZyvorJanusEnv
 
 
-def rollout(env: ForgeSimEnv, policy: str, *, seed: int = 0) -> float:
+def rollout(env: ZyvorJanusEnv, policy: str, *, seed: int = 0) -> float:
     rng = random.Random(seed)
     obs, _info = env.reset(seed=seed)
     total_reward = 0.0
@@ -36,12 +36,12 @@ def main() -> None:
     parser.add_argument(
         "--config",
         default="configs/clusters/rl_small.yaml",
-        help="ForgeSim cluster/workload config",
+        help="Zyvor Janus cluster/workload config",
     )
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
 
-    env = ForgeSimEnv(args.config)
+    env = ZyvorJanusEnv(args.config)
     rollout(env, "fifo", seed=args.seed)
     rollout(env, "random", seed=args.seed)
 

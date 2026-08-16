@@ -3,9 +3,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from forgesim.benchmarks.aiperf_adapter import extract_profile_curves, parse_aiperf_results, update_profile_yaml
-from forgesim.benchmarks.sweep import cartesian_variants
-from forgesim.benchmarks.twin_store import TwinEntry, TwinStore
+from zyvor_janus.benchmarks.aiperf_adapter import extract_profile_curves, parse_aiperf_results, update_profile_yaml
+from zyvor_janus.benchmarks.sweep import cartesian_variants
+from zyvor_janus.benchmarks.twin_store import TwinEntry, TwinStore
 
 ROOT = Path(__file__).resolve().parents[2]
 

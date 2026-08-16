@@ -1,17 +1,17 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: forgesim
-  namespace: forgesim
+  name: zyvor-janus
+  namespace: zyvor-janus
   labels:
-    app.kubernetes.io/name: forgesim
+    app.kubernetes.io/name: zyvor-janus
   annotations:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
 spec:
   ingressClassName: nginx
   rules:
-    - host: forgesim.example.com
+    - host: zyvor-janus.example.com
       http:
         paths:
           # Next.js login handlers must stay on the web pod.
@@ -19,27 +19,27 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: forgesim-web
+                name: zyvor-janus-web
                 port:
                   number: 3000
           - path: /api
             pathType: Prefix
             backend:
               service:
-                name: forgesim-api
+                name: zyvor-janus-api
                 port:
                   number: 8080
           - path: /ws
             pathType: Prefix
             backend:
               service:
-                name: forgesim-api
+                name: zyvor-janus-api
                 port:
                   number: 8080
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: forgesim-web
+                name: zyvor-janus-web
                 port:
                   number: 3000

@@ -1,6 +1,6 @@
-# ForgeSim Benchmark Platform
+# Zyvor Janus Benchmark Platform
 
-ForgeSim extends from **GPU scheduler simulation** (M1–M8) into a platform that connects **scheduling decisions** to **end-to-end LLM serving metrics** — TTFT, inter-token latency (ITL), tokens/sec, goodput, queue delay, GPU utilization, and cost.
+Zyvor Janus extends from **GPU scheduler simulation** (M1–M8) into a platform that connects **scheduling decisions** to **end-to-end LLM serving metrics** — TTFT, inter-token latency (ITL), tokens/sec, goodput, queue delay, GPU utilization, and cost.
 
 **Status: MVP shipped** for phases P0–P10 (core paths exist in-tree). This document remains the canonical roadmap; each phase section below notes what landed vs what is still open. QA steps: [manual_test_benchmark_platform.md](manual_test_benchmark_platform.md).
 
@@ -10,12 +10,12 @@ See also: [Architecture](architecture.md) · [Milestones](milestones.md) · [UI 
 
 ## Vision
 
-Today ForgeSim answers: *“How does this scheduler policy allocate GPUs and affect queue wait / utilization?”*
+Today Zyvor Janus answers: *“How does this scheduler policy allocate GPUs and affect queue wait / utilization?”*
 
 The benchmark platform adds: *“How does that scheduling policy affect LLM serving SLOs — and how do simulated predictions compare to measured AIPerf results?”*
 
 ```text
-                    ForgeSim
+                    Zyvor Janus
                         │
          Scheduler Simulation
                         │
@@ -29,7 +29,7 @@ The benchmark platform adds: *“How does that scheduling policy affect LLM serv
                       Compare Simulation vs Reality
 ```
 
-**Positioning:** ForgeSim does not replace AIPerf or real inference servers. External benchmark tools become **calibration and validation plugins**. The simulator remains runnable without GPUs.
+**Positioning:** Zyvor Janus does not replace AIPerf or real inference servers. External benchmark tools become **calibration and validation plugins**. The simulator remains runnable without GPUs.
 
 **Differentiator:** First open-source platform that couples scheduler placement with LLM serving KPIs, calibrated from real measurements where available.
 
@@ -79,16 +79,16 @@ flowchart TB
 | Layer | Responsibility | Current state |
 |-------|----------------|---------------|
 | **Simulation** | DES, schedulers, cluster, MIG, topology, RL, inference model | M1–M8 + P1 complete |
-| **Benchmark** | Workload/trace I/O, AIPerf calibration, OpenAI virtual endpoint | MVP in `python/forgesim/benchmarks/`, `serving_trace.rs`, OpenAI shim |
+| **Benchmark** | Workload/trace I/O, AIPerf calibration, OpenAI virtual endpoint | MVP in `python/zyvor_janus/benchmarks/`, `serving_trace.rs`, OpenAI shim |
 | **Analytics** | Dashboard, reports, digital twin, what-if, CI regression | `/benchmark`, `/what-if`, score reports, twin API, `benchmark.yml` — UI polish gaps remain |
 
 ### Integration boundaries
 
 | Component | Owner | Rationale |
 |-----------|-------|-----------|
-| Inference timing that affects GPU contention | **Rust** (`forgesim-core`) | DES invariant: core never depends on Python |
-| AIPerf subprocess, JSON import/export | **Python** (`python/forgesim/benchmarks/`) | External tool orchestration |
-| OpenAI HTTP shim | **Python** (`python/forgesim/server/`) | Request ingress; requires auth before ship |
+| Inference timing that affects GPU contention | **Rust** (`zyvor-janus-core`) | DES invariant: core never depends on Python |
+| AIPerf subprocess, JSON import/export | **Python** (`python/zyvor_janus/benchmarks/`) | External tool orchestration |
+| OpenAI HTTP shim | **Python** (`python/zyvor_janus/server/`) | Request ingress; requires auth before ship |
 | Dashboard / compare / replay | **Next.js + FastAPI** | Extend existing `web/` — no second app |
 
 ---
@@ -150,7 +150,7 @@ New inference metrics (P1): `ttft_p50`, `ttft_p99`, `itl_p50`, `tps_mean`, `good
 
 | Area | Deliverables |
 |------|--------------|
-| **Work** | Wire `StartRunRequest.scheduler` in `python/forgesim/server/app.py`; replay from engine `decisions` (not `step_fifo()`); persist run metadata hash under `outputs/runs/` |
+| **Work** | Wire `StartRunRequest.scheduler` in `python/zyvor_janus/server/app.py`; replay from engine `decisions` (not `step_fifo()`); persist run metadata hash under `outputs/runs/` |
 | **UI** | Verify run detail replay matches configured scheduler |
 | **Unit tests** | Rust scheduler override; Python server passes scheduler to Rust |
 | **Integration** | `integration.rs` preemptive via API path; `python/tests/test_server_scheduler.py`; replay decision smoke |
@@ -163,9 +163,9 @@ New inference metrics (P1): `ttft_p50`, `ttft_p99`, `itl_p50`, `tps_mean`, `good
 
 | Area | Deliverables |
 |------|--------------|
-| **Rust** | Extend `Job` in `crates/forgesim-core/src/models.rs` (`model_id`, `input_tokens`, `output_tokens`, `batch_size`, `concurrency`); new `inference.rs` analytical model; extend `SimulationMetrics` in `forgesim-metrics` |
+| **Rust** | Extend `Job` in `crates/zyvor-janus-core/src/models.rs` (`model_id`, `input_tokens`, `output_tokens`, `batch_size`, `concurrency`); new `inference.rs` analytical model; extend `SimulationMetrics` in `zyvor-janus-metrics` |
 | **Profiles** | v2 schema in `configs/profiles/`: `prefill_ms_per_token`, `decode_tps`, `max_batch` |
-| **Python** | Profile v2 loader in `python/forgesim/adapters/profiles.py` |
+| **Python** | Profile v2 loader in `python/zyvor_janus/adapters/profiles.py` |
 | **UI** | TTFT/TPS tiles in `web/src/components/MetricsCharts.tsx` when inference jobs present |
 | **Unit tests** | Monotonicity: ↑tokens ⇒ ↑duration; ↑concurrency ⇒ ↑TTFT; serde round-trip |
 | **Integration** | `configs/workloads/inference_llama.yaml` → metrics JSON contains `ttft_p50`; scheduler compare changes TTFT when queueing differs |
@@ -176,7 +176,7 @@ New inference metrics (P1): `ttft_p50`, `ttft_p99`, `itl_p50`, `tps_mean`, `good
 
 | Area | Deliverables |
 |------|--------------|
-| **Work** | `python/forgesim/workloads/generate_synthetic.py`; documented schema; presets (Morning RAG, Peak Chat, Night Training) |
+| **Work** | `python/zyvor_janus/workloads/generate_synthetic.py`; documented schema; presets (Morning RAG, Peak Chat, Night Training) |
 | **UI** | Workload preset picker on dashboard |
 | **Unit tests** | Deterministic seed; validator rejects invalid tokens |
 | **Integration** | Golden `tests/fixtures/workloads/synthetic_llm_peak.yaml` |
@@ -187,8 +187,8 @@ New inference metrics (P1): `ttft_p50`, `ttft_p99`, `itl_p50`, `tps_mean`, `good
 
 | Area | Deliverables |
 |------|--------------|
-| **Rust** | `crates/forgesim-config/src/serving_trace.rs` (**done**); CLI `--serving-trace` / `--export-serving-trace` (**not yet**) |
-| **Python** | `python/forgesim/adapters/serving_trace.py` — AIPerf trace mapping (**done**) |
+| **Rust** | `crates/zyvor-janus-config/src/serving_trace.rs` (**done**); CLI `--serving-trace` / `--export-serving-trace` (**not yet**) |
+| **Python** | `python/zyvor_janus/adapters/serving_trace.py` — AIPerf trace mapping (**done**) |
 | **Schema** | `serving.trace.v1` JSONL: `{time, model, input_tokens, output_tokens}` |
 | **API** | `GET /api/runs/{id}/serving-trace` (**done**; token fields may be stubbed) |
 | **UI** | Run detail export button (**blocked on missing `/runs/:id` page**) |
@@ -200,7 +200,7 @@ New inference metrics (P1): `ttft_p50`, `ttft_p99`, `itl_p50`, `tps_mean`, `good
 
 | Area | Deliverables |
 |------|--------------|
-| **Rust** | `SchedulerBenchmarkReport` in `forgesim-metrics`; fairness (Jain index), fragmentation, optional composite score |
+| **Rust** | `SchedulerBenchmarkReport` in `zyvor-janus-metrics`; fairness (Jain index), fragmentation, optional composite score |
 | **Config** | `configs/analytics/cost.yaml` — GPU-hour rates |
 | **Docs** | [benchmark_score.md](benchmark_score.md) — weight definitions |
 | **UI** | Extended `ComparePanel` with serving + scheduling columns |
@@ -222,7 +222,7 @@ New inference metrics (P1): `ttft_p50`, `ttft_p99`, `itl_p50`, `tps_mean`, `good
 
 | Area | Deliverables |
 |------|--------------|
-| **Work** | `python/forgesim/server/openai_shim.py` — `POST /v1/chat/completions` + SSE (**done**; analytical timing, not DES queue) |
+| **Work** | `python/zyvor_janus/server/openai_shim.py` — `POST /v1/chat/completions` + SSE (**done**; analytical timing, not DES queue) |
 | **Security** | API key auth + rate limits (**done**); bind host depends on run script |
 | **Docs** | [openai_shim.md](openai_shim.md) |
 | **Integration** | OpenAI client against shim; deterministic TTFT for fixed seed |
@@ -233,8 +233,8 @@ New inference metrics (P1): `ttft_p50`, `ttft_p99`, `itl_p50`, `tps_mean`, `good
 
 | Area | Deliverables |
 |------|--------------|
-| **Work** | `python/forgesim/benchmarks/aiperf_adapter.py` — export sim workload; import AIPerf JSON → profiles |
-| **CLI** | `PYTHONPATH=python python -m forgesim.benchmarks.aiperf_adapter import results.json --profile llama-70b` |
+| **Work** | `python/zyvor_janus/benchmarks/aiperf_adapter.py` — export sim workload; import AIPerf JSON → profiles |
+| **CLI** | `PYTHONPATH=python python -m zyvor_janus.benchmarks.aiperf_adapter import results.json --profile llama-70b` |
 | **Fixtures** | `tests/fixtures/aiperf/` — offline golden artifacts (no GPU in CI) |
 | **UI** | Import upload / full sim-vs-measured chart — **thin**; use CLI for now |
 | **Integration** | Re-run sim after import → TTFT within tolerance of measured |
@@ -242,7 +242,7 @@ New inference metrics (P1): `ttft_p50`, `ttft_p99`, `itl_p50`, `tps_mean`, `good
 **Workflow:**
 
 ```text
-ForgeSim sim → Export benchmark config/trace → AIPerf → vLLM/NIM → Metrics JSON → Import → Update profiles/twin
+Zyvor Janus sim → Export benchmark config/trace → AIPerf → vLLM/NIM → Metrics JSON → Import → Update profiles/twin
 ```
 
 ---
@@ -251,7 +251,7 @@ ForgeSim sim → Export benchmark config/trace → AIPerf → vLLM/NIM → Metri
 
 | Area | Deliverables |
 |------|--------------|
-| **Work** | `python/forgesim/benchmarks/sweep.py` (**done**); cluster templates in `configs/clusters/templates/` (**not yet**) |
+| **Work** | `python/zyvor_janus/benchmarks/sweep.py` (**done**); cluster templates in `configs/clusters/templates/` (**not yet**) |
 | **API** | `POST /api/what-if` — sweep cluster × scheduler × workload (**done**) |
 | **UI** | `web/src/app/what-if/page.tsx` — scenario matrix (**done**); Pareto chart (**not yet**) |
 
@@ -293,9 +293,9 @@ H100:
 
 | Schema | Purpose | Location |
 |--------|---------|----------|
-| `scheduler.trace.v1` | M3 oracle replay — placement decisions | `crates/forgesim-config/src/trace.rs` |
+| `scheduler.trace.v1` | M3 oracle replay — placement decisions | `crates/zyvor-janus-config/src/trace.rs` |
 | `serving.trace.v1` | LLM request arrivals for AIPerf replay | P3 — `serving_trace.rs` |
-| `JobsTimeline` | Post-run Gantt export | M8 — `forgesim-metrics` |
+| `JobsTimeline` | Post-run Gantt export | M8 — `zyvor-janus-metrics` |
 
 ---
 
@@ -348,15 +348,15 @@ Run existing tests: see [milestones.md](milestones.md#running-tests).
 
 | Phase | Paths |
 |-------|-------|
-| P0 | `python/forgesim/server/app.py` |
-| P1 | `crates/forgesim-core/src/inference.rs`, `models.rs`, `forgesim-metrics` |
-| P2 | `python/forgesim/workloads/generate_synthetic.py` |
-| P3 | `crates/forgesim-config/src/serving_trace.rs`, `python/forgesim/adapters/serving_trace.py` |
+| P0 | `python/zyvor_janus/server/app.py` |
+| P1 | `crates/zyvor-janus-core/src/inference.rs`, `models.rs`, `zyvor-janus-metrics` |
+| P2 | `python/zyvor_janus/workloads/generate_synthetic.py` |
+| P3 | `crates/zyvor-janus-config/src/serving_trace.rs`, `python/zyvor_janus/adapters/serving_trace.py` |
 | P4 | `docs/benchmark_score.md`, `configs/analytics/cost.yaml` |
 | P5 | `web/src/app/benchmark/page.tsx` |
-| P6 | `python/forgesim/server/openai_shim.py`, `docs/openai_shim.md` |
-| P7 | `python/forgesim/benchmarks/aiperf_adapter.py`, `tests/fixtures/aiperf/` |
-| P8 | `python/forgesim/benchmarks/sweep.py`, `web/src/app/what-if/page.tsx` |
+| P6 | `python/zyvor_janus/server/openai_shim.py`, `docs/openai_shim.md` |
+| P7 | `python/zyvor_janus/benchmarks/aiperf_adapter.py`, `tests/fixtures/aiperf/` |
+| P8 | `python/zyvor_janus/benchmarks/sweep.py`, `web/src/app/what-if/page.tsx` |
 | P9 | `outputs/twins/` |
 | P10 | `.github/workflows/benchmark.yml`, `benchmarks/ci/` |
 
