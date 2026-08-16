@@ -52,8 +52,8 @@ See [`deploy/kubernetes/README.md`](deploy/kubernetes/README.md) for the full gu
 ### From source (Rust CLI + Python bindings)
 
 ```bash
-git clone https://github.com/hypersdk/ZyForgeSim.git
-cd ZyForgeSim
+git clone https://github.com/hypersdk/zyvor-janus.git
+cd zyvor-janus
 cargo build --release -p zyvor-janus-cli
 
 # Optional: Python bindings + web API (builds the PyO3 extension)
