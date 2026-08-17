@@ -35,12 +35,11 @@ Rich CLI dashboard    FastAPI (REST + WebSocket)
 - **Run:** `./scripts/run_live_dashboard.sh --config configs/clusters/small_h100.yaml`
 - **Data:** `SimSession.step_fifo()` + extended `ClusterSnapshot`
 
-## Phase 2 — Web dashboard (done, MVP)
+## Phase 2 — Web dashboard (done)
 
-- **Backend:** `python/zyvor_janus/server/app.py` — `./scripts/run_web_api.sh`
+- **Backend:** `crates/zyvor-janus-api` (Rust) — replaced `python/zyvor_janus/server/app.py` in prod; see Cargo cutover commits
 - **Frontend:** `web/` — `./scripts/run_web_ui.sh` or `./scripts/run_web_dashboard.sh`
-- **Views:** home (run + compare), login
-- **Gap:** dedicated `/runs/:id` replay page not shipped (components exist; home may still link there)
+- **Views:** home (run + compare), login, `/runs/:id` (overview, cluster, queue, MIG, replay, shadow-race tabs; live WS streaming with polling fallback)
 
 ## Phase 3 — Zyvor Forge integration (future)
 
@@ -61,4 +60,4 @@ Extends Phase 2 web UI — not a separate app. See [benchmark_platform.md](bench
 | `/benchmark` | TTFT, TPS, goodput, benchmark runs | Done (MVP) |
 | `/what-if` | Cluster/scheduler sweep matrix | Done (table; Pareto TBD) |
 
-Backend: inference metrics (P1), AIPerf adapter (P7), score reports (P4). Remaining polish: full sim-vs-measured AIPerf overlay, twin library page, working `/runs/:id`.
+Backend: inference metrics (P1), AIPerf adapter (P7), score reports (P4). Twin library page: done (`/twins`, reads `GET /api/twins`). Remaining polish: full sim-vs-measured AIPerf overlay (needs a config→twin GPU/model correlation, not yet exposed by any API).
