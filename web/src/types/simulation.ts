@@ -128,6 +128,9 @@ export interface ShadowStepEvent {
 export interface ConfigEntry {
   id: string;
   path: string;
+  /** Best-effort twin correlation hint resolved server-side; null for non-inference configs. */
+  gpu_type: string | null;
+  model: string | null;
 }
 
 export interface CompareResult {

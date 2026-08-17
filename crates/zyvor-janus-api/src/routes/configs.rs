@@ -10,6 +10,9 @@ use crate::state::AppState;
 pub struct ConfigEntry {
     id: String,
     path: String,
+    /// Best-effort twin correlation hint -- see `resolve_config_twin_hint`.
+    gpu_type: Option<String>,
+    model: Option<String>,
 }
 
 /// Shared with `routes::batch::benchmark_presets`, which embeds the same
@@ -35,7 +38,15 @@ pub fn list_configs_raw(state: &AppState) -> std::io::Result<Vec<ConfigEntry>> {
                 .strip_prefix(&state.inner.repo_root)
                 .map(|p| p.to_string_lossy().to_string())
                 .unwrap_or_else(|_| path.to_string_lossy().to_string());
-            ConfigEntry { id, path: rel }
+            let (gpu_type, model) = zyvor_janus_config::resolve_config_twin_hint(&path)
+                .map(|(g, m)| (Some(g), Some(m)))
+                .unwrap_or((None, None));
+            ConfigEntry {
+                id,
+                path: rel,
+                gpu_type,
+                model,
+            }
         })
         .collect();
 

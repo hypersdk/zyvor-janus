@@ -417,6 +417,34 @@ fn apply_topology_template(
     }
 }
 
+/// Best-effort `(gpu_type, model)` hint for a simulation config, used to
+/// correlate benchmark runs against calibrated twins in
+/// `outputs/twins/twins.sqlite` (see `zyvor-janus-api`'s `/api/twins` and
+/// `/api/configs`). Looks at the first workload job with a `model_id`;
+/// `gpu_type` comes from that job if set, else the cluster's first GPU
+/// hardware profile with any `_<memory>GB` suffix stripped (`H100_80GB` ->
+/// `H100`), matching the prefix fallback `resolve_inference_profile` already
+/// does. Returns `None` for non-inference configs or on any read/parse error
+/// -- callers treat this as decoration, not a hard requirement.
+pub fn resolve_config_twin_hint(config_path: &Path) -> Option<(String, String)> {
+    let sim_cfg = load_simulation_config(config_path).ok()?;
+    let base = config_path.parent()?;
+    let workload_path = resolve_path(base, &sim_cfg.workload.path);
+    let content = fs::read_to_string(&workload_path).ok()?;
+    let workload: WorkloadConfig = serde_yaml::from_str(&content).ok()?;
+    let job = workload.jobs.iter().find(|j| j.model_id.is_some())?;
+    let model = job.model_id.clone()?;
+    let gpu_type = job.gpu_type.clone().or_else(|| {
+        sim_cfg
+            .cluster
+            .nodes
+            .first()
+            .and_then(|n| n.gpus.first())
+            .map(|g| g.profile.split('_').next().unwrap_or(&g.profile).to_string())
+    })?;
+    Some((gpu_type, model))
+}
+
 pub fn resolve_path(base: &Path, relative: &str) -> PathBuf {
     let p = PathBuf::from(relative);
     if p.is_absolute() {
@@ -905,5 +933,27 @@ mod tests {
         assert_eq!(mig.mig_profile.as_deref(), Some("1g.10gb"));
         assert_eq!(mig.mig_count, Some(2));
         assert!(mig.is_mig_job());
+    }
+
+    #[test]
+    fn resolve_config_twin_hint_reads_model_and_cluster_gpu_profile() {
+        let config = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../configs/clusters/inference_llama.yaml");
+        if !config.exists() {
+            return;
+        }
+        let (gpu_type, model) = resolve_config_twin_hint(&config).expect("hint");
+        assert_eq!(gpu_type, "H100");
+        assert_eq!(model, "llama-70b");
+    }
+
+    #[test]
+    fn resolve_config_twin_hint_none_for_non_inference_config() {
+        let config = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../configs/clusters/small_h100.yaml");
+        if !config.exists() {
+            return;
+        }
+        assert_eq!(resolve_config_twin_hint(&config), None);
     }
 }

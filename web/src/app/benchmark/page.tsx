@@ -18,14 +18,26 @@ import {
   Card,
   FormField,
   PageHero,
+  ProgressBar,
   SchedulerPillGroup,
   Select,
   Skeleton,
 } from "@/components/ui";
-import { fetchBenchmarkPresets, fetchBenchmarkReports, runBenchmark } from "@/lib/api";
+import { fetchBenchmarkPresets, fetchBenchmarkReports, fetchTwins, runBenchmark } from "@/lib/api";
 import { chartColors, theme } from "@/lib/theme";
 import { easeOut, fadeInUp, staggerContainer } from "@/lib/motion";
-import type { SchedulerBenchmarkReport, SimulationMetrics } from "@/types/simulation";
+import type { ConfigEntry, SchedulerBenchmarkReport, SimulationMetrics, TwinEntry } from "@/types/simulation";
+
+/** Case-insensitive match, tolerant of a `_<mem>GB` hardware-profile suffix (e.g. `H100_80GB` vs `h100`). */
+function matchTwin(twins: TwinEntry[], gpuType: string | null, model: string | null): TwinEntry | null {
+  if (!gpuType || !model) return null;
+  const gpuKey = gpuType.split("_")[0].toLowerCase();
+  const modelKey = model.toLowerCase();
+  return (
+    twins.find((t) => t.gpu_type.split("_")[0].toLowerCase() === gpuKey && t.model.toLowerCase() === modelKey) ??
+    null
+  );
+}
 
 type ReportRow = {
   run_id: string;
@@ -71,8 +83,9 @@ function cellClass(value: number, best: number, worseIsHigher: boolean) {
 }
 
 export default function BenchmarkPage() {
-  const [configs, setConfigs] = useState<Array<{ id: string; path: string }>>([]);
+  const [configs, setConfigs] = useState<ConfigEntry[]>([]);
   const [presets, setPresets] = useState<Array<{ id: string; description: string }>>([]);
+  const [twins, setTwins] = useState<TwinEntry[]>([]);
   const [selected, setSelected] = useState("inference_llama.yaml");
   const [scheduler, setScheduler] = useState("fifo");
   const [metrics, setMetrics] = useState<SimulationMetrics | null>(null);
@@ -97,6 +110,10 @@ export default function BenchmarkPage() {
     ]).finally(() => setLoading(false));
   }, [selected]);
 
+  useEffect(() => {
+    fetchTwins().then(setTwins).catch(console.error);
+  }, []);
+
   async function handleRun() {
     setBusy(true);
     setError(null);
@@ -115,6 +132,12 @@ export default function BenchmarkPage() {
   }
 
   const radarData = useMemo(() => (benchmark ? radarPoints(benchmark) : null), [benchmark]);
+
+  const selectedConfig = useMemo(() => configs.find((c) => c.id === selected) ?? null, [configs, selected]);
+  const matchedTwin = useMemo(
+    () => matchTwin(twins, selectedConfig?.gpu_type ?? null, selectedConfig?.model ?? null),
+    [twins, selectedConfig]
+  );
 
   const compareStats = useMemo(() => {
     const rows = reports.filter((r) => r.benchmark).slice(0, 8);
@@ -252,6 +275,90 @@ export default function BenchmarkPage() {
                   </div>
                 </div>
               </div>
+            </Card>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {benchmark && metrics ? (
+          <motion.div
+            key="twin-overlay"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: easeOut }}
+          >
+            <Card
+              title="Sim vs measured (AIPerf twin)"
+              description={
+                matchedTwin
+                  ? `Calibrated against ${matchedTwin.gpu_type}/${matchedTwin.model}, measured ${matchedTwin.measured_at}.`
+                  : selectedConfig?.gpu_type && selectedConfig?.model
+                    ? `No calibrated twin for ${selectedConfig.gpu_type}/${selectedConfig.model} yet.`
+                    : "This config has no inference workload to correlate against a twin."
+              }
+            >
+              {matchedTwin ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {[
+                    {
+                      label: "TTFT p50",
+                      sim: (metrics.ttft_p50 ?? 0) * 1000,
+                      measured: matchedTwin.ttft_ms,
+                      unit: "ms",
+                      lowerIsBetter: true,
+                    },
+                    {
+                      label: "TPS mean",
+                      sim: metrics.tps_mean ?? 0,
+                      measured: matchedTwin.tps,
+                      unit: "",
+                      lowerIsBetter: false,
+                    },
+                  ].map((row) => {
+                    const max = Math.max(row.sim, row.measured, 0.001);
+                    const deltaPct = row.measured > 0 ? ((row.sim - row.measured) / row.measured) * 100 : 0;
+                    return (
+                      <div key={row.label} className="space-y-2">
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-sm text-hs-muted">{row.label}</span>
+                          <span
+                            className={
+                              Math.abs(deltaPct) <= 10
+                                ? "text-xs text-hs-muted"
+                                : (deltaPct > 0) === row.lowerIsBetter
+                                  ? "text-xs text-red-400"
+                                  : "text-xs text-emerald-400"
+                            }
+                          >
+                            {deltaPct >= 0 ? "+" : ""}
+                            {deltaPct.toFixed(1)}% vs measured
+                          </span>
+                        </div>
+                        <div className="compare-cell">
+                          <span className="compare-cell-value">
+                            sim {row.sim.toFixed(row.unit === "ms" ? 1 : 2)}
+                            {row.unit}
+                          </span>
+                          <ProgressBar value={row.sim} max={max} variant="warn" />
+                        </div>
+                        <div className="compare-cell">
+                          <span className="compare-cell-value">
+                            measured {row.measured.toFixed(row.unit === "ms" ? 1 : 2)}
+                            {row.unit}
+                          </span>
+                          <ProgressBar value={row.measured} max={max} variant="success" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-hs-muted">
+                  Calibrate one with the offline AIPerf adapter, then re-run this benchmark to see the overlay.
+                </p>
+              )}
             </Card>
           </motion.div>
         ) : null}
