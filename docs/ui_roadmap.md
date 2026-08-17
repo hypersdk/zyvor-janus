@@ -45,19 +45,20 @@ Rich CLI dashboard    FastAPI (REST + WebSocket)
 
 | Mode | Source |
 |------|--------|
-| Simulation | YAML / forge bundle → FastAPI |
+| Simulation | YAML / forge bundle → `zyvor-janus-api` |
 | Replay | M3 trace JSONL → event stream |
 | Live | Forge export → `ClusterSnapshot` mapping |
 
 Long-term vision: **Grafana meets Kubernetes Dashboard meets DCGM — focused on AI scheduling**.
 
-## Phase 4 — Benchmark dashboard (MVP done)
+## Phase 4 — Benchmark dashboard (done)
 
 Extends Phase 2 web UI — not a separate app. See [benchmark_platform.md](benchmark_platform.md).
 
 | Route | Purpose | Status |
 |-------|---------|--------|
-| `/benchmark` | TTFT, TPS, goodput, benchmark runs | Done (MVP) |
+| `/benchmark` | TTFT, TPS, goodput, benchmark runs, sim-vs-measured AIPerf twin overlay | Done |
 | `/what-if` | Cluster/scheduler sweep matrix | Done (table; Pareto TBD) |
+| `/twins` | Calibrated GPU/model twin library | Done |
 
-Backend: inference metrics (P1), AIPerf adapter (P7), score reports (P4). Twin library page: done (`/twins`, reads `GET /api/twins`). Remaining polish: full sim-vs-measured AIPerf overlay (needs a config→twin GPU/model correlation, not yet exposed by any API).
+Backend: inference metrics (P1), AIPerf adapter (P7), score reports (P4). `GET /api/configs` resolves a best-effort `(gpu_type, model)` hint per config (`zyvor_janus_config::resolve_config_twin_hint`) so the frontend can correlate a benchmark run against its calibrated twin from `GET /api/twins`.
