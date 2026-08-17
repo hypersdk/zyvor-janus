@@ -136,3 +136,14 @@ export interface CompareResult {
   metrics: SimulationMetrics | null;
   run_id: string;
 }
+
+/** One calibrated GPU/model pair from `GET /api/twins` (`outputs/twins/twins.sqlite`). */
+export interface TwinEntry {
+  gpu_type: string;
+  model: string;
+  ttft_ms: number;
+  tps: number;
+  throughput: number;
+  measured_at: string;
+  aiperf_run_id: string | null;
+}

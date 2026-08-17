@@ -7,6 +7,7 @@ import type {
   RunSummary,
   SchedulerDecision,
   SimulationMetrics,
+  TwinEntry,
 } from "@/types/simulation";
 
 const API = "/api";
@@ -171,6 +172,10 @@ export async function runWhatIf(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ base_config: baseConfig, schedulers }),
   });
+}
+
+export async function fetchTwins(): Promise<TwinEntry[]> {
+  return apiFetch<TwinEntry[]>("/twins");
 }
 
 export function pollRun(id: string, onUpdate: (run: RunDetail) => void, intervalMs = 1000): () => void {

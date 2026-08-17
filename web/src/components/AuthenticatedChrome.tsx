@@ -10,6 +10,7 @@ const NAV = [
   { href: "/simulate", label: "Simulate", match: (p: string) => p.startsWith("/simulate") },
   { href: "/benchmark", label: "Benchmark", match: (p: string) => p.startsWith("/benchmark") },
   { href: "/what-if", label: "What-if", match: (p: string) => p.startsWith("/what-if") },
+  { href: "/twins", label: "Twins", match: (p: string) => p.startsWith("/twins") },
 ] as const;
 
 export function AuthenticatedChrome({ children }: { children: React.ReactNode }) {

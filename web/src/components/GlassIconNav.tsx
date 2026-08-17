@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
+  Database,
   FlaskConical,
   LayoutDashboard,
   PlayCircle,
@@ -38,6 +39,12 @@ export const PRIMARY_NAV: NavItem[] = [
     label: "What-if",
     icon: FlaskConical,
     match: (p) => p.startsWith("/what-if"),
+  },
+  {
+    href: "/twins",
+    label: "Twins",
+    icon: Database,
+    match: (p) => p.startsWith("/twins"),
   },
 ];
 
