@@ -1,5 +1,6 @@
 <div align="center">
-  <img src="web/public/zyvor-logo.png" alt="Zyvor Janus" width="320">
+
+  # Zyvor Janus
 
   ### A discrete-event simulator for Kubernetes-native GPU scheduling
 
@@ -11,6 +12,12 @@
   [![License: Apache-2.0](https://img.shields.io/github/license/hypersdk/zyvor-janus)](LICENSE)
 
   **[▶ Watch the demo](https://youtu.be/p0GQVaZ_X1A)** · [Quick start](#quick-start) · [Docs](docs/)
+
+  ![Rust](https://img.shields.io/badge/Rust-000000?logo=rust&logoColor=white)
+  ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
+  ![Next.js](https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white)
+  ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+  ![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?logo=kubernetes&logoColor=white)
 </div>
 
 ---
@@ -102,13 +109,14 @@ optional `viz`, `rl`, and `dashboard` extras.
 
 ## Quick start
 
-### Internal workload (M1)
-
 ```bash
 cargo run -p zyvor-janus-cli -- run --config configs/clusters/small_h100.yaml
 ```
 
-### Forge export bundle (M2 — test Forge without GPUs)
+That's it — a full cluster simulation with no GPU, no Kubernetes, no config beyond the one YAML file. Everything below is one `cargo run` (or script) away; click a row to expand it.
+
+<details>
+<summary><b>▸ Forge export bundle</b> — test Forge without GPUs (M2)</summary>
 
 1. Export from a Forge cluster:
 
@@ -137,7 +145,10 @@ cargo run -p zyvor-janus-cli -- run \
   --profiles-dir configs/profiles
 ```
 
-### Scheduler policies (M6)
+</details>
+
+<details>
+<summary><b>▸ Scheduler policies</b> — fifo · priority · preemptive · bestfit · forge (M6)</summary>
 
 ```bash
 # Priority: highest priority first, no preemption
@@ -152,7 +163,10 @@ cargo run -p zyvor-janus-cli -- run \
   --scheduler forge
 ```
 
-### Scheduler trace replay (M3 — compare vs production Forge)
+</details>
+
+<details>
+<summary><b>▸ Scheduler trace replay</b> — compare vs production Forge (M3)</summary>
 
 ```bash
 cargo run -p zyvor-janus-cli -- replay \
@@ -162,7 +176,10 @@ cargo run -p zyvor-janus-cli -- replay \
 
 Writes `outputs/trace_diff.json` with oracle vs FIFO placement diffs.
 
-### MIG simulation (M4)
+</details>
+
+<details>
+<summary><b>▸ MIG simulation</b> — fractional GPU slices (M4)</summary>
 
 ```bash
 cargo run -p zyvor-janus-cli -- run --config configs/clusters/mig_single.yaml
@@ -170,7 +187,10 @@ cargo run -p zyvor-janus-cli -- run --config configs/clusters/mig_single.yaml
 
 MIG jobs use `mig_profile` and `mig_count` (Forge `spec.mig`) to allocate fractional GPU slices with a simulated reconfiguration delay.
 
-### Topology + gang placement (M5 / M6)
+</details>
+
+<details>
+<summary><b>▸ Topology + gang placement</b> — NVLink domains, gang scheduling (M5/M6)</summary>
 
 ```bash
 # NVLink-domain-aware placement; cross-domain jobs inflate runtime
@@ -183,7 +203,10 @@ cargo run -p zyvor-janus-cli -- run --config configs/clusters/gang_m6.yaml
 cargo run -p zyvor-janus-cli -- run --config configs/clusters/gang_timeout_m6.yaml
 ```
 
-### Inference + LLM serving metrics (P1)
+</details>
+
+<details>
+<summary><b>▸ Inference + LLM serving metrics</b> — TTFT/TPS estimation (P1)</summary>
 
 ```bash
 cargo run -p zyvor-janus-cli -- run \
@@ -193,7 +216,10 @@ cargo run -p zyvor-janus-cli -- run \
 
 Uses profile v2 fields (`prefill_ms_per_token`, `decode_tps`) to estimate TTFT/TPS. See [docs/benchmark_platform.md](docs/benchmark_platform.md).
 
-### Visualization (M8)
+</details>
+
+<details>
+<summary><b>▸ Visualization</b> — job timeline plots (M8)</summary>
 
 ```bash
 cargo run -p zyvor-janus-cli -- run \
@@ -204,18 +230,24 @@ pip install -e '.[viz]'
 python python/examples/plot_run.py outputs/jobs.json
 ```
 
-### Live CLI dashboard (Phase 1 UI)
+</details>
 
-Rich terminal dashboard — see **[docs/ui_dashboard.md](docs/ui_dashboard.md)** for full setup, scripts, and troubleshooting.
+<details>
+<summary><b>▸ Live CLI dashboard</b> — Rich terminal UI (Phase 1)</summary>
+
+See **[docs/ui_dashboard.md](docs/ui_dashboard.md)** for full setup, scripts, and troubleshooting.
 
 ```bash
 ./scripts/setup_dev.sh
 ./scripts/run_live_dashboard.sh --config configs/clusters/small_h100.yaml
 ```
 
-### Web dashboard (Phase 2 + benchmark UI)
+</details>
 
-FastAPI + Next.js — see **[docs/ui_dashboard.md](docs/ui_dashboard.md)** for API reference and scripts.
+<details>
+<summary><b>▸ Web dashboard</b> — FastAPI + Next.js, runs/benchmark/what-if (Phase 2)</summary>
+
+See **[docs/ui_dashboard.md](docs/ui_dashboard.md)** for API reference and scripts.
 
 ```bash
 ./scripts/setup_dev.sh
@@ -225,7 +257,10 @@ cd web && npm install && cd ..
 
 Routes: `/` (runs + compare), `/benchmark`, `/what-if`, `/login`. Or run API and UI separately: `./scripts/run_web_api.sh` · `./scripts/run_web_ui.sh`
 
-### Deploy (Docker / Kubernetes)
+</details>
+
+<details>
+<summary><b>▸ Deploy</b> — Docker / Kubernetes</summary>
 
 ```bash
 ./deploy/build-images.sh
@@ -234,7 +269,10 @@ kubectl apply -k deploy/kubernetes
 
 See **[docs/deploy.md](docs/deploy.md)** and **[deploy/kubernetes/README.md](deploy/kubernetes/README.md)**.
 
-### Python + RL (M7)
+</details>
+
+<details>
+<summary><b>▸ Python + RL</b> — Gymnasium env + PPO baseline (M7)</summary>
 
 On macOS Homebrew Python, use the setup script if `venv` fails on `pyexpat`:
 
@@ -246,14 +284,20 @@ python python/examples/run_rl_env.py
 python python/baselines/ppo_cleanrl.py --config configs/clusters/rl_small.yaml
 ```
 
-### AIPerf calibration (P7)
+</details>
+
+<details>
+<summary><b>▸ AIPerf calibration</b> — import real benchmark results (P7)</summary>
 
 ```bash
 PYTHONPATH=python python -m zyvor_janus.benchmarks.aiperf_adapter \
   import tests/fixtures/aiperf/sample_result.json --profile llama-70b
 ```
 
-### OpenAI-compatible shim (P6)
+</details>
+
+<details>
+<summary><b>▸ OpenAI-compatible shim</b> — drop-in <code>/v1/chat/completions</code> (P6)</summary>
 
 With the web API running (`./scripts/run_web_api.sh`):
 
@@ -266,7 +310,10 @@ curl -s http://127.0.0.1:8080/v1/chat/completions \
 
 See [docs/openai_shim.md](docs/openai_shim.md).
 
-### Test layout
+</details>
+
+<details>
+<summary><b>▸ Test layout</b> — what's covered, how to run it</summary>
 
 | Layer | Location | What it covers |
 |-------|----------|----------------|
@@ -284,6 +331,8 @@ cargo test -p zyvor-janus-cli --test cli_integration
 PYTHONPATH=python python3 -m unittest discover -s python/tests -v
 bash benchmarks/ci/run_golden.sh
 ```
+
+</details>
 
 ## Project layout
 
