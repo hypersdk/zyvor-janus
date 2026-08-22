@@ -1,3 +1,6 @@
+# Copyright 2026 ZyvorAI Labs Private Limited
+# SPDX-License-Identifier: Apache-2.0
+
 """Plot Gantt and GPU heatmap from a Zyvor Janus jobs timeline JSON."""
 
 from __future__ import annotations

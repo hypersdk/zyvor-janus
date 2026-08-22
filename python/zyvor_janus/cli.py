@@ -1,3 +1,6 @@
+# Copyright 2026 ZyvorAI Labs Private Limited
+# SPDX-License-Identifier: Apache-2.0
+
 """Optional CLI entry point when running without maturin develop."""
 
 import sys

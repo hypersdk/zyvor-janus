@@ -1,3 +1,6 @@
+# Copyright 2026 ZyvorAI Labs Private Limited
+# SPDX-License-Identifier: Apache-2.0
+
 """Digital twin store for calibrated cluster fingerprints."""
 
 from __future__ import annotations

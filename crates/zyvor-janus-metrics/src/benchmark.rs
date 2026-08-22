@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 //! Scheduler benchmark score vector and optional composite weighting.
 
 use std::collections::HashMap;

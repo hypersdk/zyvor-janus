@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 use axum::extract::{Path as AxumPath, State};
 use axum::response::IntoResponse;
 use axum::Json;

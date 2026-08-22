@@ -1,3 +1,6 @@
+# Copyright 2026 ZyvorAI Labs Private Limited
+# SPDX-License-Identifier: Apache-2.0
+
 """Calibrated model runtime profiles keyed by (model, gpuType)."""
 
 from __future__ import annotations

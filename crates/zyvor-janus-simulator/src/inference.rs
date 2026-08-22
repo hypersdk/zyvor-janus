@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 //! Analytical inference performance model for LLM serving jobs.
 //!
 //! Estimates TTFT, decode duration, and end-to-end runtime from token counts,

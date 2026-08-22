@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 use std::collections::HashSet;
 
 /// Minimal per-GPU topology facts needed to compute a runtime multiplier,

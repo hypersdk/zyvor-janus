@@ -1,3 +1,6 @@
+# Copyright 2026 ZyvorAI Labs Private Limited
+# SPDX-License-Identifier: Apache-2.0
+
 """Load Zyvor Janus jobs timeline JSON."""
 
 from __future__ import annotations

@@ -1,3 +1,6 @@
+# Copyright 2026 ZyvorAI Labs Private Limited
+# SPDX-License-Identifier: Apache-2.0
+
 """Load Forge export bundles (jobs/, cluster/, quotas/)."""
 
 from __future__ import annotations

@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 //! serving.trace.v1 import/export — separate from M3 scheduler traces.
 
 use std::fs;

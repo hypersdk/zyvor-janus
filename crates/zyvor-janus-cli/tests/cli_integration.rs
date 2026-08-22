@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 //! CLI integration tests: invoke the zyvor-janus binary end-to-end.
 
 use std::path::PathBuf;

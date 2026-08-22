@@ -1,3 +1,6 @@
+# Copyright 2026 ZyvorAI Labs Private Limited
+# SPDX-License-Identifier: Apache-2.0
+
 """Zyvor Janus — thin Python API over the Rust simulation core."""
 
 from typing import TYPE_CHECKING, Any

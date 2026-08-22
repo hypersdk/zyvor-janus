@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 import { NextRequest, NextResponse } from "next/server";
 import { COOKIE_NAME, verifySessionToken } from "@/lib/auth";
 

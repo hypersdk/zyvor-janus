@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 ZyvorAI Labs Private Limited
+# SPDX-License-Identifier: Apache-2.0
+
 """Run the Zyvor Janus Rich live dashboard."""
 
 from __future__ import annotations

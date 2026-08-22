@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 //! Small statistics helpers shared by metrics and inference timing.
 
 pub fn percentile(values: &mut [f64], p: f64) -> f64 {

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 ZyvorAI Labs Private Limited
+# SPDX-License-Identifier: Apache-2.0
+
 """Run a Zyvor Janus FIFO simulation from the sample H100 cluster config."""
 
 from pathlib import Path

@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 import { motion } from "framer-motion";
 import type { ClusterSnapshot } from "@/types/simulation";
 import { fadeInUp, staggerContainer } from "@/lib/motion";

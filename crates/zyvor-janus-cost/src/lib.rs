@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 //! GPU cost model -- seed crate for future multi-provider cloud pricing.
 
 use serde::{Deserialize, Serialize};

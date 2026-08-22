@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { MotionConfig } from "framer-motion";

@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;

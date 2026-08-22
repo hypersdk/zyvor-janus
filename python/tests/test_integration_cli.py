@@ -1,3 +1,6 @@
+# Copyright 2026 ZyvorAI Labs Private Limited
+# SPDX-License-Identifier: Apache-2.0
+
 """Integration tests: invoke zyvor-janus CLI and verify end-to-end outputs."""
 
 from __future__ import annotations

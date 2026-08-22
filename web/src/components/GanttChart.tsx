@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 import { Fragment } from "react";
 import type { JobRunSegment, JobsTimeline } from "@/types/simulation";
 import { ganttColors } from "@/lib/theme";

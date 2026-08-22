@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 export interface SimulationMetrics {
   makespan: number;
   mean_wait_time: number;

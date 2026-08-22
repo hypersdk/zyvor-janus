@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 use std::time::Duration;
 
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};

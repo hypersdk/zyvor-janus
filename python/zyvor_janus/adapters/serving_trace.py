@@ -1,3 +1,6 @@
+# Copyright 2026 ZyvorAI Labs Private Limited
+# SPDX-License-Identifier: Apache-2.0
+
 """serving.trace.v1 adapters — separate from M3 scheduler traces."""
 
 from __future__ import annotations

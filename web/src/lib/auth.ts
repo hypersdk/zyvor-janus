@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 /** Session cookie auth for the Zyvor Janus dashboard. */
 
 export const COOKIE_NAME = "zyvor_janus_session";

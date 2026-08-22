@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::snapshot::{obs_size, ClusterSnapshot, DEFAULT_OBS_TOP_K};
 use zyvor_janus_core::events::{Event, EventKind, EventQueue};
 use zyvor_janus_model::cluster::Cluster;

@@ -1,3 +1,6 @@
+# Copyright 2026 ZyvorAI Labs Private Limited
+# SPDX-License-Identifier: Apache-2.0
+
 """OpenAI-compatible virtual endpoint backed by Zyvor Janus inference model.
 
 Superseded by crates/zyvor-janus-api/src/routes/openai_shim.rs -- see the

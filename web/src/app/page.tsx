@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 import { requireAuth } from "@/lib/require-auth";
 import { DashboardHome } from "./DashboardHome";
 

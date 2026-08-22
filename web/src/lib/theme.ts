@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 /** Zyvor / HyperSDK chart and topology colors (mirrors python/zyvor_janus/theme.py). */
 
 export const theme = {

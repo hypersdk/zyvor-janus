@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 use zyvor_janus_core::error::{SimError, SimResult};
 use zyvor_janus_model::cluster::Cluster;
 use zyvor_janus_model::mig::reconfigure_gpu;

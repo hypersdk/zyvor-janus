@@ -1,3 +1,6 @@
+# Copyright 2026 ZyvorAI Labs Private Limited
+# SPDX-License-Identifier: Apache-2.0
+
 """Visualization helpers for Zyvor Janus run outputs."""
 
 from typing import TYPE_CHECKING, Any

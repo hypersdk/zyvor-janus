@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 use serde::{Deserialize, Serialize};
 
 /// A single schedulable moment recorded for replay and UI animation.

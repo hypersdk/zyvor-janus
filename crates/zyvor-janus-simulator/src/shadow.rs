@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 use zyvor_janus_metrics::SimulationMetrics;
 use zyvor_janus_model::cluster::Cluster;
 

@@ -1,3 +1,6 @@
+# Copyright 2026 ZyvorAI Labs Private Limited
+# SPDX-License-Identifier: Apache-2.0
+
 """FastAPI backend for Zyvor Janus web dashboard (Phase 2).
 
 Superseded by crates/zyvor-janus-api (see deploy/docker/Dockerfile.api,

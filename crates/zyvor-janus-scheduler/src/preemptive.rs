@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::resource::ResourceManager;
 use crate::Scheduler;
 use zyvor_janus_model::cluster::Cluster;

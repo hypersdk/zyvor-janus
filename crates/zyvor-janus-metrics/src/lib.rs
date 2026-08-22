@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 use serde::{Deserialize, Serialize};
 use zyvor_janus_core::stats::percentile;
 use zyvor_janus_model::cluster::Cluster;

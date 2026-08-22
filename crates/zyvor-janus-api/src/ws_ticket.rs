@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 use chrono::Utc;
 use hmac::{Hmac, Mac};
 use sha2::Sha256;

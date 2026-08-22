@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 //! Load MIG profile definitions keyed by hardware profile name.
 
 use std::fs;

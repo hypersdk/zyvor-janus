@@ -1,3 +1,6 @@
+// Copyright 2026 ZyvorAI Labs Private Limited
+// SPDX-License-Identifier: Apache-2.0
+
 /**
  * Shared Framer Motion variants — import from here instead of redefining transitions
  * per component. `prefers-reduced-motion` is handled globally by the `MotionConfig
