@@ -11,7 +11,7 @@
   [![Release](https://img.shields.io/github/v/release/hypersdk/zyvor-janus?sort=semver)](https://github.com/hypersdk/zyvor-janus/releases)
   [![License: Apache-2.0](https://img.shields.io/github/license/hypersdk/zyvor-janus)](LICENSE)
 
-  **[▶ Watch the demo](https://youtu.be/p0GQVaZ_X1A)** · [Quick start](#quick-start) · [Docs](docs/)
+  **[▶ Watch the demo](https://youtu.be/p0GQVaZ_X1A)** · [Quick start](#quick-start) · [Repo docs](docs/) · [zyvor.dev/docs](https://zyvor.dev/docs?utm_source=github&utm_medium=zyvor-janus) · [Blog](https://zyvor.dev/blog?utm_source=github&utm_medium=zyvor-janus)
 
   ![Rust](https://img.shields.io/badge/Rust-000000?logo=rust&logoColor=white)
   ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
