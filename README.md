@@ -330,7 +330,17 @@ See [docs/forge_input.md](docs/forge_input.md) for CRD mapping rules, export wor
 
 ## Enterprise & support
 
-Zyvor Janus is the free digital-twin simulator for [Zyvor Forge](https://zyvor.dev/forge), the production GPU/Kubernetes control plane. Looking for enterprise support, managed deployments, or the full Forge platform? Visit **[zyvor.dev](https://zyvor.dev)**.
+Zyvor Janus is the free digital-twin simulator for [Zyvor Forge](https://zyvor.dev/forge), the production GPU/Kubernetes control plane. Janus lets you develop and validate scheduling policy entirely offline; Forge is what runs it against real GPUs.
+
+| | Zyvor Janus (this repo) | Zyvor Forge ([zyvor.dev/forge](https://zyvor.dev/forge)) |
+|---|---|---|
+| **What it is** | Discrete-event simulator / digital twin | Production GPU/Kubernetes control plane |
+| **GPUs required** | None — fully simulated | Real GPU fleet |
+| **Use case** | Scheduler R&D, RL research, capacity planning, CI regression gates | Live cluster scheduling, MIG/topology-aware placement, gang scheduling in production |
+| **Input** | Forge CRD export bundles, YAML configs, trace replay | Live cluster via `FabricAIJob` / `FabricGPUNode` / `FabricQuota` CRDs |
+| **Support** | [GitHub Issues](https://github.com/hypersdk/zyvor-janus/issues) | SLA, onboarding, migration support — [zyvor.dev/contact](https://zyvor.dev/contact?utm_source=github&utm_medium=zyvor-janus) |
+
+Looking for enterprise support, managed deployments, or the full Forge platform? Visit **[zyvor.dev](https://zyvor.dev)**.
 
 ## License
 
