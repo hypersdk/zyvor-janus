@@ -9,11 +9,11 @@ use zyvor_janus_config::{
     build_shadow_run, load_forge_bundle, run_forge_bundle, run_simulation, run_trace_file,
     trace_diff_to_json, TraceDiffReport,
 };
-use zyvor_janus_simulator::ShadowSide;
 use zyvor_janus_model::cluster::Cluster;
 use zyvor_janus_model::models::{Gpu, Job, JobState, Node};
 use zyvor_janus_scheduler::resource::ResourceManager;
 use zyvor_janus_scheduler::ForgeScheduler;
+use zyvor_janus_simulator::ShadowSide;
 use zyvor_janus_simulator::SimulationEngine;
 
 fn repo_root() -> PathBuf {
@@ -62,8 +62,7 @@ fn integration_shadow_run_steps_both_schedulers_to_completion() {
     if !config.exists() {
         return;
     }
-    let handle =
-        build_shadow_run(&config, Some("fifo"), "priority").expect("build shadow run");
+    let handle = build_shadow_run(&config, Some("fifo"), "priority").expect("build shadow run");
     assert_eq!(handle.primary_scheduler, "fifo");
     assert_eq!(handle.shadow_scheduler, "priority");
     let jobs_total = handle.jobs_total;

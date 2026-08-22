@@ -102,7 +102,9 @@ async fn relay(mut socket: WebSocket, state: AppState, id: Uuid) {
             loop {
                 let status = state.inner.runs.read().await.get(&id).map(|run| run.status);
                 match status {
-                    Some(RunStatus::Running) => tokio::time::sleep(Duration::from_millis(200)).await,
+                    Some(RunStatus::Running) => {
+                        tokio::time::sleep(Duration::from_millis(200)).await
+                    }
                     _ => break,
                 }
             }
@@ -118,7 +120,9 @@ async fn relay(mut socket: WebSocket, state: AppState, id: Uuid) {
             report.map(|r| r.metrics.clone()),
             report.map(|r| r.decisions.clone()).unwrap_or_default(),
             shadow_report.map(|r| r.metrics.clone()),
-            shadow_report.map(|r| r.decisions.clone()).unwrap_or_default(),
+            shadow_report
+                .map(|r| r.decisions.clone())
+                .unwrap_or_default(),
         )
     };
     let msg = json!({

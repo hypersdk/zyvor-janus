@@ -4,7 +4,7 @@
 use zyvor_janus_metrics::SimulationMetrics;
 use zyvor_janus_model::cluster::Cluster;
 
-use crate::engine::{SteppableSimulation, StepOutcome};
+use crate::engine::{StepOutcome, SteppableSimulation};
 use crate::snapshot::ClusterSnapshot;
 
 /// Which of the two engines a [`ShadowStep`] came from.

@@ -443,7 +443,13 @@ pub fn resolve_config_twin_hint(config_path: &Path) -> Option<(String, String)> 
             .nodes
             .first()
             .and_then(|n| n.gpus.first())
-            .map(|g| g.profile.split('_').next().unwrap_or(&g.profile).to_string())
+            .map(|g| {
+                g.profile
+                    .split('_')
+                    .next()
+                    .unwrap_or(&g.profile)
+                    .to_string()
+            })
     })?;
     Some((gpu_type, model))
 }
@@ -586,8 +592,12 @@ pub fn build_shadow_run(
     let primary_rm = build_resource_manager(mig_registry.clone(), &primary_scheduler);
     let shadow_rm = build_resource_manager(mig_registry, shadow_scheduler);
 
-    let primary_engine =
-        build_steppable_engine(cluster.clone(), &primary_scheduler, primary_rm, jobs.clone())?;
+    let primary_engine = build_steppable_engine(
+        cluster.clone(),
+        &primary_scheduler,
+        primary_rm,
+        jobs.clone(),
+    )?;
     let shadow_engine = build_steppable_engine(cluster, shadow_scheduler, shadow_rm, jobs)?;
 
     let cost_path = resolve_path(base, "../analytics/cost.yaml");
@@ -636,9 +646,7 @@ fn build_steppable_engine(
     Ok(match scheduler {
         "fifo" => seed(cluster, FifoScheduler, resource_manager, jobs),
         "priority" => seed(cluster, PriorityScheduler, resource_manager, jobs),
-        "preemptive" | "forge" => {
-            seed(cluster, ForgeScheduler::default(), resource_manager, jobs)
-        }
+        "preemptive" | "forge" => seed(cluster, ForgeScheduler::default(), resource_manager, jobs),
         "bestfit" => seed(cluster, BestFitScheduler, resource_manager, jobs),
         other => {
             return Err(ConfigError::Invalid(format!(

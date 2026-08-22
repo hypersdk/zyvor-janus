@@ -305,9 +305,7 @@ impl<S: Scheduler> SteppableSimulation for SimulationEngine<S> {
         match event.kind {
             EventKind::JobArrival => self.handle_arrival(&event.job_id),
             EventKind::JobComplete => self.handle_complete(&event.job_id, event.run_generation),
-            EventKind::GangTimeout => {
-                self.handle_gang_timeout(&event.job_id, event.run_generation)
-            }
+            EventKind::GangTimeout => self.handle_gang_timeout(&event.job_id, event.run_generation),
         }
         let new_decisions = self.cluster.decision_log[decisions_before..].to_vec();
         Some(StepOutcome {

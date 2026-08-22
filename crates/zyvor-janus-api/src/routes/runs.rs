@@ -8,7 +8,9 @@ use axum::response::IntoResponse;
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use zyvor_janus_config::{build_shadow_run, run_simulation_report_with_scheduler, shadow_side_report};
+use zyvor_janus_config::{
+    build_shadow_run, run_simulation_report_with_scheduler, shadow_side_report,
+};
 
 use crate::error::ApiError;
 use crate::run_registry::{RunRecord, RunStatus};
@@ -186,8 +188,11 @@ pub(crate) async fn execute_shadow_run(
         .insert(id, tx.clone());
 
     let result = tokio::task::spawn_blocking(move || {
-        let handle =
-            build_shadow_run(&config_path, scheduler_override.as_deref(), &shadow_scheduler)?;
+        let handle = build_shadow_run(
+            &config_path,
+            scheduler_override.as_deref(),
+            &shadow_scheduler,
+        )?;
         let mut run = handle.run;
         while let Some(step) = run.step() {
             let msg = serde_json::json!({"type": "step", "data": step}).to_string();

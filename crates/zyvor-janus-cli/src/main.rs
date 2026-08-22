@@ -11,7 +11,10 @@ use zyvor_janus_config::{
 };
 
 #[derive(Parser)]
-#[command(name = "zyvor-janus", about = "Zyvor Janus GPU cluster scheduler simulator")]
+#[command(
+    name = "zyvor-janus",
+    about = "Zyvor Janus GPU cluster scheduler simulator"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
