@@ -73,7 +73,7 @@ pub fn estimate_inference(profile: &InferenceProfile, req: InferenceRequest) -> 
     let batch = req.batch_size.max(1) as f64;
     let concurrency = req.concurrency.max(1) as f64;
     let input = req.input_tokens.max(1) as f64;
-    let output = req.output_tokens.max(0) as f64;
+    let output = req.output_tokens as f64;
 
     let batch_penalty = 1.0 + (batch - 1.0).max(0.0) * 0.015;
     let concurrency_penalty = 1.0 + (concurrency - 1.0).max(0.0) * 0.05;

@@ -301,7 +301,7 @@ fn gang_nodes_needed(job: &Job) -> Option<u32> {
 }
 
 fn gpus_per_gang_node(job: &Job, nodes: u32) -> Option<u32> {
-    if nodes == 0 || job.gpu_count % nodes != 0 {
+    if nodes == 0 || !job.gpu_count.is_multiple_of(nodes) {
         None
     } else {
         Some(job.gpu_count / nodes)

@@ -261,10 +261,8 @@ impl RlSession {
             self.done = self.cluster.finished_jobs.len() >= self.jobs_total;
             return;
         }
-        if !placed || !self.at_decision_point() {
-            if !self.advance_time_one_event_or_unblock() {
-                self.drain_events();
-            }
+        if (!placed || !self.at_decision_point()) && !self.advance_time_one_event_or_unblock() {
+            self.drain_events();
         }
         self.advance_to_decision();
     }

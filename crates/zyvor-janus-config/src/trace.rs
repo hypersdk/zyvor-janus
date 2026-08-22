@@ -187,7 +187,7 @@ pub fn validate_job_gang_config(job: &Job) -> ConfigResult<()> {
             job.id
         ))
     })?;
-    if job.gpu_count % nodes != 0 {
+    if !job.gpu_count.is_multiple_of(nodes) {
         return Err(ConfigError::Invalid(format!(
             "job '{}': gpu_count {} is not divisible by gang_size_nodes {}",
             job.id, job.gpu_count, nodes
