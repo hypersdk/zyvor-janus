@@ -1,10 +1,44 @@
-# Zyvor Janus
+<div align="center">
+  <img src="web/public/zyvor-logo.png" alt="Zyvor Janus" width="320">
 
-Zyvor Janus is a discrete-event simulator for Kubernetes-native GPU scheduling inspired by Zyvor Forge ( https://zyvor.dev/forge ). It models clusters, MIG, topology, tenants, quotas, gang scheduling, and AI workloads, enabling scheduler development, RL research, and performance evaluation without requiring physical NVIDIA GPUs.
+  ### A discrete-event simulator for Kubernetes-native GPU scheduling
+
+  [![Rust](https://github.com/hypersdk/zyvor-janus/actions/workflows/rust.yml/badge.svg)](https://github.com/hypersdk/zyvor-janus/actions/workflows/rust.yml)
+  [![Python](https://github.com/hypersdk/zyvor-janus/actions/workflows/python.yml/badge.svg)](https://github.com/hypersdk/zyvor-janus/actions/workflows/python.yml)
+  [![Benchmark Gates](https://github.com/hypersdk/zyvor-janus/actions/workflows/benchmark.yml/badge.svg)](https://github.com/hypersdk/zyvor-janus/actions/workflows/benchmark.yml)
+  [![Publish container images](https://github.com/hypersdk/zyvor-janus/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/hypersdk/zyvor-janus/actions/workflows/docker-publish.yml)
+  [![Release](https://img.shields.io/github/v/release/hypersdk/zyvor-janus?sort=semver)](https://github.com/hypersdk/zyvor-janus/releases)
+  [![License: Apache-2.0](https://img.shields.io/github/license/hypersdk/zyvor-janus)](LICENSE)
+
+  **[▶ Watch the demo](https://youtu.be/p0GQVaZ_X1A)** · [Quick start](#quick-start) · [Docs](docs/)
+</div>
+
+---
+
+Zyvor Janus is a discrete-event simulator for Kubernetes-native GPU scheduling inspired by [Zyvor Forge](https://zyvor.dev/forge). It models clusters, MIG, topology, tenants, quotas, gang scheduling, and AI workloads, enabling scheduler development, RL research, and performance evaluation without requiring physical NVIDIA GPUs.
 
 [![Watch the Forge + Zyvor Janus demo](https://img.youtube.com/vi/p0GQVaZ_X1A/maxresdefault.jpg)](https://youtu.be/p0GQVaZ_X1A "Watch the Forge + Zyvor Janus demo on YouTube")
 
 **▶ [Watch the demo](https://youtu.be/p0GQVaZ_X1A)** — Forge (production GPU/Kubernetes control plane) and Zyvor Janus (its simulator) running side by side, ~3 min.
+
+## Why Zyvor Janus
+
+- **No GPUs required** — full discrete-event simulation of cluster placement, MIG slicing, NVLink/PCIe topology penalties, and gang scheduling
+- **Forge-native** — imports real `FabricAIJob` / `FabricGPUNode` / `FabricQuota` CRDs and replays production scheduler traces for oracle-vs-live diffing
+- **Pluggable schedulers** — `fifo`, `priority`, `preemptive`, `bestfit`, and Forge's own policy, swappable with one CLI flag
+- **RL-ready** — Gymnasium environment + PPO baseline for scheduler policy research
+- **Full observability stack** — Rich terminal dashboard, Next.js web UI (runs, benchmark, what-if), and an OpenAI-compatible inference shim for calibrated LLM serving metrics
+
+## Table of contents
+
+- [Architecture](#architecture)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Project layout](#project-layout)
+- [Milestones](#milestones)
+- [Dual-node "migrate" demo](#dual-node-migrate-demo-placement-not-live-cuda)
+- [Forge input](#forge-input)
+- [License](#license)
 
 ## Architecture
 
@@ -275,7 +309,7 @@ See [docs/milestones.md](docs/milestones.md). **M1–M8 complete**, including to
 
 Schedulers: `fifo`, `priority`, `preemptive`, `forge` (alias for preemptive), `bestfit`.
 
-## Dual-node “migrate” demo (placement, not live CUDA)
+## Dual-node "migrate" demo (placement, not live CUDA)
 
 Preemptive scheduler moves a low-priority job across **machines** after preemption:
 
@@ -287,7 +321,7 @@ ZYVOR_JANUS_DEMO_CONFIG=dual_node_preempt.yaml \
   node scripts/demo-videos/record-zyvor-janus-2gpu-migrate-wow-reel.mjs
 ```
 
-This is a **digital-twin placement migrate**. Forge’s production live migrate is KubeVirt VMs (Path A); pod checkpoint/restore is experimental Path B — see Forge [`docs/product/POD_VS_VM_MIGRATION.md`](https://github.com/ssahani/forge/blob/main/docs/product/POD_VS_VM_MIGRATION.md).
+This is a **digital-twin placement migrate**. Forge's production live migrate is KubeVirt VMs (Path A); pod checkpoint/restore is experimental Path B — see Forge [`docs/product/POD_VS_VM_MIGRATION.md`](https://github.com/ssahani/forge/blob/main/docs/product/POD_VS_VM_MIGRATION.md).
 
 ## Forge input
 
