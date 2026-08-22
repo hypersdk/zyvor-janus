@@ -38,6 +38,7 @@ Zyvor Janus is a discrete-event simulator for Kubernetes-native GPU scheduling i
 - [Milestones](#milestones)
 - [Dual-node "migrate" demo](#dual-node-migrate-demo-placement-not-live-cuda)
 - [Forge input](#forge-input)
+- [Enterprise & support](#enterprise--support)
 - [License](#license)
 
 ## Architecture
@@ -326,6 +327,10 @@ This is a **digital-twin placement migrate**. Forge's production live migrate is
 ## Forge input
 
 See [docs/forge_input.md](docs/forge_input.md) for CRD mapping rules, export workflow, and adapter levels.
+
+## Enterprise & support
+
+Zyvor Janus is the free digital-twin simulator for [Zyvor Forge](https://zyvor.dev/forge), the production GPU/Kubernetes control plane. Looking for enterprise support, managed deployments, or the full Forge platform? Visit **[zyvor.dev](https://zyvor.dev)**.
 
 ## License
 
