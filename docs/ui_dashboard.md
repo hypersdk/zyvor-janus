@@ -353,7 +353,7 @@ All Zyvor Janus UI surfaces share the Zyvor / HyperSDK design tokens from [zyvor
 | Rich CLI dashboard | [`python/zyvor_janus/theme.py`](../python/zyvor_janus/theme.py) |
 | Matplotlib Gantt / heatmap | Same Python module (`ACCENT_ORANGE`, `TEAL`, custom heatmap colormap) |
 
-Key colors: background `#050505`, primary accent `#f0583a`, busy GPU `#6366f1`, idle `#22c55e`, Gantt run `#10b981`. The web header displays the Zyvor logo with “Zyvor Janus · Zyvor AI Labs”.
+Key colors: background `#050505`, primary accent `#f0583a`, busy GPU `#6366f1`, idle `#22c55e`, Gantt run `#10b981`. The web header displays the Zyvor logo with “Zyvor Janus · Zyvor”.
 
 ---
 

@@ -142,7 +142,7 @@ def render_dashboard_rich(state: DashboardState) -> Any:
             queue_table.add_row(f"{idx}. {name}")
 
     return Group(
-        Panel(summary, title="Zyvor Janus · Zyvor AI Labs", border_style=styles["summary"]),
+        Panel(summary, title="Zyvor Janus · Zyvor", border_style=styles["summary"]),
         Panel(gpu_table, border_style=styles["gpu"]),
         Panel(queue_table, title="Waiting", border_style=styles["queue"]),
     )

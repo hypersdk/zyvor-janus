@@ -27,7 +27,7 @@ export function Sidebar({
         <div className="brand-logo-wrap">
           <Image
             src="/zyvor-logo.png"
-            alt="Zyvor AI Labs"
+            alt="Zyvor"
             width={120}
             height={40}
             className="h-6 w-auto"

@@ -130,7 +130,7 @@ export function LoginForm() {
         <div style={{ position: "relative", zIndex: 1 }}>
           <div className="login-fade-in" style={{ marginBottom: 32 }}>
             <div className="brand-name">Zyvor Janus</div>
-            <div className="brand-sub">ZYVOR AI LABS</div>
+            <div className="brand-sub">ZYVOR</div>
           </div>
           <h2 className="hero-headline login-fade-in d1">
             GPU scheduler simulation for the <span className="login-text-gradient">Forge platform</span>
